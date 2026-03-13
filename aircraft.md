@@ -1,8 +1,7 @@
 ---
 layout: default
-title: Test Page
-permalink: /aircraft/
----
+title: Database
+permLink: /aircraft/
 
-# TEST SUCCESSFUL
-If you can see this, the NORDEN II link is working.
+#SYSTEM ONLINE
+Database is operational.
