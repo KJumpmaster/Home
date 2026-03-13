@@ -1,3 +1,8 @@
+<div class="classified-header-container" style="text-align: center; margin-bottom: 30px;">
+    <img src="https://i.ibb.co/3sX8M8H/declassified-norden-header.png" 
+         alt="Norden II Declassified" 
+         style="width: 100%; max-width: 800px; border: 1px solid #444; box-shadow: 0 0 15px rgba(51, 255, 51, 0.2);">
+</div>
 ---
 layout: default
 title: NORDEN II – Tactical Dossier
