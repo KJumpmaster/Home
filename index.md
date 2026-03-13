@@ -37,7 +37,7 @@ This dossier contains technical specifications and ballistics data for the NORDE
   <div class="data-card" style="flex: 1; border: 1px solid #444; padding: 20px; background-color: #1a1a1a;">
     <h3 style="color: #33ff33;">[01] AIRCRAFT DATA</h3>
     <p>Performance specs, turn rates, and historical comparison for WWII heavy bombers.</p>
-    <a href="{{ '/aircraft/' | relative_url }}" class="tactical-button">ACCESS ARCHIVE</a>
+    <a href="{{ '/aircraft.html' | relative_url }}" class="tactical-button">ACCESS ARCHIVE</a>
   
   <div class="data-card" style="flex: 1; border: 1px solid #444; padding: 20px; background-color: #1a1a1a;">
     <h3 style="color: #33ff33;">[02] WEAPONS & HELOS</h3>
