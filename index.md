@@ -1,19 +1,19 @@
-<div class="classified-header-container" style="text-align: center; margin-bottom: 30px;">
-    <img src="https://i.ibb.co/3sX8M8H/declassified-norden-header.png" 
-         alt="Norden II Declassified" 
-         style="width: 100%; max-width: 800px; border: 1px solid #444; box-shadow: 0 0 15px rgba(51, 255, 51, 0.2);">
-</div>
 ---
 layout: default
 title: NORDEN II – Tactical Dossier
 ---
 
-<div class="classified-header-container">
-    <img src="{{ site.baseurl }}/assets/images/declassified-norden-header.png" alt="Norden II Declassified" class="classified-header-img">
+<div style="background: #001100; border: 2px solid #00ff00; padding: 20px; text-align: center; font-family: monospace;">
+  <h1 style="color: #00ff00; margin: 0; letter-spacing: 5px;">[ NORDEN II ]</h1>
+  <p style="color: #00ff00; margin: 5px 0;">SYSTEM STATUS: ONLINE | DATABASE: 82ND-ABN-VET</p>
+  <div style="border-top: 1px solid #00ff00; margin: 10px 0;"></div>
+  <p style="color: #ff0000; font-weight: bold; margin: 0;">CLASSIFICATION: DECLASSIFIED</p>
 </div>
 
-# NORDEN II: TACTICAL DOSSIER
-**AUTOMATED BOMBING COMPUTER & BALLISTICS DATABASE**
+# OPERATIONAL COMMAND
+**WELCOME BACK, JUMPINGKJ.**
+
+This dossier contains technical specifications and ballistics data for the NORDEN II project.
 
 ---
 
