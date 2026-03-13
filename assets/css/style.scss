@@ -1,53 +1,17 @@
 ---
 ---
-// This imports the Midnight theme defaults
 @import "{{ site.theme }}";
 
-// --- NORDEN II TACTICAL OVERRIDES ---
-
 body {
-  background-color: #050505; // Deep black for high contrast
-  color: #33ff33;            // Classic "Radar Green" text
-  font-family: 'Courier New', Courier, monospace;
+  background-color: #050505 !important;
+  color: #33ff33 !important;
+  font-family: 'Courier New', monospace;
 }
 
-// Make the links look like terminal commands
 a {
   color: #00ff00;
-  text-decoration: none;
-  border-bottom: 1px dashed #00ff00;
   &:hover {
-    background-color: #003300;
-    color: #fff;
+    color: #ffffff;
+    background-color: #004400;
   }
-}
-
-// Tactical Data Tables
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 20px 0;
-  border: 1px solid #33ff33;
-}
-
-th {
-  background-color: #003300;
-  color: #33ff33;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  border: 1px solid #33ff33;
-  padding: 10px;
-}
-
-td {
-  border: 1px solid #114411;
-  padding: 8px;
-  background-color: rgba(0, 20, 0, 0.8);
-}
-
-// Highlight for "Classified" or "Warning" info
-.warning {
-  color: #ff4444;
-  font-weight: bold;
-  text-transform: uppercase;
 }
