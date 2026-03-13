@@ -1,6 +1,10 @@
 ---
 layout: default
 title: Aircraft Archive
+permalink: /aircraft/
+---
+layout: default
+title: Aircraft Archive
 ---
 
 # [01] AIRCRAFT ARCHIVE
