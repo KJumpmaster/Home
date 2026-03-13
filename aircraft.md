@@ -1,8 +1,11 @@
 ---
 layout: default
 title: Aircraft Archive
-permalink: /aircraft/
+permalink: /aircraft.html
 ---
+
+# AIRCRAFT INTELLIGENCE REPORT
+
 layout: default
 title: Aircraft Archive
 ---
