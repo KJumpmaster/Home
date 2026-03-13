@@ -1,0 +1,33 @@
+name: Update Aircraft Inventory
+
+on:
+  repository_dispatch: # Triggers when your other repos send a signal
+  workflow_dispatch:   # Allows you to run it manually for testing
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Site Repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: pip install requests PyYAML
+
+      - name: Run Inventory Script
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: python .github/scripts/update_list.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "Norden-Bot"
+          git config --global user.email "bot@norden.ii"
+          git add _data/aircraft_list.yml
+          git commit -m "Automated Inventory Update [Skip CI]" || exit 0
+          git push
