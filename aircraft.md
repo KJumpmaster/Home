@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Database
-permLink: /aircraft/
+permalink: /aircraft/
 
 #SYSTEM ONLINE
 Database is operational.
