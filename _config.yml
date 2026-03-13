@@ -2,8 +2,8 @@ title: NORDEN II
 description: Tactical Dossier and Ballistics Database
 remote_theme: pages-themes/midnight@v0.2.0
 
-url: "https://KJumpmaster.github.io"
-baseurl: "/home"
+url: "https://kjumpmaster.github.io"
+baseurl: "/Home"
 
 plugins:
   - jekyll-remote-theme
