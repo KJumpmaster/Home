@@ -1,1 +1,18 @@
+---
+layout: default
+title: NORDEN II – War Thunder Tactical Dossier
+---
 
+## 📡 Latest Reconnaissance Photos
+*Recent additions to the tactical database:*
+
+<div class="recon-gallery">
+  {% for image in site.data.aircraft_list.Aircraft_Pics limit:3 %}
+  <div class="recon-item">
+    <img src="{{ site.data.repos.sources.game_pics }}{{ image }}" alt="Recon Photo">
+    <p>[RECON_ID: {{ image | truncate: 15 }}]</p>
+  </div>
+  {% endfor %}
+</div>
+
+---
