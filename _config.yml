@@ -1,0 +1,13 @@
+title: NORDEN II Tactical Dossier
+description: War Thunder Aircraft and Weapons Database
+baseurl: "" # Leave this empty
+url: "https://KJumpmaster.github.io"
+
+# This tells Jekyll to look into your _data folder
+data_dir: _data
+
+# Pick a theme (Midnight is a great "tactical" look)
+theme: jekyll-theme-midnight
+
+# This ensures your "robot" can see the hidden .github folders
+include: [".github"]
