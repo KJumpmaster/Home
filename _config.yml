@@ -1,17 +1,10 @@
-title: NORDEN II Tactical Dossier
-description: War Thunder Aircraft and Weapons Database
-baseurl: "home"url: "https://KJumpmaster.github.io"
-baseurl: "/home"
-
-# CHANGED: Using remote_theme instead of theme
+title: NORDEN II
+description: Tactical Dossier and Ballistics Database
 remote_theme: pages-themes/midnight@v0.2.0
 
-# ADDED: These plugins are required for the theme to load correctly
+url: "https://KJumpmaster.github.io"
+baseurl: "/home"
+
 plugins:
   - jekyll-remote-theme
   - jekyll-seo-tag
-
-# This ensures your "robot" can see your folders
-include: [".github", "_data"]
-
-data_dir: _data
