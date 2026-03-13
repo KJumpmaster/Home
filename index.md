@@ -1,51 +1,28 @@
 ---
 layout: default
-title: NORDEN II – Tactical Dossier
+title: NORDEN II Command Center
 ---
 
-<div style="background: #001100; border: 2px solid #00ff00; padding: 20px; text-align: center; font-family: monospace;">
-  <h1 style="color: #00ff00; margin: 0; letter-spacing: 5px;">[ NORDEN II ]</h1>
-  <p style="color: #00ff00; margin: 5px 0;">SYSTEM STATUS: ONLINE | DATABASE: 82ND-ABN-VET</p>
-  <div style="border-top: 1px solid #00ff00; margin: 10px 0;"></div>
-  <p style="color: #ff0000; font-weight: bold; margin: 0;">CLASSIFICATION: DECLASSIFIED</p>
+<div style="background: #001a00; border: 2px solid #00ff00; padding: 20px; text-align: center; border-radius: 5px; box-shadow: 0 0 15px #00ff00;">
+  <h1 style="color: #00ff00; margin: 0; font-family: monospace; letter-spacing: 5px;">[ NORDEN II ]</h1>
+  <p style="color: #00ff00; font-family: monospace; font-weight: bold; margin: 10px 0;">TACTICAL DATA SYSTEM | STATUS: OPERATIONAL</p>
+  <div style="border-top: 1px solid #00ff00; margin: 15px auto; width: 80%;"></div>
+  <p style="color: #ff0000; font-weight: bold; font-family: monospace;">CLASSIFICATION: DECLASSIFIED</p>
 </div>
 
-# OPERATIONAL COMMAND
-**WELCOME BACK, JUMPINGKJ.**
+### OPERATIONAL COMMANDS
 
-This dossier contains technical specifications and ballistics data for the NORDEN II project.
+Welcome back, **JumpingKJ**. Select a module below to begin data retrieval.
 
----
-
-## 📡 Latest Reconnaissance
-*Recent intelligence gathered for the database:*
-
-<div class="recon-gallery">
-  {% for image in site.data.aircraft_list.Aircraft_Pics limit:3 %}
-  <div class="recon-item">
-    <img src="{{ site.data.repos.sources.game_pics }}{{ image }}" alt="Recon Photo">
-    <p>[RECON_ID: {{ image | truncate: 18 }}]</p>
-  </div>
-  {% endfor %}
-</div>
-
----
-
-## 📂 Operational Archives
-
-<div class="data-grid" style="display: flex; gap: 20px; margin-top: 20px;">
-  <div class="data-card" style="flex: 1; border: 1px solid #444; padding: 20px; background-color: #1a1a1a;">
-    <h3 style="color: #33ff33;">[01] AIRCRAFT DATA</h3>
-    <p>Performance specs, turn rates, and historical comparison for WWII heavy bombers.</p>
-    <a href="{{ '/aircraft/' | relative_url }}" class="tactical-button">ACCESS ARCHIVE</a>
+<div style="display: flex; gap: 10px; margin-top: 20px;">
+  <a href="{{ '/aircraft.html' | relative_url }}" style="background: #004400; color: #fff; padding: 15px 25px; border: 1px solid #00ff00; text-decoration: none; font-weight: bold; flex: 1; text-align: center;">ACCESS AIRCRAFT ARCHIVE</a>
   
-  <div class="data-card" style="flex: 1; border: 1px solid #444; padding: 20px; background-color: #1a1a1a;">
-    <h3 style="color: #33ff33;">[02] WEAPONS & HELOS</h3>
-    <p>Ballistics tables, missile guidance types (F&F, SACLOS), and helicopter ordnance.</p>
-    <a href="{{ '/weapons' | relative_url }}" class="tactical-button">WEAPONS SYSTEMS</a>
-  </div>
+  <a href="{{ '/weapons.html' | relative_url }}" style="background: #004400; color: #fff; padding: 15px 25px; border: 1px solid #00ff00; text-decoration: none; font-weight: bold; flex: 1; text-align: center;">WEAPONS SYSTEMS</a>
 </div>
 
 ---
 
-> **NORDEN II SYSTEM NOTE:** > This tool provides automated calculation data to assist bombardiers in achieving maximum impact on target. Precision is the difference between a mission's success and a total loss.
+### MISSION LOGS
+* **PROJECT:** NORDEN II Ballistics Tool
+* **DEVELOPER:** JumpingKJ (82nd ABN Vet)
+* **TARGET:** War Thunder Technical Data
