@@ -31,5 +31,5 @@ jobs:
           git config --global user.name "Norden-Bot"
           git config --global user.email "bot@norden.ii"
           git add _data/aircraft_list.yml
-          git commit -m "Automated Inventory Update [Skip CI]" || exit 0
+          git commit -m "Automated Inventory Update"
           git push
