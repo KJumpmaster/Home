@@ -1,36 +1,57 @@
 import os
 import yaml
+import requests
 
-# Path to your images and the data file
-IMAGE_DIR = 'assets/images'
+# The Repositories to scan
+PICTURE_REPOS = [
+    "KJumpmaster/Aircraft-Pics",
+    "KJumpmaster/Real_Life_Aircraft_Pics"
+]
+
 DATA_FILE = '_data/aircraft_list.yml'
+GITHUB_TOKEN = os.getenv('GH_TOKEN')
+
+def get_repo_files(repo_full_name):
+    """Fetches the file list from a GitHub repository via API."""
+    url = f"https://api.github.com/repos/{repo_full_name}/contents/"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
+    
+    response = requests.get(url, headers=headers)
+    if response.status_status == 200:
+        return response.json()
+    else:
+        print(f"Failed to scan {repo_full_name}: {response.status_code}")
+        return []
 
 def update_inventory():
     aircraft_list = []
-    
-    # Check if the images directory exists
-    if not os.path.exists(IMAGE_DIR):
-        print(f"Error: {IMAGE_DIR} not found.")
-        return
+    seen_names = set()
 
-    # Scan the folder for image files
-    for filename in os.listdir(IMAGE_DIR):
-        if filename.endswith(('.png', '.jpg', '.jpeg')):
-            # Turn 'f16c.png' into 'F16C'
-            name = os.path.splitext(filename)[0].replace('_', ' ').upper()
-            aircraft_list.append({
-                'name': name,
-                'rank': 'TBD',
-                'br': 'TBD',
-                'radar_type': 'SCANNING...'
-            })
+    for repo in PICTURE_REPOS:
+        print(f"Scanning {repo}...")
+        files = get_repo_files(repo)
+        
+        for file in files:
+            filename = file['name']
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                # Convert 'f16c.png' -> 'F-16C'
+                name = os.path.splitext(filename)[0].replace('_', ' ').replace('..', '.').upper()
+                
+                if name not in seen_names:
+                    aircraft_list.append({
+                        'name': name,
+                        'rank': 'RECON',
+                        'br': 'PENDING',
+                        'source': repo.split('/')[-1] # Shows which repo it came from
+                    })
+                    seen_names.add(name)
 
-    # Write the list to your _data folder
+    # Write to the _data folder in your Home repo
     os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
     with open(DATA_FILE, 'w') as f:
         yaml.dump(aircraft_list, f, default_flow_style=False)
     
-    print(f"Success: Updated {len(aircraft_list)} aircraft in inventory.")
+    print(f"Success: Synced {len(aircraft_list)} aircraft from remote intelligence feeds.")
 
 if __name__ == "__main__":
     update_inventory()
