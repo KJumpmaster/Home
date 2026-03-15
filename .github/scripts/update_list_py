@@ -1,31 +1,36 @@
 import os
-import requests
 import yaml
 
-USER = "KJumpmaster"
-REPOS = ["Aircraft-Pics", "Real_Life_Aircraft_Pics"]
-TOKEN = os.getenv("GH_TOKEN")
+# Path to your images and the data file
+IMAGE_DIR = 'assets/images'
+DATA_FILE = '_data/aircraft_list.yml'
 
-def get_image_list(repo):
-    url = f"https://api.github.com/repos/{USER}/{repo}/contents/"
-    headers = {"Authorization": f"token {TOKEN}"} if TOKEN else {}
-    response = requests.get(url, headers=headers)
-    # ... rest of the script from before ...
-        # We only want common image formats
-        return [file['name'] for file in response.json() 
-                if file['name'].lower().endswith(('.png', '.jpg', '.jpeg', '.webp'))]
-    else:
-        print(f"Error accessing {repo}: {response.status_code}")
-        return []
+def update_inventory():
+    aircraft_list = []
+    
+    # Check if the images directory exists
+    if not os.path.exists(IMAGE_DIR):
+        print(f"Error: {IMAGE_DIR} not found.")
+        return
 
-# Build the data structure
-data_output = {}
-for repo in REPOS:
-    print(f"Cataloging {repo}...")
-    data_output[repo.replace("-", "_")] = get_image_list(repo)
+    # Scan the folder for image files
+    for filename in os.listdir(IMAGE_DIR):
+        if filename.endswith(('.png', '.jpg', '.jpeg')):
+            # Turn 'f16c.png' into 'F16C'
+            name = os.path.splitext(filename)[0].replace('_', ' ').upper()
+            aircraft_list.append({
+                'name': name,
+                'rank': 'TBD',
+                'br': 'TBD',
+                'radar_type': 'SCANNING...'
+            })
 
-# Save to a YAML file for Jekyll
-with open('aircraft_list.yml', 'w') as f:
-    yaml.dump(data_output, f)
+    # Write the list to your _data folder
+    os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
+    with open(DATA_FILE, 'w') as f:
+        yaml.dump(aircraft_list, f, default_flow_style=False)
+    
+    print(f"Success: Updated {len(aircraft_list)} aircraft in inventory.")
 
-print("Success! 'aircraft_list.yml' is ready for your _data folder.")
+if __name__ == "__main__":
+    update_inventory()
