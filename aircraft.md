@@ -17,7 +17,7 @@ The following data is pulled directly from the **NORDEN II** database files.
       <th style="padding: 10px; border: 1px solid #00ff00;">NAME</th>
       <th style="padding: 10px; border: 1px solid #00ff00;">RANK</th>
       <th style="padding: 10px; border: 1px solid #00ff00;">BR</th>
-      <th style="padding: 10px; border: 1px solid #00ff00;">RADAR</th>
+      <td style="padding: 10px; border: 1px solid #004400;">{{ plane.source }}</td>
     </tr>
   </thead>
   <tbody>
