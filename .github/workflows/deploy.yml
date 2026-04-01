@@ -29,7 +29,8 @@ jobs:
           app_location: "/" 
           api_location: "" 
           output_location: ""
-          app_build_command: ""
+          # THE FIX: This line kills the Oryx build engine error
+          skip_app_build: true 
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
