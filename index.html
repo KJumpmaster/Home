@@ -65,5 +65,33 @@
     <footer class="mt-20 border-t border-slate-900 pt-4 text-[10px] text-slate-700 text-center uppercase tracking-widest">
         Uplink Established // Norden II V4 // Kenneth Johnson
     </footer>
+<!DOCTYPE html>
+<html>
+<head>
+    </head>
+<body>
+    <h1>S.K.Y.P.I.L.O.T. Dashboard</h1>
+    
+    <div id="cesiumContainer" style="width: 100%; height: 500px; margin-top: 20px; border: 2px solid #333;"></div>
+
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.104/Build/Cesium/Cesium.js"></script>
+    <link href="https://cesium.com/downloads/cesiumjs/releases/1.104/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+
+    <script>
+      // Your Mission Token from the text file
+      Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNDI0ZmM0Ny0wYzM4LTQwOTAtYTBlYi1kOWU1MTVhMjM5NmUiLCJpZCI6NDEyNTQ1LCJpYXQiOjE3NzUwODA5MjZ9.M2ZCrF-qVaLIKI4d8tYMPSPEYMdQBV8sDQN1u9IAAPU';
+
+      const viewer = new Cesium.Viewer('cesiumContainer', {
+        terrainProvider: Cesium.createWorldTerrain(),
+        sceneModePicker: false,
+        baseLayerPicker: false,
+      });
+
+      // Fly to a "Training Range" (Nevada) on startup
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(-115.1728, 36.1147, 5000.0)
+      });
+    </script>
+</body> </html>
 </body>
 </html>
