@@ -24,8 +24,10 @@ jobs:
           app_location: "/" 
           api_location: "" 
           output_location: ""
-          skip_app_build: true 
+          # THE TACTICAL BYPASS:
+          skip_app_build: true
           ###### End of Repository/Build Configurations ######
-        env: # THE NUCLEAR OPTION
-          IS_STATIC_EXPORT: true
-          SKIP_ORYX_BUILD: true
+        env:
+          # THESE TWO LINES FORCE AZURE TO STOP LOOKING FOR RUBY/NODE
+          SKIP_ORYX_BUILD: "true"
+          IS_STATIC_EXPORT: "true"
