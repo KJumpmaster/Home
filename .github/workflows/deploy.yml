@@ -25,11 +25,11 @@ jobs:
           # This uses the built-in GitHub permission to talk to Azure
           repo_token: ${{ secrets.GITHUB_TOKEN }} 
           action: "upload"
-          ###### Repository/Build Configurations ######
+          ####### Repository/Build Configurations ######
           app_location: "/" 
           api_location: "" 
-          output_location: ""
-          app_build_command: "" # Tells Azure: "No building needed, just take my HTML!"
+          output_location: "" 
+          app_build_command: "" # <--- ADD THIS LINE EXACTLY LIKE THIS
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
