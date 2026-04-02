@@ -6,7 +6,7 @@
     <title>THE CAOC | COMBINED AIR OPERATIONS CENTER</title>
     
     <style>
-        /* 1. THE FOUNDATION: Metal skin everywhere */
+        /* 1. THE HULL: Seamless metal skin */
         body { 
             background: #1a1a1a url('metal_background.png') no-repeat center center fixed; 
             background-size: cover;
@@ -19,64 +19,74 @@
             flex-direction: column;
         }
 
-        /* 2. REMOVED DARK TINT: Letting the raw metal show through */
-        body::before {
-            display: none; /* Kills the dark overlay entirely */
-        }
-
-        /* 3. THE HEADER: Transparent background, only the green line remains */
+        /* 2. THE HEADER: No border, no background, just the assets */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 40px; 
-            border-bottom: 4px solid #00ff00; /* This is your green separator line */
-            background: transparent; /* No more dark bar on top */
+            padding: 20px 40px; 
+            background: transparent; /* No dark bar on top */
             flex-shrink: 0;
+            border-bottom: none; /* REMOVED THE SEPARATION LINE */
         }
 
         .logo-video { 
             width: 300px; height: 300px; 
             border: 4px solid #00ff00; border-radius: 50%; 
-            object-fit: cover; box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
-            background: #000; /* Keeps the inside of the circle black */
+            object-fit: cover; box-shadow: 0 0 40px rgba(0, 255, 0, 0.6);
+            background: #000;
         }
 
         .center-box { text-align: center; flex-grow: 1; margin: 0 20px; }
 
         .main-banner {
-            width: 100%; max-width: 650px; 
-            border: 2px solid #00ff00;
+            width: 100%; max-width: 750px; 
+            border: 3px solid #00ff00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
         }
 
+        /* 3. BIGGER TEXT: 5.5em for the title, 1.8em for slogan */
         h1 { 
-            margin: 10px 0 0 0; 
-            letter-spacing: 15px; 
-            font-size: 3.5em; 
+            margin: 20px 0 5px 0; 
+            letter-spacing: 25px; 
+            font-size: 5.5em; /* INCREASED SIZE */
             text-transform: uppercase;
-            text-shadow: 2px 2px 4px #000; /* Keeps text readable on light metal */
+            text-shadow: 0 0 20px #000, 0 0 10px #00ff00; /* Glow effect */
         }
 
-        /* 4. THE NAVIGATION: Completely transparent */
+        .slogan {
+            margin: 0; 
+            color: #00ff00; 
+            font-weight: bold; 
+            letter-spacing: 12px; /* WIDER SPACING */
+            font-size: 1.8em; /* INCREASED SIZE */
+            text-transform: uppercase;
+        }
+
+        /* 4. BUTTONS: Floating on the metal */
         .nav-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 25px; padding: 40px; 
-            max-width: 1200px; 
+            gap: 30px; padding: 30px 60px; 
+            max-width: 1400px; 
             margin: auto auto; 
             width: 100%; 
             background: transparent; 
         }
 
         .nav-btn { 
-            background: rgba(0, 0, 0, 0.8); /* Dark buttons so they stand out on light metal */
+            background: rgba(0, 0, 0, 0.85); 
             border: 3px solid #00ff00; 
-            color: #00ff00; padding: 25px; text-align: center; 
-            text-decoration: none; font-weight: bold; font-size: 1.5em;
-            box-shadow: 8px 8px 0px #004400;
+            color: #00ff00; padding: 30px; text-align: center; 
+            text-decoration: none; font-weight: bold; font-size: 1.6em;
+            box-shadow: 10px 10px 0px #004400;
             transition: 0.3s;
         }
 
-        .nav-btn:hover { background: #00ff00; color: #000; }
+        .nav-btn:hover { 
+            background: #00ff00; color: #000; 
+            box-shadow: 0 0 40px #00ff00; 
+            transform: scale(1.05); 
+        }
 
-        .rivet { width: 12px; height: 12px; background: #555; border-radius: 50%; position: absolute; box-shadow: inset 2px 2px 4px #000; border: 1px solid #333; }
+        .rivet { width: 14px; height: 14px; background: #666; border-radius: 50%; position: absolute; box-shadow: inset 2px 2px 4px #000; border: 1px solid #333; }
     </style>
 </head>
 <body>
@@ -96,7 +106,7 @@
                 <source src="caoc_banner.mp4" type="video/mp4">
             </video>
             <h1>The CAOC</h1>
-            <p style="margin: 5px 0; color: #00ff00; font-weight: bold; letter-spacing: 6px;">COMBINED AIR OPERATIONS CENTER</p>
+            <p class="slogan">COMBINED AIR OPERATIONS CENTER</p>
         </div>
 
         <video class="logo-video" autoplay muted loop playsinline>
