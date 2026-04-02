@@ -5,127 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>THE CAOC | USA AIR WING</title>
     <style>
-        body { 
-            background: #050505 url('metal%20background.png') no-repeat center center fixed; 
-            background-size: cover; color: #00ff00; font-family: 'Courier New', monospace; 
-            margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden;
-        }
-
-        /* TERMINAL DECODING OVERLAY */
+        body { background: #050505; color: #00ff00; font-family: 'Courier New', monospace; margin: 0; overflow-x: hidden; }
+        
         #loading-overlay {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.8s ease;
         }
         #comms-vis { width: 350px; height: auto; margin-bottom: 25px; border: 1px solid #004400; opacity: 0; transition: opacity 1s ease; }
-        .decode-header { font-size: 1.2em; letter-spacing: 6px; margin-bottom: 20px; color: #00ff00; font-weight: bold; }
         .progress-bar { width: 350px; height: 3px; background: #111; border: 1px solid #004400; position: relative; }
-        .progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 2s linear; }
-        #status-update { margin-top: 15px; font-size: 0.8em; color: #00ff00; letter-spacing: 2px; text-transform: uppercase; height: 1.2em; }
+        .progress-fill { width: 0%; height: 100%; background: #00ff00; transition: width 2s linear; }
+        #status-update { margin-top: 15px; font-size: 0.8em; color: #00ff00; letter-spacing: 2px; text-transform: uppercase; }
 
-        /* WIDESCREEN BANNER */
-        .usa-hero { width: 100%; height: 160px; overflow: hidden; border-bottom: 2px solid #00ff00; position: relative; background: #000; }
-        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; opacity: 0.6; }
+        .usa-hero { width: 100%; height: 160px; overflow: hidden; border-bottom: 2px solid #00ff00; position: relative; }
+        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
 
-        /* HEADER SECTION */
-        .header-block { text-align: center; padding: 30px 0; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
-        .main-title { font-size: 3.5em; letter-spacing: 15px; margin: 0; color: #fff; font-weight: 900; }
-        .tdl-status { font-size: 1.1em; color: #00ff00; letter-spacing: 5px; margin-top: 15px; font-weight: bold; }
-        .arog-line { font-size: 0.9em; color: #888; letter-spacing: 2px; margin-top: 8px; font-weight: bold; }
-
+        .header-block { text-align: center; padding: 30px 0; }
+        .main-title { font-size: 3.5em; letter-spacing: 15px; margin: 0; color: #fff; }
         .satcom-blink { color: #00ff00; animation: satcomFade 5s infinite; }
-        @keyframes satcomFade { 0%, 100% { opacity: 1; text-shadow: 0 0 10px #00ff00; } 50% { opacity: 0.1; } }
+        @keyframes satcomFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
 
-        /* THE RESEARCH THEATER */
-        .tree-viewport { padding: 20px 60px 100px 60px; display: flex; flex-direction: column; gap: 80px; max-width: 1800px; margin: 0 auto; }
-        .rank-wrapper { display: flex; align-items: stretch; position: relative; }
-        .rank-sidebar { 
-            font-size: 3em; font-weight: bold; writing-mode: vertical-rl; text-orientation: upright; 
-            padding: 15px; letter-spacing: -5px; user-select: none;
-            color: rgba(0, 255, 0, 0.45); text-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
-        }
+        .tree-viewport { padding: 20px 60px 100px 60px; display: flex; flex-direction: column; gap: 80px; }
+        .rank-wrapper { display: flex; align-items: stretch; }
+        .rank-sidebar { font-size: 3em; font-weight: bold; writing-mode: vertical-rl; text-orientation: upright; padding: 15px; color: rgba(0, 255, 0, 0.45); text-shadow: 0 0 10px rgba(0, 255, 0, 0.2); }
 
-        .rank-container {
-            flex-grow: 1; display: grid; grid-template-columns: repeat(7, 1fr); 
-            grid-auto-rows: 150px; gap: 20px; position: relative; padding: 40px;
-            background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(0, 255, 0, 0.1);
-        }
-
-        .arrow-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-
-        .v-card { background: rgba(10, 10, 10, 0.98); border: 1px solid #222; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; transition: 0.2s; z-index: 10; }
-        .v-card:hover { border-color: #00ff00; transform: scale(1.03); z-index: 100; box-shadow: 0 0 15px #00ff00; }
-        .premium { border: 1px solid #d4af37; }
-        .squadron { border: 1px solid #55efc4; }
-
+        .rank-container { flex-grow: 1; display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 150px; gap: 20px; padding: 40px; background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(0, 255, 0, 0.1); position: relative; }
+        .v-card { background: rgba(10, 10, 10, 0.98); border: 1px solid #222; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
         .v-img { width: 100%; height: 80px; object-fit: contain; }
-        .v-name { margin-top: 5px; font-size: 0.7em; font-weight: bold; color: #bbb; text-transform: uppercase; }
-
-        .back-btn { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.9); border: 1px solid #00ff00; color: #00ff00; padding: 6px 12px; text-decoration: none; font-weight: bold; font-size: 0.8em; z-index: 2000; }
+        .v-name { margin-top: 5px; font-size: 0.7em; font-weight: bold; color: #bbb; }
+        .back-btn { position: fixed; bottom: 20px; left: 20px; background: #000; border: 1px solid #00ff00; color: #00ff00; padding: 6px 12px; text-decoration: none; z-index: 2000; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
         <img src="Comms_Pic.png" id="comms-vis" onerror="this.style.display='none';">
-        <div class="decode-header">USA TERMINAL: VETERAN ACCESS</div>
+        <div style="color:#00ff00; letter-spacing:5px; margin-bottom:20px;">USA TERMINAL: SECURE ACCESS</div>
         <div class="progress-bar"><div class="progress-fill" id="bar-fill"></div></div>
         <div id="status-update">INITIALIZING HANDSHAKE...</div>
     </div>
 
     <div class="usa-hero">
-        <video class="usa-banner-video" autoplay muted loop playsinline><source src="USA Banner.mp4" type="video/mp4"></video>
+        <video autoplay muted loop playsinline class="usa-banner-video"><source src="USA Banner.mp4" type="video/mp4"></video>
     </div>
 
     <div class="header-block">
-        <h1 class="main-title">USA AIR WING</h1>
-        <div class="tdl-status">[ TACTICAL DATA LINK : ACTIVE ]</div>
-        <div class="arog-line">
-            COMMAND & CONTROL | AIR RESEARCH OPERATIONAL GRID (AROG) : 
-            <span class="satcom-blink">COMMS ESTABLISHED</span>
-        </div>
-    </div>
-
-    <div id="research-theater" class="tree-viewport"></div>
-    <a href="index.html" class="back-btn">RETURN TO CAOC</a>
-
-    <script>
-        const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
-        
-        /* SHIFT TO THE AIRCRAFT-PICS DIRECTORY */
-        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
-        
-        const clean = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-
-        async function initiateSystem() {
-            document.getElementById('bar-fill').style.width = '100%';
-            const statusBox = document.getElementById('status-update');
-            setTimeout(() => { document.getElementById('comms-vis').style.opacity = '1'; }, 300);
-            setTimeout(() => { statusBox.innerText = "ESTABLISHING SECURE SATCOM LINK..."; }, 200);
-            setTimeout(() => { statusBox.innerText = "DECRYPTING AIR-WING MANIFEST..."; }, 800);
-            setTimeout(() => { statusBox.innerText = "AUTHENTICATING VETERAN CREDENTIALS..."; }, 1500);
-
-            try {
-                const [regRes, treeRes, edgeRes] = await Promise.all([
-                    fetch('./SP_Registry_CANON_3_31.csv'),
-                    fetch('./usa_tree_v4.json'),
-                    fetch('./usa_tree_pass2_edges.csv')
-                ]);
-
-                const regText = await regRes.text();
-                const treeData = await treeRes.json();
-                const edgeText = await edgeRes.text();
-                const registry = {};
-
-                regText.split('\n').slice(1).forEach(row => {
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (cols.length > 3) {
-                        const img = cols[2]?.replace(/"/g, '').trim();
-                        [cols[0], cols[3], cols[6], cols[14]].forEach(val => {
-                            if (val) registry[clean(val)] = img;
-                        });
-                    }
-                });
-
-                const theater = document.getElementById('research-theater');
-                [1,2,3,4,5,6,7
+        <h1 class="main-title
