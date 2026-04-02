@@ -6,9 +6,9 @@
     <title>THE CAOC | COMBINED AIR OPERATIONS CENTER</title>
     
     <style>
-        /* 1. THE HULL: Seamless metal skin */
+        /* 1. THE HULL: Seamless metal skin with the space-fix for "metal background.png" */
         body { 
-            background: #1a1a1a url('metal_background.png') no-repeat center center fixed; 
+            background: #1a1a1a url('metal%20background.png') no-repeat center center fixed; 
             background-size: cover;
             color: #00ff00; 
             font-family: 'Courier New', monospace; 
@@ -19,74 +19,104 @@
             flex-direction: column;
         }
 
-        /* 2. THE HEADER: No border, no background, just the assets */
+        /* 2. THE HEADER: Transparent background to let the metal flow through */
         .header { 
-            display: flex; justify-content: space-between; align-items: center; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
             padding: 20px 40px; 
-            background: transparent; /* No dark bar on top */
+            background: transparent; 
             flex-shrink: 0;
-            border-bottom: none; /* REMOVED THE SEPARATION LINE */
+            border-bottom: none; /* Removed the separation line */
         }
 
+        /* Logos at the "Perfect" 300% size */
         .logo-video { 
-            width: 300px; height: 300px; 
-            border: 4px solid #00ff00; border-radius: 50%; 
-            object-fit: cover; box-shadow: 0 0 40px rgba(0, 255, 0, 0.6);
+            width: 380px; 
+            height: 380px; 
+            border: 4px solid #00ff00; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.6);
+            flex-shrink: 0;
             background: #000;
         }
 
-        .center-box { text-align: center; flex-grow: 1; margin: 0 20px; }
-
-        .main-banner {
-            width: 100%; max-width: 750px; 
-            border: 3px solid #00ff00;
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+        .center-box { 
+            text-align: center; 
+            flex-grow: 1; 
+            margin: 0 30px; 
         }
 
-        /* 3. BIGGER TEXT: 5.5em for the title, 1.8em for slogan */
+        .main-banner {
+            width: 100%; 
+            max-width: 850px; 
+            height: auto;
+            border: 3px solid #00ff00;
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.3);
+        }
+
+        /* 3. BIGGER TEXT: Massive Title and Slogan */
         h1 { 
             margin: 20px 0 5px 0; 
             letter-spacing: 25px; 
-            font-size: 5.5em; /* INCREASED SIZE */
+            font-size: 5.5em; 
             text-transform: uppercase;
-            text-shadow: 0 0 20px #000, 0 0 10px #00ff00; /* Glow effect */
+            text-shadow: 0 0 20px #000, 0 0 10px #00ff00;
         }
 
         .slogan {
             margin: 0; 
             color: #00ff00; 
             font-weight: bold; 
-            letter-spacing: 12px; /* WIDER SPACING */
-            font-size: 1.8em; /* INCREASED SIZE */
+            letter-spacing: 12px; 
+            font-size: 1.8em; 
             text-transform: uppercase;
         }
 
-        /* 4. BUTTONS: Floating on the metal */
+        /* 4. NAVIGATION: Transparent background grid centered on the metal */
         .nav-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 30px; padding: 30px 60px; 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 30px; 
+            padding: 30px 60px; 
             max-width: 1400px; 
             margin: auto auto; 
             width: 100%; 
             background: transparent; 
+            box-sizing: border-box;
         }
 
         .nav-btn { 
             background: rgba(0, 0, 0, 0.85); 
             border: 3px solid #00ff00; 
-            color: #00ff00; padding: 30px; text-align: center; 
-            text-decoration: none; font-weight: bold; font-size: 1.6em;
+            color: #00ff00; 
+            padding: 30px; 
+            text-align: center; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 1.6em;
             box-shadow: 10px 10px 0px #004400;
             transition: 0.3s;
+            text-transform: uppercase;
         }
 
         .nav-btn:hover { 
-            background: #00ff00; color: #000; 
+            background: #00ff00; 
+            color: #000; 
             box-shadow: 0 0 40px #00ff00; 
             transform: scale(1.05); 
         }
 
-        .rivet { width: 14px; height: 14px; background: #666; border-radius: 50%; position: absolute; box-shadow: inset 2px 2px 4px #000; border: 1px solid #333; }
+        /* Hardware Details: Rivets in the corners */
+        .rivet { 
+            width: 14px; height: 14px; 
+            background: #666; border-radius: 50%; 
+            position: absolute; 
+            box-shadow: inset 2px 2px 4px #000; 
+            border: 1px solid #333; 
+            z-index: 10; 
+        }
     </style>
 </head>
 <body>
@@ -116,7 +146,7 @@
 
     <div class="nav-grid">
         <a href="#" class="nav-btn">NORDEN II</a>
-        <a href="#" class="nav-btn">RESEARCH TREES</a>
+        <a href="research.html" class="nav-btn">RESEARCH TREES</a>
         <a href="#" class="nav-btn">THE ARMORY</a>
     </div>
 
