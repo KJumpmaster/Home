@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>THE CAOC | USA RESEARCH TREE</title>
     <style>
-        /* 1. THE HULL: Consistent Metal Skin */
+        /* 1. THE HULL: Aircraft Skin Background */
         body { 
             background: #1a1a1a url('metal%20background.png') no-repeat center center fixed; 
             background-size: cover;
@@ -16,55 +17,69 @@
 
         /* 2. USA STRATEGIC BANNER */
         .usa-hero {
-            width: 100%; height: 220px;
+            width: 100%; height: 200px;
             overflow: hidden; border-bottom: 4px solid #00ff00;
             position: relative; background: #000;
         }
 
-        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
+        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
 
         .title-overlay { 
             position: absolute; bottom: 20px; left: 40px; 
             text-shadow: 0 0 20px #000; 
         }
 
-        /* 3. THE RESEARCH GRID */
-        .tree-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr); /* Standard 5-column WT Layout */
-            gap: 20px; padding: 40px;
+        /* 3. THE RESEARCH THEATER: 5-Column Tactical Grid */
+        .tree-viewport {
+            padding: 40px; display: flex; flex-direction: column; gap: 80px;
             max-width: 1600px; margin: 0 auto;
         }
 
-        .rank-header {
-            grid-column: 1 / -1;
-            background: rgba(0, 255, 0, 0.1);
-            padding: 15px; font-size: 2.5em; letter-spacing: 12px;
-            border-left: 15px solid #00ff00; margin-top: 50px;
-            text-transform: uppercase; text-shadow: 0 0 10px #00ff00;
+        .rank-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* Standard 5-column WT Layout */
+            grid-auto-rows: 140px;
+            gap: 25px;
+            position: relative;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.4);
+            border-left: 12px solid #00ff00;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
         }
 
-        /* 4. VEHICLE CARDS: Linked via Master Key */
+        .rank-label { 
+            font-size: 4em; font-weight: bold; color: rgba(0, 255, 0, 0.15);
+            position: absolute; left: -80px; top: 50%; 
+            transform: translateY(-50%) rotate(-90deg);
+            white-space: nowrap;
+            letter-spacing: 15px;
+        }
+
+        /* 4. VEHICLE CARDS */
         .v-card {
-            background: rgba(10, 10, 10, 0.9);
-            border: 2px solid #333; padding: 15px;
-            text-align: center; transition: 0.3s;
-            cursor: pointer; box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid #333; padding: 12px;
+            text-align: center; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: 0.3s;
+            box-shadow: 8px 8px 15px rgba(0,0,0,0.7);
         }
 
         .v-card:hover { 
-            border-color: #00ff00; box-shadow: 0 0 25px #00ff00; 
-            transform: translateY(-8px); 
+            border-color: #00ff00; box-shadow: 0 0 30px #00ff00; 
+            transform: translateY(-5px) scale(1.03); 
+            z-index: 10;
         }
 
         .v-img {
-            width: 100%; height: 110px;
-            object-fit: contain; filter: drop-shadow(0 0 8px rgba(0,255,0,0.3));
+            width: 100%; height: 80px;
+            object-fit: contain; filter: drop-shadow(0 0 5px rgba(0,255,0,0.4));
         }
 
         .v-name { 
-            margin-top: 12px; font-size: 0.9em; font-weight: bold; 
+            margin-top: 10px; font-size: 0.75em; font-weight: bold; 
             color: #fff; text-transform: uppercase; letter-spacing: 1px;
+            line-height: 1.2;
         }
 
         .back-btn {
@@ -72,82 +87,10 @@
             background: #000; border: 3px solid #00ff00;
             color: #00ff00; padding: 15px 30px;
             text-decoration: none; font-weight: bold; font-size: 1.2em;
-            box-shadow: 5px 5px 0px #004400; z-index: 100;
+            box-shadow: 5px 5px 0px #004400; z-index: 1000;
         }
     </style>
 </head>
 <body>
 
-    <div class="usa-hero">
-        <video class="usa-banner-video" autoplay muted loop playsinline>
-            <source src="usa_banner.mp4" type="video/mp4">
-        </video>
-        <div class="title-overlay">
-            <h1 style="font-size: 4.5em; margin: 0; letter-spacing: 20px;">USA AIR BRANCH</h1>
-            <p style="letter-spacing: 6px; font-weight: bold; color: #00ff00;">MASTER KEY SYNC: ONLINE</p>
-        </div>
-    </div>
-
-    <div class="tree-grid" id="usa-tree-viewport">
-        </div>
-
-    <a href="index.html" class="back-btn">RETURN TO COMMAND</a>
-
-    <script>
-        async function initiateMasterKeySync() {
-            try {
-                // PHASE 1: Load the Registry (The Intel Depot)
-                const regResponse = await fetch('SP_Registry_CANON_3_31.csv');
-                const regText = await regResponse.text();
-                const regRows = regText.split('\n').slice(1);
-                
-                const registryMap = {};
-                regRows.forEach(row => {
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (cols.length >= 15) {
-                        const wikiName = cols[14]?.replace(/"/g, '').trim(); // Col 15
-                        const imageName = cols[2]?.replace(/"/g, '').trim(); // Col 3
-                        if (wikiName) registryMap[wikiName] = imageName;
-                    }
-                });
-
-                // PHASE 2: Load the USA Tree Map (The Operational Layout)
-                const treeResponse = await fetch('usa_tree_v4.json');
-                const treeData = await treeResponse.json();
-                const viewport = document.getElementById('usa-tree-viewport');
-                const picBase = "https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/";
-
-                // PHASE 3: Link the Map to the Intel
-                // This assumes your JSON has a "vehicles" array or similar structure
-                // We'll iterate through the items in your JSON
-                treeData.forEach(vehicle => {
-                    // Check if this item is a Rank Header or a Vehicle
-                    if (vehicle.type === "rank_header") {
-                        const header = document.createElement('div');
-                        header.className = 'rank-header';
-                        header.innerText = vehicle.name;
-                        viewport.appendChild(header);
-                    } else {
-                        const vName = vehicle.name; // The link key
-                        const vIcon = registryMap[vName] || 'placeholder.png';
-
-                        const card = document.createElement('div');
-                        card.className = 'v-card';
-                        card.innerHTML = `
-                            <img src="${picBase}${vIcon}" class="v-img" alt="${vName}" 
-                                 onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=MISSING+LINK';">
-                            <div class="v-name">${vName}</div>
-                        `;
-                        viewport.appendChild(card);
-                    }
-                });
-
-            } catch (err) {
-                console.error("CRITICAL SYNC ERROR:", err);
-            }
-        }
-        initiateMasterKeySync();
-    </script>
-
-</body>
-</html>
+    <div class="usa-hero
