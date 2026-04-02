@@ -6,9 +6,9 @@
     <title>THE CAOC | COMBINED AIR OPERATIONS CENTER</title>
     
     <style>
-        /* Updated to match your exact filename: metal_background.png */
+        /* The "Premium" Background Logic */
         body { 
-            background-image: url('metal_background.png'); 
+            background-image: url('metal_skin.jpg'); /* Ensure your file is named this */
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
@@ -16,16 +16,16 @@
             color: #00ff00; 
             font-family: 'Courier New', monospace; 
             margin: 0; padding: 0; 
-            overflow: hidden; 
+            overflow: hidden; /* Locks it to one page */
             height: 100vh;
         }
 
-        /* The Premium Tinted Overlay */
+        /* The Subtle Tinted Overlay */
         body::before {
             content: "";
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.35); 
+            background: rgba(0, 0, 0, 0.35); /* Slightly darker for better text contrast */
             pointer-events: none;
             z-index: -1;
         }
@@ -34,13 +34,13 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            padding: 20px 40px; 
+            padding: 30px 50px; 
             border-bottom: 4px solid #00ff00;
             background: rgba(0, 0, 0, 0.5); 
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
 
-        /* Logos at the "Perfect" 300% size */
+        /* Logos at 300% (Approx 380px) */
         .logo-video { 
             width: 380px; 
             height: 380px; 
@@ -55,21 +55,22 @@
         .center-box { 
             text-align: center; 
             flex-grow: 1; 
-            margin: 0 30px; 
+            margin: 0 40px; 
         }
 
+        /* Massive Stretched Banner */
         .main-banner {
             width: 100%; 
-            max-width: 900px; 
+            max-width: 1000px; 
             height: auto;
             border: 3px solid #00ff00; 
             box-shadow: 0 0 50px rgba(0, 255, 0, 0.3);
         }
 
         h1 { 
-            margin: 15px 0 0 0; 
-            letter-spacing: 18px; 
-            font-size: 4em; 
+            margin: 20px 0 0 0; 
+            letter-spacing: 20px; 
+            font-size: 4.5em; 
             text-transform: uppercase;
             text-shadow: 0 0 20px #00ff00;
         }
@@ -77,8 +78,8 @@
         .nav-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 25px; 
-            padding: 30px 50px; 
+            gap: 30px; 
+            padding: 50px; 
             max-width: 1400px; 
             margin: 0 auto; 
         }
@@ -87,20 +88,20 @@
             background: rgba(10, 10, 10, 0.85); 
             border: 3px solid #00ff00; 
             color: #00ff00; 
-            padding: 20px; 
+            padding: 30px; 
             text-align: center; 
             text-decoration: none; 
             font-weight: bold; 
-            font-size: 1.4em;
+            font-size: 1.5em;
             transition: 0.3s;
-            box-shadow: 6px 6px 0px #004400;
+            box-shadow: 8px 8px 0px #004400;
         }
 
         .nav-btn:hover { 
             background: #00ff00; 
             color: #000; 
             box-shadow: 0 0 30px #00ff00;
-            transform: scale(1.03);
+            transform: scale(1.05);
         }
 
         .rivet { width: 12px; height: 12px; background: #777; border-radius: 50%; position: absolute; box-shadow: inset 2px 2px 4px #000; border: 1px solid #444; }
@@ -108,10 +109,10 @@
 </head>
 <body>
 
-    <div class="rivet" style="top: 15px; left: 15px;"></div>
-    <div class="rivet" style="top: 15px; right: 15px;"></div>
-    <div class="rivet" style="bottom: 15px; left: 15px;"></div>
-    <div class="rivet" style="bottom: 15px; right: 15px;"></div>
+    <div class="rivet" style="top: 20px; left: 20px;"></div>
+    <div class="rivet" style="top: 20px; right: 20px;"></div>
+    <div class="rivet" style="bottom: 20px; left: 20px;"></div>
+    <div class="rivet" style="bottom: 20px; right: 20px;"></div>
 
     <div class="header">
         <video class="logo-video" autoplay muted loop playsinline>
@@ -123,7 +124,7 @@
                 <source src="caoc_banner.mp4" type="video/mp4">
             </video>
             <h1>The CAOC</h1>
-            <p style="margin: 5px 0; color: #00ff00; font-weight: bold; letter-spacing: 6px; font-size: 1.1em;">COMBINED AIR OPERATIONS CENTER</p>
+            <p style="margin: 10px 0; color: #00ff00; font-weight: bold; letter-spacing: 8px; font-size: 1.2em;">COMBINED AIR OPERATIONS CENTER</p>
         </div>
 
         <video class="logo-video" autoplay muted loop playsinline>
