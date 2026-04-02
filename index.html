@@ -18,12 +18,12 @@
         }
         .logo-video { 
             width: 130px; height: 130px; border: 2px solid #00ff00; border-radius: 50%; 
-            object-fit: cover; background: #111; /* Placeholder color if video fails */
+            object-fit: cover; background: #111;
         }
         .center-box { text-align: center; flex-grow: 1; margin: 0 20px; }
         .main-banner {
             width: 100%; max-width: 600px; border: 2px solid #00ff00; 
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.5);
         }
         .nav-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
@@ -35,13 +35,17 @@
             font-weight: bold; transition: 0.3s; cursor: pointer;
         }
         .nav-btn:hover { background: #00ff00; color: #000; box-shadow: 0 0 20px #00ff00; }
+        
+        /* Ensures videos fill their circular frames */
+        video { background: black; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <video class="logo-video" autoplay muted loop playsinline>
+        <video class="logo-video" autoplay muted loop playsinline poster="https://raw.githubusercontent.com/KJumpmaster/terrain/main/Norden_II_Logo.mp4">
             <source src="https://raw.githubusercontent.com/KJumpmaster/terrain/main/Norden_II_Logo.mp4" type="video/mp4">
+            Your browser does not support the video tag.
         </video>
 
         <div class="center-box">
@@ -62,6 +66,10 @@
         <a href="#" class="nav-btn">NORDEN II SYSTEM</a>
         <a href="#" class="nav-btn">RESEARCH TREES</a>
         <a href="#" class="nav-btn">THE ARMORY</a>
+    </div>
+
+    <div style="text-align: center; padding: 20px; color: #333; font-size: 10px;">
+        AZURE B1 NODE • EST. 2026 • MISSION READY
     </div>
 
 </body>
