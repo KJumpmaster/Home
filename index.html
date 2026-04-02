@@ -3,54 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.K.Y.P.I.L.O.T. MISSION CONTROL</title>
+    <title>CAOC_WT | COMBINED AIR OPERATIONS CENTER</title>
     
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.104/Build/Cesium/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.104/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-
     <style>
-        body { background-color: #0a0a0a; color: #00ff00; font-family: 'Courier New', monospace; margin: 0; padding: 20px; }
-        .header { border-bottom: 2px solid #00ff00; padding: 10px; text-align: center; margin-bottom: 20px; }
-        .nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .nav-btn { background: #222; border: 1px solid #00ff00; color: #00ff00; padding: 15px; text-align: center; text-decoration: none; font-weight: bold; cursor: pointer; }
-        .nav-btn:hover { background: #00ff00; color: #000; }
-        #cesiumContainer { width: 100%; height: 500px; border: 2px solid #333; border-radius: 5px; }
-        .health-status { font-size: 12px; color: #888; text-align: right; margin-top: 10px; }
+        /* Tactical Styling for CAOC Interface */
+        body { 
+            background-color: #0a0a0a; 
+            color: #00ff00; 
+            font-family: 'Courier New', monospace; 
+            margin: 0; 
+            padding: 0; 
+            overflow-x: hidden; 
+        }
+
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 20px; 
+            border-bottom: 2px solid #00ff00; 
+            background: rgba(0, 255, 0, 0.05); 
+        }
+
+        .logo-video { 
+            width: 120px; 
+            height: 120px; 
+            border: 2px solid #00ff00; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+        }
+
+        .center-banner-box {
+            text-align: center; 
+            flex-grow: 1; 
+            margin: 0 20px;
+        }
+
+        .main-caoc-video {
+            width: 100%; 
+            max-width: 550px; 
+            border: 2px solid #00ff00; 
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .nav-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 20px; 
+            padding: 30px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+        }
+
+        .nav-btn { 
+            background: #111; 
+            border: 1px solid #00ff00; 
+            color: #00ff00; 
+            padding: 25px; 
+            text-align: center; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 1.1em;
+            transition: 0.3s; 
+            cursor: pointer;
+        }
+
+        .nav-btn:hover { 
+            background: #00ff00; 
+            color: #000; 
+            box-shadow: 0 0 20px #00ff00; 
+        }
+
+        .footer-status {
+            border-top: 1px solid #333;
+            padding: 15px 30px;
+            font-size: 12px;
+            color: #444;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="header">
-        <h1>S.K.Y.P.I.L.O.T. HUB</h1>
-        <p>SYSTEM REFRESH: APRIL 2026</p>
+        
+        <video class="logo-video" autoplay muted loop>
+            <source src="https://raw.githubusercontent.com/KJumpmaster/terrain/main/Norden_II_Logo.mp4" type="video/mp4">
+        </video>
+
+        <div class="center-banner-box">
+            <video class="main-caoc-video" autoplay muted loop>
+                <source src="https://raw.githubusercontent.com/KJumpmaster/terrain/main/caoc_banner.mp4" type="video/mp4">
+            </video>
+            <h1 style="margin: 15px 0 5px 0; letter-spacing: 10px; font-size: 3em;">CAOC_WT</h1>
+            <p style="margin: 0; color: #008800; font-weight: bold; letter-spacing: 3px;">COMBINED AIR OPERATIONS CENTER</p>
+            <p style="font-size: 14px; color: #666; margin-top: 5px;">QUESTION → ANSWER = DONE</p>
+        </div>
+
+        <video class="logo-video" autoplay muted loop>
+            <source src="https://raw.githubusercontent.com/KJumpmaster/terrain/main/SKY_PILOT_LOGO.mp4" type="video/mp4">
+        </video>
+
     </div>
 
     <div class="nav-grid">
-        <div class="nav-btn">NORDEN II</div>
-        <div class="nav-btn">SKYPILOT (INV)</div>
-        <div class="nav-btn">THE ARMORY</div>
+        <a href="#" class="nav-btn">NORDEN II SYSTEM</a>
+        <a href="#" class="nav-btn">RESEARCH TREES</a>
+        <a href="#" class="nav-btn">THE ARMORY</a>
     </div>
 
-    <div id="cesiumContainer"></div>
+    <div class="footer-status">
+        <div>AZURE B1 SERVER: ONLINE</div>
+        <div>DATA SOURCE: WT_SDK_RECON</div>
+        <div>EST. 2026 | BLESSED FOR PRECISION</div>
+    </div>
 
-    <div class="health-status">PROBE PATH: / | STATUS: ONLINE</div>
-
-    <script>
-        Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNDI0ZmM0Ny0wYzM4LTQwOTAtYTBlYi1kOWU1MTVhMjM5NmUiLCJpZCI6NDEyNTQ1LCJpYXQiOjE3NzUwODA5MjZ9.M2ZCrF-qVaLIKI4d8tYMPSPEYMdQBV8sDQN1u9IAAPU';
-
-        // 1. First, we create the 'viewer' (The Cockpit)
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-        terrainProvider: new Cesium.ImageLayerTerrainProvider({
-        url: 'https://github.com/KJumpmaster/Terrain/raw/refs/heads/main/lightmap.tga',
-        heightScale: 200,
-        requestVertexNormals: true
-})
-});
-
-        // 2. Then, we tell the camera where to fly (The Mission)
-        viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(0.0, 0.0, 15000.0) // 0,0 is the default "Drop Zone"
-});
-        </script>
 </body>
 </html>
