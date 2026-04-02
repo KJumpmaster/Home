@@ -38,10 +38,11 @@
     <script>
         Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNDI0ZmM0Ny0wYzM4LTQwOTAtYTBlYi1kOWU1MTVhMjM5NmUiLCJpZCI6NDEyNTQ1LCJpYXQiOjE3NzUwODA5MjZ9.M2ZCrF-qVaLIKI4d8tYMPSPEYMdQBV8sDQN1u9IAAPU';
         
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: Cesium.createWorldTerrain(),
-            sceneModePicker: false,
-            baseLayerPicker: false
+          // This tells Cesium to pull the War Thunder map from your new repo
+            viewer.terrainProvider = new Cesium.ImageLayerTerrainProvider({
+             url : 'https://github.com/KJumpmaster/Terrain/raw/refs/heads/main/lightmap.tga', 
+             heightScale: 200,   // The "Golden Number" from your SDK recon!
+             requestVertexNormals : true
         });
 
         viewer.camera.flyTo({
