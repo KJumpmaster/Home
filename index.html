@@ -6,10 +6,14 @@
     <title>THE CAOC | COMBINED AIR OPERATIONS CENTER</title>
     
     <style>
-        /* MAIN INTERFACE: Direct link to bypass filename space issues */
+        /* STRIPPED DOWN BACKGROUND: No overlays, no fancy tint */
         body { 
-            background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal%20background.png') no-repeat center center fixed; 
+            background-color: #1a1a1a; /* Dark grey fallback */
+            background-image: url('metal%20background.png'); 
             background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
             color: #00ff00; 
             font-family: 'Courier New', monospace; 
             margin: 0; padding: 0; 
@@ -19,74 +23,54 @@
             flex-direction: column;
         }
 
-        /* PREMIUM TINT: The dark cockpit canopy effect */
-        body::before {
-            content: ""; position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.45); 
-            pointer-events: none; z-index: -1;
-        }
-
-        /* COMMAND HEADER: Locked at 30% of screen height */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 10px 40px; 
+            padding: 15px 40px; 
             border-bottom: 4px solid #00ff00;
-            background: rgba(0, 0, 0, 0.75); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            background: rgba(0, 0, 0, 0.8); /* Solid dark bar for contrast */
             flex-shrink: 0;
         }
 
-        /* LOGOS: 300px Precision Balanced */
         .logo-video { 
             width: 300px; height: 300px; 
             border: 4px solid #00ff00; border-radius: 50%; 
-            object-fit: cover; box-shadow: 0 0 35px rgba(0, 255, 0, 0.6);
-            background: #000;
+            object-fit: cover; box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
         }
 
-        .center-box { text-align: center; flex-grow: 1; margin: 0 30px; }
+        .center-box { text-align: center; flex-grow: 1; margin: 0 20px; }
 
         .main-banner {
             width: 100%; max-width: 650px; 
             border: 2px solid #00ff00;
-            box-shadow: 0 0 40px rgba(0, 255, 0, 0.3);
         }
 
-        h1 { margin: 10px 0 0 0; letter-spacing: 15px; font-size: 3.5em; text-transform: uppercase; text-shadow: 0 0 20px #00ff00; }
+        h1 { margin: 10px 0 0 0; letter-spacing: 15px; font-size: 3.5em; text-transform: uppercase; }
 
-        /* TACTICAL NAVIGATION: Centered in the remaining airspace */
         .nav-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 25px; padding: 20px 50px; 
-            max-width: 1300px; margin: auto auto; 
+            gap: 20px; padding: 30px; 
+            max-width: 1200px; margin: auto auto; 
             width: 100%; box-sizing: border-box;
         }
 
         .nav-btn { 
-            background: rgba(10, 10, 10, 0.9); border: 3px solid #00ff00; 
+            background: #111; border: 3px solid #00ff00; 
             color: #00ff00; padding: 25px; text-align: center; 
-            text-decoration: none; font-weight: bold; font-size: 1.5em;
-            box-shadow: 8px 8px 0px #004400;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-transform: uppercase;
+            text-decoration: none; font-weight: bold; font-size: 1.4em;
+            box-shadow: 6px 6px 0px #004400;
         }
 
-        .nav-btn:hover { 
-            background: #00ff00; color: #000; 
-            box-shadow: 0 0 30px #00ff00; 
-            transform: scale(1.05) translateY(-5px); 
-        }
+        .nav-btn:hover { background: #00ff00; color: #000; }
 
-        /* HARDWARE DETAIL: Industrial Rivets */
-        .rivet { width: 12px; height: 12px; background: #666; border-radius: 50%; position: absolute; box-shadow: inset 2px 2px 4px #000; border: 1px solid #444; z-index: 10; }
+        .rivet { width: 10px; height: 10px; background: #444; border-radius: 50%; position: absolute; box-shadow: inset 1px 1px 2px #000; }
     </style>
 </head>
 <body>
 
-    <div class="rivet" style="top: 15px; left: 15px;"></div>
-    <div class="rivet" style="top: 15px; right: 15px;"></div>
-    <div class="rivet" style="bottom: 15px; left: 15px;"></div>
-    <div class="rivet" style="bottom: 15px; right: 15px;"></div>
+    <div class="rivet" style="top: 10px; left: 10px;"></div>
+    <div class="rivet" style="top: 10px; right: 10px;"></div>
+    <div class="rivet" style="bottom: 10px; left: 10px;"></div>
+    <div class="rivet" style="bottom: 10px; right: 10px;"></div>
 
     <div class="header">
         <video class="logo-video" autoplay muted loop playsinline>
@@ -98,8 +82,7 @@
                 <source src="caoc_banner.mp4" type="video/mp4">
             </video>
             <h1>The CAOC</h1>
-            <p style="margin: 5px 0; color: #00ff00; font-weight: bold; letter-spacing: 6px; font-size: 1.1em;">COMBINED AIR OPERATIONS CENTER</p>
-            <p style="font-size: 12px; color: #555; letter-spacing: 2px;">QUESTION → ANSWER = DONE</p>
+            <p style="margin: 0; font-weight: bold; letter-spacing: 5px;">COMBINED AIR OPERATIONS CENTER</p>
         </div>
 
         <video class="logo-video" autoplay muted loop playsinline>
