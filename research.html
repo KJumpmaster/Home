@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE CAOC | USA RESEARCH TREE</title>
+    <title>THE CAOC | USA AIR WING TDL</title>
     <style>
-        /* 1. THE HULL: Aircraft Skin Background */
+        /* THE HULL: Dark Metal Background */
         body { 
-            background: #1a1a1a url('metal%20background.png') no-repeat center center fixed; 
+            background: #0a0a0a url('metal%20background.png') no-repeat center center fixed; 
             background-size: cover;
             color: #00ff00; 
             font-family: 'Courier New', monospace; 
@@ -15,92 +15,90 @@
             min-height: 100vh;
         }
 
-        /* 2. USA STRATEGIC BANNER */
+        /* USA STRATEGIC BANNER */
         .usa-hero {
-            width: 100%; height: 200px;
+            width: 100%; height: 220px;
             overflow: hidden; border-bottom: 4px solid #00ff00;
             position: relative; background: #000;
         }
 
-        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.5; }
 
         .title-overlay { 
-            position: absolute; bottom: 20px; left: 40px; 
-            text-shadow: 0 0 20px #000; 
+            position: absolute; bottom: 25px; left: 45px; 
+            text-shadow: 0 0 25px #000; 
         }
 
-        /* 3. THE RESEARCH THEATER */
+        /* THE RESEARCH THEATER */
         .tree-viewport {
-            padding: 60px 80px; display: flex; flex-direction: column; gap: 100px;
-            max-width: 1800px; margin: 0 auto;
+            padding: 60px 80px; display: flex; flex-direction: column; gap: 110px;
+            max-width: 1900px; margin: 0 auto;
         }
 
         .rank-wrapper { display: flex; align-items: stretch; position: relative; }
 
         /* ROMAN NUMERAL SIDEBARS */
         .rank-sidebar {
-            font-size: 6em; font-weight: bold; color: rgba(0, 255, 0, 0.08);
+            font-size: 5em; font-weight: bold; color: rgba(0, 255, 0, 0.07);
             writing-mode: vertical-rl; text-orientation: upright;
-            padding: 20px; letter-spacing: -10px; display: flex; align-items: center;
-            user-select: none;
+            padding: 25px; letter-spacing: -12px; display: flex; align-items: center;
+            user-select: none; white-space: nowrap;
         }
 
         .rank-container {
             flex-grow: 1; display: grid; 
-            grid-template-columns: repeat(7, 1fr); /* 7 Columns to handle Premium/Event wings */
-            grid-auto-rows: 150px;
-            gap: 25px;
+            grid-template-columns: repeat(7, 1fr); 
+            grid-auto-rows: 160px;
+            gap: 28px;
             position: relative;
-            padding: 40px;
-            background: rgba(0, 0, 0, 0.5);
+            padding: 45px;
+            background: rgba(0, 0, 0, 0.6); /* DARKER for eye protection */
             border: 1px solid rgba(0, 255, 0, 0.2);
-            box-shadow: inset 0 0 60px rgba(0,0,0,0.9);
+            box-shadow: inset 0 0 80px rgba(0,0,0,1);
         }
 
-        /* ARROW SVG LAYER */
         .arrow-svg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 1;
         }
 
-        /* 4. VEHICLE CARDS */
+        /* VEHICLE CARDS */
         .v-card {
-            background: rgba(10, 10, 10, 0.95);
-            border: 2px solid #333; padding: 12px;
+            background: rgba(5, 5, 5, 0.98); /* DEEP DARK CARDS */
+            border: 2px solid #222; padding: 14px;
             text-align: center; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            transition: 0.3s;
-            box-shadow: 8px 8px 15px rgba(0,0,0,0.7);
-            z-index: 10;
-            position: relative;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.9);
+            z-index: 10; position: relative;
         }
 
         .v-card:hover { 
-            border-color: #00ff00; box-shadow: 0 0 25px #00ff00; 
-            transform: translateY(-5px) scale(1.03); 
-            z-index: 50;
+            border-color: #00ff00; box-shadow: 0 0 35px #00ff00; 
+            transform: translateY(-8px) scale(1.04); 
+            z-index: 100;
         }
 
-        .premium { border: 2px solid #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
-        .squadron { border: 2px solid #55efc4; box-shadow: 0 0 15px rgba(85, 239, 196, 0.3); }
+        .premium { border: 2px solid #d4af37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+        .squadron { border: 2px solid #55efc4; box-shadow: 0 0 20px rgba(85, 239, 196, 0.2); }
 
         .v-img {
-            width: 100%; height: 85px;
-            object-fit: contain; filter: drop-shadow(0 0 5px rgba(0,255,0,0.3));
+            width: 100%; height: 90px;
+            object-fit: contain; filter: drop-shadow(0 0 8px rgba(0,255,0,0.25));
         }
 
         .v-name { 
-            margin-top: 8px; font-size: 0.75em; font-weight: bold; 
-            color: #fff; text-transform: uppercase; letter-spacing: 1px;
-            line-height: 1.1;
+            margin-top: 10px; font-size: 0.72em; font-weight: bold; 
+            color: #e0e0e0; text-transform: uppercase; letter-spacing: 1.5px;
+            line-height: 1.2;
         }
 
         .back-btn {
-            position: fixed; bottom: 30px; left: 30px;
+            position: fixed; bottom: 35px; left: 35px;
             background: #000; border: 3px solid #00ff00;
-            color: #00ff00; padding: 15px 30px;
-            text-decoration: none; font-weight: bold; font-size: 1.2em;
-            box-shadow: 5px 5px 0px #004400; z-index: 1000;
+            color: #00ff00; padding: 18px 35px;
+            text-decoration: none; font-weight: bold; font-size: 1.3em;
+            box-shadow: 6px 6px 0px #004400; z-index: 1000;
         }
     </style>
 </head>
@@ -108,11 +106,11 @@
 
     <div class="usa-hero">
         <video class="usa-banner-video" autoplay muted loop playsinline>
-            <source src="usa_banner.mp4" type="video/mp4">
+            <source src="USA Banner.mp4" type="video/mp4">
         </video>
         <div class="title-overlay">
-            <h1 style="font-size: 4em; margin: 0; letter-spacing: 15px;">USA AIR BRANCH</h1>
-            <p style="letter-spacing: 5px; font-weight: bold; color: #00ff00;">TACTICAL DATA LINK: ONLINE | RANKS I - IX</p>
+            <h1 style="font-size: 4.2em; margin: 0; letter-spacing: 18px;">USA AIR WING TDL</h1>
+            <p style="letter-spacing: 6px; font-weight: bold; color: #00ff00; margin-top: 5px;">COMMAND & CONTROL | RESEARCH GRID</p>
         </div>
     </div>
 
@@ -125,12 +123,8 @@
         const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/";
         const GHOST_UNITS = ["xf5f", "placeholder", "empty_"];
 
-        // Deep Scan Cleaner: Strips special characters for better matching
-        const clean = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-
         async function initiateSystem() {
             try {
-                // 1. FETCH INTEL
                 const [regRes, treeRes, edgeRes] = await Promise.all([
                     fetch('./SP_Registry_CANON_3_31.csv'),
                     fetch('./usa_tree_v4.json'),
@@ -142,25 +136,26 @@
                 const edgeText = await edgeRes.text();
                 const registry = {};
 
-                // 2. BUILD THE DEEP SCAN MAP
+                // 1. REGISTRY MAPPING: Nation -> Group/Master -> Image
                 regText.split('\n').slice(1).forEach(row => {
                     const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (cols.length > 14) {
-                        const img = cols[2]?.replace(/"/g, '').trim();
-                        // Map Col 1, 4, 7, and 15
-                        [cols[0], cols[3], cols[6], cols[14]].forEach(val => {
-                            if (val) registry[clean(val)] = img;
-                        });
+                    if (cols.length > 3) {
+                        const nation = cols[1]?.replace(/"/g, '').trim().toLowerCase();
+                        if (nation === "usa") {
+                            const imageName = cols[2]?.replace(/"/g, '').trim(); 
+                            const masterKey = cols[0]?.replace(/"/g, '').trim();
+                            if (masterKey) registry[masterKey] = imageName;
+                        }
                     }
                 });
 
                 const theater = document.getElementById('research-theater');
 
-                // 3. DEPLOY RANKS
+                // 2. BUILD BY RANK
                 [1,2,3,4,5,6,7,8,9].forEach(r => {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'rank-wrapper';
-                    wrapper.innerHTML = `<div class="rank-sidebar">${ROMAN[r]}</div>`;
+                    wrapper.innerHTML = `<div class="rank-sidebar">Rank ${ROMAN[r]}</div>`;
 
                     const container = document.createElement('div');
                     container.className = 'rank-container';
@@ -171,17 +166,16 @@
                     svg.id = `svg-rank-${r}`;
                     container.appendChild(svg);
 
-                    // Filter cells for this rank and EXORCISE THE GHOSTS
                     const cells = treeData.cells.filter(c => {
                         const isGhost = GHOST_UNITS.some(g => c.cell_id.toLowerCase().includes(g));
                         return c.rank === r && !isGhost;
                     });
 
                     cells.forEach(cell => {
-                        const icon = registry[clean(cell.cell_id)] || registry[clean(cell.display_name)] || 'placeholder.png';
-                        const card = document.createElement('div');
+                        // IMAGE SELECTION: Check for direct cell_id first, then group name
+                        const imageName = registry[cell.cell_id] || registry[cell.display_name] || 'placeholder.png';
                         
-                        // Flag styling
+                        const card = document.createElement('div');
                         let special = "";
                         if(cell.flags.is_premium || cell.flags.is_pack) special = "premium";
                         else if(cell.flags.is_squadron || cell.flags.is_event) special = "squadron";
@@ -194,7 +188,7 @@
                         const dName = (cell.display_name || cell.cell_id).replace(/_/g, ' ');
 
                         card.innerHTML = `
-                            <img src="${PIC_BASE}${icon}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
+                            <img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
                             <div class="v-name">${dName}</div>
                         `;
                         container.appendChild(card);
@@ -202,55 +196,49 @@
 
                     const rightBar = document.createElement('div');
                     rightBar.className = 'rank-sidebar';
-                    rightBar.innerText = ROMAN[r];
+                    rightBar.innerText = `Rank ${ROMAN[r]}`;
                     wrapper.appendChild(container);
                     wrapper.appendChild(rightBar);
                     theater.appendChild(wrapper);
                 });
 
-                // 4. DRAW ARROWS
-                setTimeout(() => drawArrows(edgeText), 800);
+                setTimeout(() => drawArrows(edgeText), 1000);
 
             } catch (err) { console.error("LINK FAILURE:", err); }
         }
 
         function drawArrows(csv) {
-            const lines = csv.split('\n').slice(1);
-            lines.forEach(line => {
+            csv.split('\n').slice(1).forEach(line => {
                 const cols = line.split(',');
                 if (cols.length >= 6) {
                     const fromId = cols[0].trim();
                     const toId = cols[1].trim();
-                    const fromRank = cols[4].trim();
-                    const toRank = cols[5].trim();
+                    const rank = cols[4].trim();
 
-                    if (fromRank === toRank) { // Intra-rank connections
-                        const start = document.getElementById(`unit-${fromId}`);
-                        const end = document.getElementById(`unit-${toId}`);
-                        const svg = document.getElementById(`svg-rank-${fromRank}`);
+                    const start = document.getElementById(`unit-${fromId}`);
+                    const end = document.getElementById(`unit-${toId}`);
+                    const svg = document.getElementById(`svg-rank-${rank}`);
 
-                        if (start && end && svg) {
-                            const rect = svg.getBoundingClientRect();
-                            const sRect = start.getBoundingClientRect();
-                            const eRect = end.getBoundingClientRect();
+                    if (start && end && svg) {
+                        const rect = svg.getBoundingClientRect();
+                        const sR = start.getBoundingClientRect();
+                        const eR = end.getBoundingClientRect();
 
-                            const x1 = (sRect.left + sRect.width / 2) - rect.left;
-                            const y1 = (sRect.bottom) - rect.top;
-                            const x2 = (eRect.left + eRect.width / 2) - rect.left;
-                            const y2 = (eRect.top) - rect.top;
+                        const x1 = (sR.left + sR.width / 2) - rect.left;
+                        const y1 = (sR.bottom) - rect.top;
+                        const x2 = (eR.left + eR.width / 2) - rect.left;
+                        const y2 = (eR.top) - rect.top;
 
-                            const arrow = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                            arrow.setAttribute("x1", x1); arrow.setAttribute("y1", y1);
-                            arrow.setAttribute("x2", x2); arrow.setAttribute("y2", y2);
-                            arrow.setAttribute("stroke", "rgba(0, 255, 0, 0.4)");
-                            arrow.setAttribute("stroke-width", "3");
-                            svg.appendChild(arrow);
-                        }
+                        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+                        line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+                        line.setAttribute("stroke", "rgba(0, 255, 0, 0.4)");
+                        line.setAttribute("stroke-width", "3");
+                        svg.appendChild(line);
                     }
                 }
             });
         }
-
         initiateSystem();
     </script>
 </body>
