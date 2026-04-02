@@ -1,71 +1,117 @@
-<style>
-    /* THE RESEARCH THEATER */
-    .tree-container {
-        padding: 40px;
-        display: flex;
-        flex-direction: column;
-        gap: 50px;
-        overflow-y: auto; /* Allows scrolling through the Ranks */
-        height: calc(100vh - 450px); /* Adjusts based on your massive header */
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>THE CAOC | USA RESEARCH TREE</title>
+    <style>
+        body { 
+            background: #1a1a1a url('metal_background.png') no-repeat center center fixed; 
+            background-size: cover;
+            color: #00ff00; 
+            font-family: 'Courier New', monospace; 
+            margin: 0; padding: 0;
+        }
 
-    .rank-header {
-        border-left: 10px solid #00ff00;
-        background: rgba(0, 255, 0, 0.1);
-        padding: 10px 20px;
-        font-size: 2em;
-        font-weight: bold;
-        letter-spacing: 5px;
-        text-transform: uppercase;
-    }
+        /* Small version of the header to save room for the tree */
+        .sub-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 30px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 2px solid #00ff00;
+        }
 
-    .vehicle-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr); /* 5 Columns: Standard WT Layout */
-        gap: 15px;
-    }
+        .flag-icon {
+            width: 80px;
+            height: auto;
+            border: 2px solid #00ff00;
+            margin-right: 20px;
+        }
 
-    /* THE VEHICLE CARD */
-    .vehicle-card {
-        background: rgba(10, 10, 10, 0.8);
-        border: 2px solid #444;
-        padding: 10px;
-        text-align: center;
-        transition: 0.2s;
-        cursor: pointer;
-        position: relative;
-    }
+        .tree-title {
+            font-size: 2em;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
 
-    .vehicle-card:hover {
-        border-color: #00ff00;
-        box-shadow: 0 0 15px #00ff00;
-        transform: translateY(-5px);
-    }
+        /* THE GRID: Mapping your Registry */
+        .tree-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 Columns for Fighters/Bombers */
+            gap: 15px;
+            padding: 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-    .vehicle-img {
-        width: 100%;
-        height: auto;
-        border-bottom: 1px solid #333;
-        margin-bottom: 8px;
-    }
+        .rank-divider {
+            grid-column: 1 / -1;
+            background: rgba(0, 255, 0, 0.2);
+            padding: 10px;
+            font-weight: bold;
+            font-size: 1.5em;
+            border-left: 10px solid #00ff00;
+            margin-top: 30px;
+        }
 
-    .vehicle-name {
-        font-size: 0.9em;
-        font-weight: bold;
-        color: #ddd;
-    }
-</style>
+        /* Vehicle Cards based on Col 3 (image) and Col 15 (name) */
+        .v-card {
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: center;
+            transition: 0.3s;
+        }
 
-<div class="tree-container">
-    
-    <div class="rank-section">
-        <div class="rank-header">RANK I</div>
-        <div class="vehicle-grid">
-            <div class="vehicle-card">
-                <img src="wt_pics/p_26a_34_m2.png" class="vehicle-img">
-                <div class="vehicle-name">P-26A-34 M2</div>
-            </div>
-            </div>
+        .v-card:hover {
+            border-color: #00ff00;
+            transform: scale(1.05);
+        }
+
+        .v-img {
+            width: 100%;
+            height: auto;
+            max-height: 80px;
+            object-fit: contain;
+        }
+
+        .v-name {
+            font-size: 0.8em;
+            margin-top: 10px;
+            color: #fff;
+        }
+
+        .back-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #000;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 10px 20px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sub-header">
+        <img src="usa_flag.png" class="flag-icon">
+        <div class="tree-title">USA AIR BRANCH | RANK I - IX</div>
     </div>
 
-</div>
+    <div class="tree-grid">
+        
+        <div class="rank-divider">RANK I</div>
+        <div class="v-card">
+            <img src="wt_pics/p-26a_34_m2.png" class="v-img">
+            <div class="v-name">P-26A-34 M2</div>
+        </div>
+
+        </div>
+
+    <a href="index.html" class="back-btn">RETURN TO COMMAND</a>
+
+</body>
+</html>
