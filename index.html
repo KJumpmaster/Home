@@ -6,48 +6,54 @@
     <title>THE CAOC | COMBINED AIR OPERATIONS CENTER</title>
     
     <style>
-        /* The "Premium" Background Logic */
+        /* 1. THE FOUNDATION: Aircraft Skin Background */
         body { 
-            background-image: url('metal_skin.jpg'); /* Ensure your file is named this */
+            background-image: url('metal_background.png'); 
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
             background-position: center;
+            background-color: #0a0a0a; /* Fallback if image fails */
             color: #00ff00; 
             font-family: 'Courier New', monospace; 
-            margin: 0; padding: 0; 
-            overflow: hidden; /* Locks it to one page */
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; /* Locks to one page, no scrolling */
             height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* The Subtle Tinted Overlay */
+        /* 2. THE PREMIUM TINT: Subtle Dark Overlay */
         body::before {
             content: "";
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.35); /* Slightly darker for better text contrast */
+            background: rgba(0, 0, 0, 0.35); 
             pointer-events: none;
             z-index: -1;
         }
 
+        /* 3. THE HEADER: Massive Command Row */
         .header { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            padding: 30px 50px; 
+            padding: 20px 40px; 
             border-bottom: 4px solid #00ff00;
-            background: rgba(0, 0, 0, 0.5); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.6); 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+            flex-shrink: 0;
         }
 
-        /* Logos at 300% (Approx 380px) */
+        /* Massive 300% Logos (380px) */
         .logo-video { 
             width: 380px; 
             height: 380px; 
-            border: 4px solid #00ff00; 
+            border: 5px solid #00ff00; 
             border-radius: 50%; 
             object-fit: cover;
-            box-shadow: 0 0 40px rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.6);
             flex-shrink: 0;
             background: #000;
         }
@@ -58,53 +64,73 @@
             margin: 0 40px; 
         }
 
-        /* Massive Stretched Banner */
+        /* Stretched Main Banner */
         .main-banner {
             width: 100%; 
-            max-width: 1000px; 
+            max-width: 950px; 
             height: auto;
             border: 3px solid #00ff00; 
-            box-shadow: 0 0 50px rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 60px rgba(0, 255, 0, 0.4);
         }
 
         h1 { 
-            margin: 20px 0 0 0; 
+            margin: 15px 0 0 0; 
             letter-spacing: 20px; 
             font-size: 4.5em; 
             text-transform: uppercase;
-            text-shadow: 0 0 20px #00ff00;
+            text-shadow: 0 0 30px #00ff00;
         }
 
+        .slogan {
+            margin: 5px 0; 
+            color: #00ff00; 
+            font-weight: bold; 
+            letter-spacing: 8px; 
+            font-size: 1.2em;
+        }
+
+        /* 4. THE NAVIGATION: Tactical Grid */
         .nav-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
             gap: 30px; 
-            padding: 50px; 
-            max-width: 1400px; 
-            margin: 0 auto; 
+            padding: 40px 60px; 
+            max-width: 1500px; 
+            margin: auto auto; /* Centers the grid vertically in remaining space */
         }
 
         .nav-btn { 
-            background: rgba(10, 10, 10, 0.85); 
+            background: rgba(15, 15, 15, 0.9); 
             border: 3px solid #00ff00; 
             color: #00ff00; 
             padding: 30px; 
             text-align: center; 
             text-decoration: none; 
             font-weight: bold; 
-            font-size: 1.5em;
-            transition: 0.3s;
-            box-shadow: 8px 8px 0px #004400;
+            font-size: 1.6em;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 10px 10px 0px #004400;
+            text-transform: uppercase;
         }
 
         .nav-btn:hover { 
             background: #00ff00; 
             color: #000; 
-            box-shadow: 0 0 30px #00ff00;
-            transform: scale(1.05);
+            box-shadow: 0 0 40px #00ff00;
+            transform: scale(1.05) translateY(-5px);
         }
 
-        .rivet { width: 12px; height: 12px; background: #777; border-radius: 50%; position: absolute; box-shadow: inset 2px 2px 4px #000; border: 1px solid #444; }
+        /* Hardware Details: Rivets */
+        .rivet { 
+            width: 14px; 
+            height: 14px; 
+            background: #666; 
+            border-radius: 50%; 
+            position: absolute; 
+            box-shadow: inset 2px 2px 5px #000; 
+            border: 1px solid #333; 
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
@@ -124,7 +150,8 @@
                 <source src="caoc_banner.mp4" type="video/mp4">
             </video>
             <h1>The CAOC</h1>
-            <p style="margin: 10px 0; color: #00ff00; font-weight: bold; letter-spacing: 8px; font-size: 1.2em;">COMBINED AIR OPERATIONS CENTER</p>
+            <p class="slogan">COMBINED AIR OPERATIONS CENTER</p>
+            <p style="font-size: 14px; color: #555; letter-spacing: 2px;">QUESTION → ANSWER = DONE | AZURE NODE ONLINE</p>
         </div>
 
         <video class="logo-video" autoplay muted loop playsinline>
