@@ -1,76 +1,145 @@
-<script>
-    async function buildLinkedTree() {
-        console.log("Commencing Data Link Sync..."); // Tactical Ping
-        try {
-            // 1. LOAD THE REGISTRY
-            // We use './' to force the browser to look in the current folder
-            const regRes = await fetch('./SP_Registry_CANON_3_31.csv');
-            if (!regRes.ok) throw new Error("Registry File Not Found (404)");
-            
-            const regData = await regRes.text();
-            const registry = {}; 
-            
-            regData.split('\n').slice(1).forEach(row => {
-                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                if(cols.length > 14) {
-                    const img = cols[2]?.replace(/"/g, '').trim();
-                    const k1 = cols[0]?.replace(/"/g, '').trim(); 
-                    const k4 = cols[3]?.replace(/"/g, '').trim();
-                    const k7 = cols[6]?.replace(/"/g, '').trim();
-                    const k15 = cols[14]?.replace(/"/g, '').trim();
-                    [k1, k4, k7, k15].forEach(k => { if(k) registry[k] = img; });
-                }
-            });
-            console.log("Registry Sync: SUCCESS");
-
-            // 2. LOAD THE TREE JSON
-            const treeRes = await fetch('./usa_tree_v4.json');
-            if (!treeRes.ok) throw new Error("JSON Tree File Not Found (404)");
-            
-            const treeData = await treeRes.json();
-            const theater = document.getElementById('research-theater');
-            const picBase = "https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/";
-
-            // 3. RENDER THE RANKS
-            const ranks = [1,2,3,4,5,6,7,8,9];
-            ranks.forEach(rankNum => {
-                const cells = treeData.cells.filter(c => c.rank === rankNum);
-                if(cells.length > 0) {
-                    const section = document.createElement('div');
-                    section.className = 'rank-container';
-                    section.innerHTML = `<div class="rank-label">RANK ${rankNum}</div>`;
-
-                    cells.forEach(cell => {
-                        const icon = registry[cell.cell_id] || registry[cell.display_name] || 'placeholder.png';
-                        let specialClass = "";
-                        if (cell.flags.is_premium || cell.flags.is_pack) specialClass = "premium";
-                        else if (cell.flags.is_squadron || cell.flags.is_event) specialClass = "squadron";
-
-                        const card = document.createElement('div');
-                        card.className = `v-card ${specialClass}`;
-                        card.style.gridColumn = cell.column;
-                        card.style.gridRow = cell.row;
-                        card.innerHTML = `
-                            <img src="${picBase}${icon}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=NOT+FOUND';">
-                            <div class="v-name">${cell.display_name.replace(/_/g, ' ')}</div>
-                        `;
-                        section.appendChild(card);
-                    });
-                    theater.appendChild(section);
-                }
-            });
-            console.log("Tree Render: COMPLETE");
-
-        } catch (err) {
-            console.error("CRITICAL FAILURE:", err.message);
-            // Show the error on screen so you can see it
-            document.getElementById('research-theater').innerHTML = 
-                `<div style="color:red; padding:20px; border:2px solid red;">
-                    <h3>INTEL LINK BROKEN</h3>
-                    <p>${err.message}</p>
-                    <p>Check if the file names in GitHub match EXACTLY: SP_Registry_CANON_3_31.csv and usa_tree_v4.json</p>
-                </div>`;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE CAOC | USA RESEARCH TREE</title>
+    <style>
+        body { 
+            background: #1a1a1a url('metal%20background.png') no-repeat center center fixed; 
+            background-size: cover; color: #00ff00; font-family: 'Courier New', monospace; margin: 0; padding: 0;
         }
-    }
-    buildLinkedTree();
-</script>
+
+        .usa-hero { width: 100%; height: 180px; overflow: hidden; border-bottom: 3px solid #00ff00; position: relative; background: #000; }
+        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+        .title-overlay { position: absolute; bottom: 15px; left: 30px; }
+
+        .tree-viewport { padding: 40px; display: flex; flex-direction: column; gap: 80px; max-width: 1600px; margin: 0 auto; }
+
+        .rank-container {
+            display: grid; grid-template-columns: repeat(5, 1fr); grid-auto-rows: 150px; gap: 25px;
+            position: relative; padding: 40px; background: rgba(0, 0, 0, 0.5); border-left: 12px solid #00ff00;
+        }
+
+        .rank-label { 
+            font-size: 4em; font-weight: bold; color: rgba(0, 255, 0, 0.1);
+            position: absolute; left: -90px; top: 50%; transform: translateY(-50%) rotate(-90deg);
+            white-space: nowrap; letter-spacing: 15px;
+        }
+
+        .v-card {
+            background: rgba(15, 15, 15, 0.95); border: 2px solid #444; padding: 10px;
+            text-align: center; cursor: pointer; transition: 0.2s; position: relative;
+        }
+        .v-card:hover { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; transform: scale(1.03); }
+        
+        .premium { border-color: #d4af37 !important; color: #d4af37; }
+        .squadron { border-color: #55efc4 !important; color: #55efc4; }
+
+        .v-img { width: 100%; height: 80px; object-fit: contain; }
+        .v-name { font-size: 0.75em; font-weight: bold; margin-top: 5px; text-transform: uppercase; }
+
+        .back-btn {
+            position: fixed; bottom: 20px; left: 20px;
+            background: #000; border: 2px solid #00ff00;
+            color: #00ff00; padding: 10px 20px;
+            text-decoration: none; font-weight: bold; z-index: 100;
+        }
+
+        /* Error Display */
+        #status-msg { color: #ff0000; padding: 20px; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="usa-hero">
+        <video class="usa-banner-video" autoplay muted loop playsinline>
+            <source src="usa_banner.mp4" type="video/mp4">
+        </video>
+        <div class="title-overlay">
+            <h1 style="font-size: 3.5em; margin: 0; letter-spacing: 15px;">USA AIR BRANCH</h1>
+            <p>DATA LINK: <span id="sync-status">INITIALIZING...</span></p>
+        </div>
+    </div>
+
+    <div id="status-msg"></div>
+    <div id="research-theater" class="tree-viewport"></div>
+
+    <a href="index.html" class="back-btn">RETURN TO COMMAND</a>
+
+    <script>
+        // CONFIGURATION: Pointing to your external pics repo
+        const PIC_REPO_BASE = "https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/";
+
+        async function startSync() {
+            const status = document.getElementById('sync-status');
+            const msg = document.getElementById('status-msg');
+            
+            try {
+                // 1. Load Registry
+                const regRes = await fetch('./SP_Registry_CANON_3_31.csv');
+                if(!regRes.ok) throw new Error("Registry CSV Not Found");
+                const regText = await regRes.text();
+                
+                const registry = {};
+                regText.split('\n').slice(1).forEach(row => {
+                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    if(cols.length > 14) {
+                        const img = cols[2]?.replace(/"/g, '').trim();
+                        // Map multiple columns to catch the match
+                        [cols[0], cols[3], cols[6], cols[14]].forEach(k => { if(k) registry[k.trim()] = img; });
+                    }
+                });
+
+                // 2. Load Tree JSON
+                const treeRes = await fetch('./usa_tree_v4.json');
+                if(!treeRes.ok) throw new Error("USA Tree JSON Not Found");
+                const treeData = await treeRes.json();
+
+                status.innerText = "ONLINE";
+                status.style.color = "#00ff00";
+                renderTree(treeData, registry);
+
+            } catch (err) {
+                status.innerText = "FAILED";
+                status.style.color = "#ff0000";
+                msg.innerText = "CRITICAL ERROR: " + err.message;
+                console.error(err);
+            }
+        }
+
+        function renderTree(data, registry) {
+            const theater = document.getElementById('research-theater');
+            [1,2,3,4,5,6,7,8,9].forEach(r => {
+                const container = document.createElement('div');
+                container.className = 'rank-container';
+                container.innerHTML = `<div class="rank-label">RANK ${r}</div>`;
+                
+                const cells = data.cells.filter(c => c.rank === r);
+                cells.forEach(cell => {
+                    // Try to match the cell_id or display_name to the registry
+                    const icon = registry[cell.cell_id] || registry[cell.display_name] || 'placeholder.png';
+                    
+                    let specialClass = "";
+                    if (cell.flags.is_premium || cell.flags.is_pack) specialClass = "premium";
+                    else if (cell.flags.is_squadron || cell.flags.is_event) specialClass = "squadron";
+
+                    const card = document.createElement('div');
+                    card.className = `v-card ${specialClass}`;
+                    card.style.gridColumn = cell.column;
+                    card.style.gridRow = cell.row;
+                    
+                    card.innerHTML = `
+                        <img src="${PIC_REPO_BASE}${icon}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=NOT+FOUND';">
+                        <div class="v-name">${cell.display_name.replace(/_/g, ' ')}</div>
+                    `;
+                    container.appendChild(card);
+                });
+                if(cells.length > 0) theater.appendChild(container);
+            });
+        }
+
+        startSync();
+    </script>
+</body>
+</html>
