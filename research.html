@@ -173,4 +173,85 @@
 
                     // Filter cells for this rank and EXORCISE THE GHOSTS
                     const cells = treeData.cells.filter(c => {
-                        const isGhost = GHOST_UNITS.
+                        const isGhost = GHOST_UNITS.some(g => c.cell_id.toLowerCase().includes(g));
+                        return c.rank === r && !isGhost;
+                    });
+
+                    cells.forEach(cell => {
+                        const icon = registry[clean(cell.cell_id)] || registry[clean(cell.display_name)] || 'placeholder.png';
+                        const card = document.createElement('div');
+                        
+                        // Flag styling
+                        let special = "";
+                        if(cell.flags.is_premium || cell.flags.is_pack) special = "premium";
+                        else if(cell.flags.is_squadron || cell.flags.is_event) special = "squadron";
+
+                        card.className = `v-card ${special}`;
+                        card.style.gridColumn = cell.column;
+                        card.style.gridRow = cell.row;
+                        card.id = `unit-${cell.cell_id}`;
+
+                        const dName = (cell.display_name || cell.cell_id).replace(/_/g, ' ');
+
+                        card.innerHTML = `
+                            <img src="${PIC_BASE}${icon}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
+                            <div class="v-name">${dName}</div>
+                        `;
+                        container.appendChild(card);
+                    });
+
+                    const rightBar = document.createElement('div');
+                    rightBar.className = 'rank-sidebar';
+                    rightBar.innerText = ROMAN[r];
+                    wrapper.appendChild(container);
+                    wrapper.appendChild(rightBar);
+                    theater.appendChild(wrapper);
+                });
+
+                // 4. DRAW ARROWS
+                setTimeout(() => drawArrows(edgeText), 800);
+
+            } catch (err) { console.error("LINK FAILURE:", err); }
+        }
+
+        function drawArrows(csv) {
+            const lines = csv.split('\n').slice(1);
+            lines.forEach(line => {
+                const cols = line.split(',');
+                if (cols.length >= 6) {
+                    const fromId = cols[0].trim();
+                    const toId = cols[1].trim();
+                    const fromRank = cols[4].trim();
+                    const toRank = cols[5].trim();
+
+                    if (fromRank === toRank) { // Intra-rank connections
+                        const start = document.getElementById(`unit-${fromId}`);
+                        const end = document.getElementById(`unit-${toId}`);
+                        const svg = document.getElementById(`svg-rank-${fromRank}`);
+
+                        if (start && end && svg) {
+                            const rect = svg.getBoundingClientRect();
+                            const sRect = start.getBoundingClientRect();
+                            const eRect = end.getBoundingClientRect();
+
+                            const x1 = (sRect.left + sRect.width / 2) - rect.left;
+                            const y1 = (sRect.bottom) - rect.top;
+                            const x2 = (eRect.left + eRect.width / 2) - rect.left;
+                            const y2 = (eRect.top) - rect.top;
+
+                            const arrow = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                            arrow.setAttribute("x1", x1); arrow.setAttribute("y1", y1);
+                            arrow.setAttribute("x2", x2); arrow.setAttribute("y2", y2);
+                            arrow.setAttribute("stroke", "rgba(0, 255, 0, 0.4)");
+                            arrow.setAttribute("stroke-width", "3");
+                            svg.appendChild(arrow);
+                        }
+                    }
+                }
+            });
+        }
+
+        initiateSystem();
+    </script>
+</body>
+</html>
