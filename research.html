@@ -23,29 +23,19 @@
         .progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 2s linear; }
         #status-update { margin-top: 15px; font-size: 0.8em; color: #00ff00; letter-spacing: 2px; text-transform: uppercase; height: 1.2em; }
 
-        /* WIDESCREEN BANNER */
+        /* HEADER & HERO */
         .usa-hero { width: 100%; height: 160px; overflow: hidden; border-bottom: 2px solid #00ff00; position: relative; background: #000; }
-        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; opacity: 0.6; }
-
-        /* HEADER SECTION */
+        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
         .header-block { text-align: center; padding: 30px 0; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
         .main-title { font-size: 3.5em; letter-spacing: 15px; margin: 0; color: #fff; font-weight: 900; }
-        .tdl-status { font-size: 1.1em; color: #00ff00; letter-spacing: 5px; margin-top: 15px; font-weight: bold; }
-        .arog-line { font-size: 0.9em; color: #888; letter-spacing: 2px; margin-top: 8px; font-weight: bold; }
-
-        .satcom-blink { color: #00ff00; animation: satcomFade 5s infinite; }
-        @keyframes satcomFade { 0%, 100% { opacity: 1; text-shadow: 0 0 10px #00ff00; } 50% { opacity: 0.1; } }
 
         /* THE RESEARCH THEATER */
         .tree-viewport { padding: 20px 60px 100px 60px; display: flex; flex-direction: column; gap: 80px; max-width: 1800px; margin: 0 auto; }
         .rank-wrapper { display: flex; align-items: stretch; position: relative; }
-        
         .rank-sidebar { 
-            font-size: 3em; font-weight: bold; 
-            writing-mode: vertical-rl; text-orientation: upright; 
+            font-size: 3em; font-weight: bold; writing-mode: vertical-rl; text-orientation: upright; 
             padding: 15px; letter-spacing: -5px; user-select: none;
-            color: rgba(0, 255, 0, 0.45); 
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+            color: rgba(0, 255, 0, 0.45); text-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
 
         .rank-container {
@@ -54,16 +44,22 @@
             background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(0, 255, 0, 0.1);
         }
 
-        .arrow-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-
-        .v-card { background: rgba(10, 10, 10, 0.98); border: 1px solid #222; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; transition: 0.2s; z-index: 10; }
+        /* CARD STYLING */
+        .v-card { background: rgba(10, 10, 10, 0.98); border: 1px solid #222; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; transition: 0.2s; z-index: 10; position: relative; }
         .v-card:hover { border-color: #00ff00; transform: scale(1.03); z-index: 100; box-shadow: 0 0 15px #00ff00; }
-        .premium { border: 1px solid #d4af37; }
-        .squadron { border: 1px solid #55efc4; }
+        
+        /* THE GROUP STACK EFFECT */
+        .group-stack::before {
+            content: ''; position: absolute; top: -5px; right: -5px; width: 100%; height: 100%;
+            border: 1px solid #004400; background: #050505; z-index: -1;
+        }
+        .group-stack::after {
+            content: ''; position: absolute; top: -10px; right: -10px; width: 100%; height: 100%;
+            border: 1px solid #002200; background: #000; z-index: -2;
+        }
 
         .v-img { width: 100%; height: 80px; object-fit: contain; }
         .v-name { margin-top: 5px; font-size: 0.7em; font-weight: bold; color: #bbb; text-transform: uppercase; }
-
         .back-btn { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.9); border: 1px solid #00ff00; color: #00ff00; padding: 6px 12px; text-decoration: none; font-weight: bold; font-size: 0.8em; z-index: 2000; }
     </style>
 </head>
@@ -82,11 +78,7 @@
 
     <div class="header-block">
         <h1 class="main-title">USA AIR WING</h1>
-        <div class="tdl-status">[ TACTICAL DATA LINK : ACTIVE ]</div>
-        <div class="arog-line">
-            COMMAND & CONTROL | AIR RESEARCH OPERATIONAL GRID (AROG) : 
-            <span class="satcom-blink">COMMS ESTABLISHED</span>
-        </div>
+        <div style="color:#00ff00; letter-spacing:5px; margin-top:15px; font-weight:bold;">[ TACTICAL DATA LINK : ACTIVE ]</div>
     </div>
 
     <div id="research-theater" class="tree-viewport"></div>
@@ -106,15 +98,13 @@
             setTimeout(() => { statusBox.innerText = "AUTHENTICATING VETERAN CREDENTIALS..."; }, 1500);
 
             try {
-                const [regRes, treeRes, edgeRes] = await Promise.all([
+                const [regRes, treeRes] = await Promise.all([
                     fetch('./SP_Registry_CANON_3_31.csv'),
-                    fetch('./usa_tree_v4.json'),
-                    fetch('./usa_tree_pass2_edges.csv')
+                    fetch('./usa_tree_v4.json')
                 ]);
 
                 const regText = await regRes.text();
                 const treeData = await treeRes.json();
-                const edgeText = await edgeRes.text();
                 const registry = {};
 
                 regText.split('\n').slice(1).forEach(row => {
@@ -132,33 +122,31 @@
                     const wrapper = document.createElement('div');
                     wrapper.className = 'rank-wrapper';
                     wrapper.innerHTML = `<div class="rank-sidebar">Rank ${ROMAN[r]}</div>`;
-
                     const container = document.createElement('div');
                     container.className = 'rank-container';
-                    container.id = `rank-box-${r}`;
-                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                    svg.setAttribute("class", "arrow-svg");
-                    svg.id = `svg-rank-${r}`;
-                    container.appendChild(svg);
-
+                    
                     const cells = treeData.cells.filter(c => c.rank === r && !c.cell_id.includes("xf5f"));
                     cells.forEach(cell => {
-                        const imageName = registry[clean(cell.cell_id)] || registry[clean(cell.display_name)] || 'placeholder.png';
+                        // Check if it's a Group (Folded Card)
+                        const isGroup = cell.cell_id.toLowerCase().includes('group') || (cell.display_name && cell.display_name.toLowerCase().includes('group'));
+                        
+                        let imageName = registry[clean(cell.cell_id)] || registry[clean(cell.display_name)] || 'placeholder.png';
+                        
+                        // Force Group Suffix if logic detects a folder
+                        if (isGroup && !imageName.includes('Group')) {
+                            imageName = imageName.replace('.png', ' Group.png');
+                        }
+
                         const card = document.createElement('div');
-                        let special = (cell.flags.is_premium || cell.flags.is_pack) ? "premium" : (cell.flags.is_squadron || cell.flags.is_event ? "squadron" : "");
-                        card.className = `v-card ${special}`;
+                        card.className = `v-card ${isGroup ? 'group-stack' : ''}`;
                         card.style.gridColumn = cell.column;
                         card.style.gridRow = cell.row;
-                        card.id = `unit-${cell.cell_id}`;
                         card.innerHTML = `<img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';"><div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>`;
                         container.appendChild(card);
                     });
                     wrapper.appendChild(container);
-                    wrapper.appendChild(document.createElement('div')).className = 'rank-sidebar';
                     theater.appendChild(wrapper);
                 });
-
-                setTimeout(() => drawArrows(edgeText), 1000);
 
                 setTimeout(() => {
                     statusBox.innerText = "ACCESS GRANTED. DEPLOYING...";
@@ -167,33 +155,6 @@
                 }, 2200);
 
             } catch (err) { console.error("LINK FAILURE:", err); }
-        }
-
-        function drawArrows(csv) {
-            csv.split('\n').slice(1).forEach(line => {
-                const cols = line.split(',');
-                if (cols.length >= 6) {
-                    const fromId = cols[0].trim();
-                    const toId = cols[1].trim();
-                    const rank = cols[4].trim();
-                    const start = document.getElementById(`unit-${fromId}`);
-                    const end = document.getElementById(`unit-${toId}`);
-                    const svg = document.getElementById(`svg-rank-${rank}`);
-                    if (start && end && svg) {
-                        const rect = svg.getBoundingClientRect();
-                        const sR = start.getBoundingClientRect();
-                        const eR = end.getBoundingClientRect();
-                        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                        line.setAttribute("x1", (sR.left + sR.width / 2) - rect.left);
-                        line.setAttribute("y1", (sR.bottom) - rect.top);
-                        line.setAttribute("x2", (eR.left + eR.width / 2) - rect.left);
-                        line.setAttribute("y2", (eR.top) - rect.top);
-                        line.setAttribute("stroke", "rgba(0, 255, 0, 0.4)");
-                        line.setAttribute("stroke-width", "3");
-                        svg.appendChild(line);
-                    }
-                }
-            });
         }
         initiateSystem();
     </script>
