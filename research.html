@@ -2,85 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE CAOC | USA AIR WING</title>
+    <title>TERMINAL BREAKOUT</title>
     <style>
-        body { background: #050505; color: #00ff00; font-family: 'Courier New', monospace; margin: 0; }
-        #loading-overlay {
-            position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .progress-bar { width: 300px; height: 2px; background: #111; border: 1px solid #004400; }
-        .progress-fill { width: 0%; height: 100%; background: #00ff00; transition: width 2s linear; }
-        .rank-sidebar { font-size: 3em; font-weight: bold; writing-mode: vertical-rl; text-orientation: upright; color: rgba(0, 255, 0, 0.45); }
-        .rank-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 20px; padding: 40px; background: rgba(0, 0, 0, 0.7); }
-        .v-card { background: #0a0a0a; border: 1px solid #333; padding: 10px; text-align: center; min-height: 120px; }
-        .v-img { width: 100%; height: 80px; object-fit: contain; }
+        body { background: #000; color: #0f0; font-family: monospace; padding: 20px; }
+        .rank-box { border: 1px solid #0f0; margin: 10px; padding: 10px; display: flex; flex-wrap: wrap; }
+        .unit-card { border: 1px solid #333; margin: 5px; padding: 5px; width: 120px; text-align: center; font-size: 10px; }
+        #loading-screen { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; align-items: center; justify-content: center; font-size: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay">
-        <div style="color:#00ff00; letter-spacing:5px; margin-bottom:20px;">USA TERMINAL: DECRYPTING...</div>
-        <div class="progress-bar"><div class="progress-fill" id="bar-fill"></div></div>
-    </div>
+    <div id="loading-screen">SYSTEM BOOTING...</div>
 
-    <div class="header-block" style="text-align:center; padding: 20px;">
-        <h1 style="font-size:3em; color:#fff;">USA AIR WING</h1>
-    </div>
-
-    <div id="research-theater" style="padding: 40px;"></div>
+    <h1>USA AIR WING - COMMAND TERMINAL</h1>
+    <div id="theater"></div>
 
     <script>
-        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
-        const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
-
-        // 1. THE EMERGENCY UNLOCK (Runs immediately)
-        function unlock() {
-            const loader = document.getElementById('loading-overlay');
+        // EMERGENCY UNLOCK: This runs NO MATTER WHAT after 1 second
+        setTimeout(() => {
+            const loader = document.getElementById('loading-screen');
             if(loader) loader.style.display = 'none';
-        }
+            console.log("Manual Unlock Triggered.");
+        }, 1000);
 
-        // 2. THE DATA FETCH
-        async function runTerminal() {
-            // Force the bar to move
-            document.getElementById('bar-fill').style.width = '100%';
-            
-            // AUTOMATIC UNLOCK after 2.5 seconds no matter what
-            setTimeout(unlock, 2500);
-
+        async function start() {
             try {
                 const res = await fetch('./usa_tree_v4.json');
-                const treeData = await res.json();
-                const theater = document.getElementById('research-theater');
+                if (!res.ok) throw new Error("JSON NOT FOUND");
+                const data = await res.json();
+                const theater = document.getElementById('theater');
 
                 [1,2,3,4,5,6,7,8,9].forEach(r => {
-                    const wrap = document.createElement('div');
-                    wrap.style.display = 'flex';
-                    wrap.innerHTML = `<div class="rank-sidebar">Rank ${ROMAN[r]}</div>`;
+                    const box = document.createElement('div');
+                    box.className = 'rank-box';
+                    box.innerHTML = `<strong>RANK ${r}</strong>`;
                     
-                    const cont = document.createElement('div');
-                    cont.className = 'rank-container';
-                    
-                    const cells = treeData.cells.filter(c => c.rank === r);
+                    const cells = data.cells.filter(c => c.rank === r);
                     cells.forEach(cell => {
                         const card = document.createElement('div');
-                        card.className = 'v-card';
-                        card.style.gridColumn = cell.column;
-                        card.style.gridRow = cell.row;
-                        // For now, using direct ID matching to test path
-                        card.innerHTML = `<img src="${PIC_BASE}${cell.cell_id}.png" class="v-img" onerror="this.src='https://placehold.co/100/000/0f0?text=MISSING';"><div>${cell.display_name || cell.cell_id}</div>`;
-                        cont.appendChild(card);
+                        card.className = 'unit-card';
+                        card.innerHTML = cell.display_name || cell.cell_id;
+                        box.appendChild(card);
                     });
-                    wrap.appendChild(cont);
-                    theater.appendChild(wrap);
+                    theater.appendChild(box);
                 });
-            } catch (e) {
-                console.log("Data error, but terminal is open.");
+            } catch (err) {
+                document.body.innerHTML += `<h2 style="color:red">BOOT ERROR: ${err.message}</h2>`;
             }
         }
 
-        window.onload = runTerminal;
+        start();
     </script>
 </body>
 </html>
