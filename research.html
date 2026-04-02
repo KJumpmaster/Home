@@ -1,0 +1,71 @@
+<style>
+    /* THE RESEARCH THEATER */
+    .tree-container {
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 50px;
+        overflow-y: auto; /* Allows scrolling through the Ranks */
+        height: calc(100vh - 450px); /* Adjusts based on your massive header */
+    }
+
+    .rank-header {
+        border-left: 10px solid #00ff00;
+        background: rgba(0, 255, 0, 0.1);
+        padding: 10px 20px;
+        font-size: 2em;
+        font-weight: bold;
+        letter-spacing: 5px;
+        text-transform: uppercase;
+    }
+
+    .vehicle-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr); /* 5 Columns: Standard WT Layout */
+        gap: 15px;
+    }
+
+    /* THE VEHICLE CARD */
+    .vehicle-card {
+        background: rgba(10, 10, 10, 0.8);
+        border: 2px solid #444;
+        padding: 10px;
+        text-align: center;
+        transition: 0.2s;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .vehicle-card:hover {
+        border-color: #00ff00;
+        box-shadow: 0 0 15px #00ff00;
+        transform: translateY(-5px);
+    }
+
+    .vehicle-img {
+        width: 100%;
+        height: auto;
+        border-bottom: 1px solid #333;
+        margin-bottom: 8px;
+    }
+
+    .vehicle-name {
+        font-size: 0.9em;
+        font-weight: bold;
+        color: #ddd;
+    }
+</style>
+
+<div class="tree-container">
+    
+    <div class="rank-section">
+        <div class="rank-header">RANK I</div>
+        <div class="vehicle-grid">
+            <div class="vehicle-card">
+                <img src="wt_pics/p_26a_34_m2.png" class="vehicle-img">
+                <div class="vehicle-name">P-26A-34 M2</div>
+            </div>
+            </div>
+    </div>
+
+</div>
