@@ -3,123 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAOC_WT | COMBINED AIR OPERATIONS CENTER</title>
+    <title>THE CAOC | COMBINED AIR OPERATIONS CENTER</title>
     
     <style>
-        /* Tactical Styling for CAOC Interface */
         body { 
             background-color: #0a0a0a; 
             color: #00ff00; 
             font-family: 'Courier New', monospace; 
-            margin: 0; 
-            padding: 0; 
-            overflow-x: hidden; 
+            margin: 0; padding: 0; overflow-x: hidden; 
         }
-
         .header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 20px; 
-            border-bottom: 2px solid #00ff00; 
-            background: rgba(0, 255, 0, 0.05); 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px; border-bottom: 2px solid #00ff00; background: rgba(0, 255, 0, 0.05); 
         }
-
         .logo-video { 
-            width: 120px; 
-            height: 120px; 
-            border: 2px solid #00ff00; 
-            border-radius: 50%; 
-            object-fit: cover; 
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+            width: 130px; height: 130px; border: 2px solid #00ff00; border-radius: 50%; 
+            object-fit: cover; background: #111; /* Placeholder color if video fails */
         }
-
-        .center-banner-box {
-            text-align: center; 
-            flex-grow: 1; 
-            margin: 0 20px;
+        .center-box { text-align: center; flex-grow: 1; margin: 0 20px; }
+        .main-banner {
+            width: 100%; max-width: 600px; border: 2px solid #00ff00; 
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
         }
-
-        .main-caoc-video {
-            width: 100%; 
-            max-width: 550px; 
-            border: 2px solid #00ff00; 
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-        }
-
         .nav-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 20px; 
-            padding: 30px; 
-            max-width: 1200px; 
-            margin: 0 auto; 
+            display: grid; grid-template-columns: repeat(3, 1fr); 
+            gap: 20px; padding: 30px; max-width: 1200px; margin: 0 auto; 
         }
-
         .nav-btn { 
-            background: #111; 
-            border: 1px solid #00ff00; 
-            color: #00ff00; 
-            padding: 25px; 
-            text-align: center; 
-            text-decoration: none; 
-            font-weight: bold; 
-            font-size: 1.1em;
-            transition: 0.3s; 
-            cursor: pointer;
+            background: #111; border: 1px solid #00ff00; color: #00ff00; 
+            padding: 25px; text-align: center; text-decoration: none; 
+            font-weight: bold; transition: 0.3s; cursor: pointer;
         }
-
-        .nav-btn:hover { 
-            background: #00ff00; 
-            color: #000; 
-            box-shadow: 0 0 20px #00ff00; 
-        }
-
-        .footer-status {
-            border-top: 1px solid #333;
-            padding: 15px 30px;
-            font-size: 12px;
-            color: #444;
-            display: flex;
-            justify-content: space-between;
-            margin-top: 50px;
-        }
+        .nav-btn:hover { background: #00ff00; color: #000; box-shadow: 0 0 20px #00ff00; }
     </style>
 </head>
-
 <body>
 
     <div class="header">
-        
-        <video class="logo-video" autoplay muted loop>
+        <video class="logo-video" autoplay muted loop playsinline>
             <source src="https://raw.githubusercontent.com/KJumpmaster/terrain/main/Norden_II_Logo.mp4" type="video/mp4">
         </video>
 
-        <div class="center-banner-box">
-            <video class="main-caoc-video" autoplay muted loop>
+        <div class="center-box">
+            <video class="main-banner" autoplay muted loop playsinline>
                 <source src="https://raw.githubusercontent.com/KJumpmaster/terrain/main/caoc_banner.mp4" type="video/mp4">
             </video>
-            <h1 style="margin: 15px 0 5px 0; letter-spacing: 10px; font-size: 3em;">CAOC_WT</h1>
-            <p style="margin: 0; color: #008800; font-weight: bold; letter-spacing: 3px;">COMBINED AIR OPERATIONS CENTER</p>
-            <p style="font-size: 14px; color: #666; margin-top: 5px;">QUESTION → ANSWER = DONE</p>
+            <h1 style="margin: 15px 0 5px 0; letter-spacing: 12px; font-size: 3.5em; text-transform: uppercase;">The CAOC</h1>
+            <p style="margin: 0; color: #008800; font-weight: bold; letter-spacing: 4px;">COMBINED AIR OPERATIONS CENTER</p>
+            <p style="font-size: 14px; color: #555; margin-top: 10px;">QUESTION → ANSWER = DONE</p>
         </div>
 
-        <video class="logo-video" autoplay muted loop>
+        <video class="logo-video" autoplay muted loop playsinline>
             <source src="https://raw.githubusercontent.com/KJumpmaster/terrain/main/SKY_PILOT_LOGO.mp4" type="video/mp4">
         </video>
-
     </div>
 
     <div class="nav-grid">
         <a href="#" class="nav-btn">NORDEN II SYSTEM</a>
         <a href="#" class="nav-btn">RESEARCH TREES</a>
         <a href="#" class="nav-btn">THE ARMORY</a>
-    </div>
-
-    <div class="footer-status">
-        <div>AZURE B1 SERVER: ONLINE</div>
-        <div>DATA SOURCE: WT_SDK_RECON</div>
-        <div>EST. 2026 | BLESSED FOR PRECISION</div>
     </div>
 
 </body>
