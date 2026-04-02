@@ -7,74 +7,97 @@
     
     <style>
         body { 
-            /* This points to the metal texture we'll add to your repo */
             background: #1a1a1a url('metal_skin.jpg') repeat;
+            background-size: cover;
             background-attachment: fixed;
             color: #00ff00; 
             font-family: 'Courier New', monospace; 
-            margin: 0; padding: 0; overflow: hidden; /* Prevents scrolling */
-            height: 100vh; /* Forces it to stay on one page */
+            margin: 0; padding: 0; overflow: hidden;
+            height: 100vh;
         }
 
-        /* The Header: Scaled down for a tighter fit */
         .header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 10px 20px; 
-            border-bottom: 3px solid #333; /* Industrial divider */
-            background: rgba(0, 0, 0, 0.6); 
-            box-shadow: inset 0 0 20px #000;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 15px 30px; 
+            border-bottom: 3px solid #333;
+            background: rgba(0, 0, 0, 0.7); 
+            box-shadow: inset 0 0 30px #000;
         }
 
+        /* Logos increased to 125% (125px) */
         .logo-video { 
-            width: 100px; height: 100px; /* Scaled down */
-            border: 2px solid #444; 
+            width: 125px; 
+            height: 125px; 
+            border: 2px solid #00ff00; 
             border-radius: 50%; 
             object-fit: cover;
-            box-shadow: 0 0 10px #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+            flex-shrink: 0; /* Prevents logos from squishing */
         }
 
-        .center-box { text-align: center; flex-grow: 1; margin: 0 15px; }
+        .center-box { 
+            text-align: center; 
+            flex-grow: 1; 
+            margin: 0 40px; 
+        }
 
+        /* Stretched the middle banner */
         .main-banner {
-            width: 100%; max-width: 450px; /* Scaled down significantly */
-            border: 3px solid #222; 
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            width: 100%; 
+            max-width: 850px; /* Increased width significantly */
+            height: auto;
+            border: 2px solid #444; 
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.2);
         }
 
-        h1 { margin: 5px 0; letter-spacing: 8px; font-size: 2.2em; text-shadow: 2px 2px #000; }
+        h1 { 
+            margin: 10px 0 0 0; 
+            letter-spacing: 15px; 
+            font-size: 3.5em; 
+            text-transform: uppercase;
+            text-shadow: 3px 3px 5px #000;
+        }
 
-        /* The Navigation Grid: Tightened for "One Page" view */
         .nav-grid { 
-            display: grid; grid-template-columns: repeat(3, 1fr); 
-            gap: 15px; padding: 20px; max-width: 1000px; margin: 0 auto; 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 25px; 
+            padding: 40px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
         }
 
         .nav-btn { 
-            background: rgba(20, 20, 20, 0.9); 
-            border: 2px solid #444; 
+            background: rgba(30, 30, 30, 0.9); 
+            border: 2px solid #00ff00; 
             color: #00ff00; 
-            padding: 15px; 
-            text-align: center; text-decoration: none; 
-            font-weight: bold; transition: 0.3s;
-            border-radius: 5px;
-            box-shadow: inset 0 0 5px #000;
+            padding: 25px; 
+            text-align: center; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 1.2em;
+            transition: 0.4s;
+            box-shadow: 4px 4px 0px #004400;
         }
 
         .nav-btn:hover { 
-            background: #00ff00; color: #000; 
-            border-color: #fff;
+            background: #00ff00; 
+            color: #000; 
+            box-shadow: 0 0 25px #00ff00;
+            transform: translateY(-3px);
         }
 
-        /* Added some "Rivets" for flavor in the corners */
-        .rivet { width: 8px; height: 8px; background: #444; border-radius: 50%; position: absolute; box-shadow: inset 1px 1px 2px #000; }
+        .rivet { width: 10px; height: 10px; background: #555; border-radius: 50%; position: absolute; box-shadow: inset 1px 1px 3px #000; border: 1px solid #333; }
     </style>
 </head>
 <body>
 
-    <div class="rivet" style="top: 10px; left: 10px;"></div>
-    <div class="rivet" style="top: 10px; right: 10px;"></div>
-    <div class="rivet" style="bottom: 10px; left: 10px;"></div>
-    <div class="rivet" style="bottom: 10px; right: 10px;"></div>
+    <div class="rivet" style="top: 15px; left: 15px;"></div>
+    <div class="rivet" style="top: 15px; right: 15px;"></div>
+    <div class="rivet" style="bottom: 15px; left: 15px;"></div>
+    <div class="rivet" style="bottom: 15px; right: 15px;"></div>
 
     <div class="header">
         <video class="logo-video" autoplay muted loop playsinline>
@@ -86,8 +109,7 @@
                 <source src="caoc_banner.mp4" type="video/mp4">
             </video>
             <h1>The CAOC</h1>
-            <p style="margin: 0; color: #008800; font-weight: bold; letter-spacing: 3px; font-size: 0.9em;">COMBINED AIR OPERATIONS CENTER</p>
-            <p style="font-size: 12px; color: #777; margin-top: 5px;">QUESTION → ANSWER = DONE | BLESSED FOR PRECISION</p>
+            <p style="margin: 5px 0; color: #00ff00; font-weight: bold; letter-spacing: 5px;">COMBINED AIR OPERATIONS CENTER</p>
         </div>
 
         <video class="logo-video" autoplay muted loop playsinline>
