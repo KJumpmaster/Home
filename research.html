@@ -4,114 +4,150 @@
     <meta charset="UTF-8">
     <title>THE CAOC | USA RESEARCH TREE</title>
     <style>
+        /* 1. THE HULL: Consistent Metal Skin */
         body { 
-            background: #1a1a1a url('metal_background.png') no-repeat center center fixed; 
+            background: #1a1a1a url('metal%20background.png') no-repeat center center fixed; 
             background-size: cover;
             color: #00ff00; 
             font-family: 'Courier New', monospace; 
             margin: 0; padding: 0;
+            min-height: 100vh;
         }
 
-        /* Small version of the header to save room for the tree */
-        .sub-header {
-            display: flex;
-            align-items: center;
-            padding: 10px 30px;
-            background: rgba(0, 0, 0, 0.8);
-            border-bottom: 2px solid #00ff00;
+        /* 2. USA STRATEGIC BANNER */
+        .usa-hero {
+            width: 100%; height: 220px;
+            overflow: hidden; border-bottom: 4px solid #00ff00;
+            position: relative; background: #000;
         }
 
-        .flag-icon {
-            width: 80px;
-            height: auto;
-            border: 2px solid #00ff00;
-            margin-right: 20px;
+        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
+
+        .title-overlay { 
+            position: absolute; bottom: 20px; left: 40px; 
+            text-shadow: 0 0 20px #000; 
         }
 
-        .tree-title {
-            font-size: 2em;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-        }
-
-        /* THE GRID: Mapping your Registry */
+        /* 3. THE RESEARCH GRID */
         .tree-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5 Columns for Fighters/Bombers */
-            gap: 15px;
-            padding: 40px;
-            max-width: 1400px;
-            margin: 0 auto;
+            grid-template-columns: repeat(5, 1fr); /* Standard 5-column WT Layout */
+            gap: 20px; padding: 40px;
+            max-width: 1600px; margin: 0 auto;
         }
 
-        .rank-divider {
+        .rank-header {
             grid-column: 1 / -1;
-            background: rgba(0, 255, 0, 0.2);
-            padding: 10px;
-            font-weight: bold;
-            font-size: 1.5em;
-            border-left: 10px solid #00ff00;
-            margin-top: 30px;
+            background: rgba(0, 255, 0, 0.1);
+            padding: 15px; font-size: 2.5em; letter-spacing: 12px;
+            border-left: 15px solid #00ff00; margin-top: 50px;
+            text-transform: uppercase; text-shadow: 0 0 10px #00ff00;
         }
 
-        /* Vehicle Cards based on Col 3 (image) and Col 15 (name) */
+        /* 4. VEHICLE CARDS: Linked via Master Key */
         .v-card {
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #444;
-            padding: 10px;
-            text-align: center;
-            transition: 0.3s;
+            background: rgba(10, 10, 10, 0.9);
+            border: 2px solid #333; padding: 15px;
+            text-align: center; transition: 0.3s;
+            cursor: pointer; box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
         }
 
-        .v-card:hover {
-            border-color: #00ff00;
-            transform: scale(1.05);
+        .v-card:hover { 
+            border-color: #00ff00; box-shadow: 0 0 25px #00ff00; 
+            transform: translateY(-8px); 
         }
 
         .v-img {
-            width: 100%;
-            height: auto;
-            max-height: 80px;
-            object-fit: contain;
+            width: 100%; height: 110px;
+            object-fit: contain; filter: drop-shadow(0 0 8px rgba(0,255,0,0.3));
         }
 
-        .v-name {
-            font-size: 0.8em;
-            margin-top: 10px;
-            color: #fff;
+        .v-name { 
+            margin-top: 12px; font-size: 0.9em; font-weight: bold; 
+            color: #fff; text-transform: uppercase; letter-spacing: 1px;
         }
 
         .back-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #000;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            padding: 10px 20px;
-            text-decoration: none;
-            font-weight: bold;
+            position: fixed; bottom: 30px; left: 30px;
+            background: #000; border: 3px solid #00ff00;
+            color: #00ff00; padding: 15px 30px;
+            text-decoration: none; font-weight: bold; font-size: 1.2em;
+            box-shadow: 5px 5px 0px #004400; z-index: 100;
         }
     </style>
 </head>
 <body>
 
-    <div class="sub-header">
-        <img src="usa_flag.png" class="flag-icon">
-        <div class="tree-title">USA AIR BRANCH | RANK I - IX</div>
+    <div class="usa-hero">
+        <video class="usa-banner-video" autoplay muted loop playsinline>
+            <source src="usa_banner.mp4" type="video/mp4">
+        </video>
+        <div class="title-overlay">
+            <h1 style="font-size: 4.5em; margin: 0; letter-spacing: 20px;">USA AIR BRANCH</h1>
+            <p style="letter-spacing: 6px; font-weight: bold; color: #00ff00;">MASTER KEY SYNC: ONLINE</p>
+        </div>
     </div>
 
-    <div class="tree-grid">
-        
-        <div class="rank-divider">RANK I</div>
-        <div class="v-card">
-            <img src="wt_pics/p-26a_34_m2.png" class="v-img">
-            <div class="v-name">P-26A-34 M2</div>
-        </div>
-
+    <div class="tree-grid" id="usa-tree-viewport">
         </div>
 
     <a href="index.html" class="back-btn">RETURN TO COMMAND</a>
+
+    <script>
+        async function initiateMasterKeySync() {
+            try {
+                // PHASE 1: Load the Registry (The Intel Depot)
+                const regResponse = await fetch('SP_Registry_CANON_3_31.csv');
+                const regText = await regResponse.text();
+                const regRows = regText.split('\n').slice(1);
+                
+                const registryMap = {};
+                regRows.forEach(row => {
+                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    if (cols.length >= 15) {
+                        const wikiName = cols[14]?.replace(/"/g, '').trim(); // Col 15
+                        const imageName = cols[2]?.replace(/"/g, '').trim(); // Col 3
+                        if (wikiName) registryMap[wikiName] = imageName;
+                    }
+                });
+
+                // PHASE 2: Load the USA Tree Map (The Operational Layout)
+                const treeResponse = await fetch('usa_tree_v4.json');
+                const treeData = await treeResponse.json();
+                const viewport = document.getElementById('usa-tree-viewport');
+                const picBase = "https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/";
+
+                // PHASE 3: Link the Map to the Intel
+                // This assumes your JSON has a "vehicles" array or similar structure
+                // We'll iterate through the items in your JSON
+                treeData.forEach(vehicle => {
+                    // Check if this item is a Rank Header or a Vehicle
+                    if (vehicle.type === "rank_header") {
+                        const header = document.createElement('div');
+                        header.className = 'rank-header';
+                        header.innerText = vehicle.name;
+                        viewport.appendChild(header);
+                    } else {
+                        const vName = vehicle.name; // The link key
+                        const vIcon = registryMap[vName] || 'placeholder.png';
+
+                        const card = document.createElement('div');
+                        card.className = 'v-card';
+                        card.innerHTML = `
+                            <img src="${picBase}${vIcon}" class="v-img" alt="${vName}" 
+                                 onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=MISSING+LINK';">
+                            <div class="v-name">${vName}</div>
+                        `;
+                        viewport.appendChild(card);
+                    }
+                });
+
+            } catch (err) {
+                console.error("CRITICAL SYNC ERROR:", err);
+            }
+        }
+        initiateMasterKeySync();
+    </script>
 
 </body>
 </html>
