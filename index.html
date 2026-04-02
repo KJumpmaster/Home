@@ -6,7 +6,7 @@
     <title>THE CAOC | COMBINED AIR OPERATIONS CENTER</title>
     
     <style>
-        /* 1. THE FOUNDATION: Metal skin flows through the whole body */
+        /* 1. THE FOUNDATION: Metal skin everywhere */
         body { 
             background: #1a1a1a url('metal_background.png') no-repeat center center fixed; 
             background-size: cover;
@@ -19,27 +19,25 @@
             flex-direction: column;
         }
 
-        /* 2. THE TINT: Keeps the metal look consistent and dark everywhere */
+        /* 2. REMOVED DARK TINT: Letting the raw metal show through */
         body::before {
-            content: ""; position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.4); /* Uniform dark layer */
-            pointer-events: none; z-index: -1;
+            display: none; /* Kills the dark overlay entirely */
         }
 
-        /* 3. THE HEADER: Solid command bar at the top */
+        /* 3. THE HEADER: Transparent background, only the green line remains */
         .header { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 15px 40px; 
-            border-bottom: 4px solid #00ff00;
-            background: rgba(0, 0, 0, 0.8); 
+            border-bottom: 4px solid #00ff00; /* This is your green separator line */
+            background: transparent; /* No more dark bar on top */
             flex-shrink: 0;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .logo-video { 
             width: 300px; height: 300px; 
             border: 4px solid #00ff00; border-radius: 50%; 
             object-fit: cover; box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+            background: #000; /* Keeps the inside of the circle black */
         }
 
         .center-box { text-align: center; flex-grow: 1; margin: 0 20px; }
@@ -49,34 +47,34 @@
             border: 2px solid #00ff00;
         }
 
-        h1 { margin: 10px 0 0 0; letter-spacing: 15px; font-size: 3.5em; text-transform: uppercase; text-shadow: 0 0 20px #000; }
+        h1 { 
+            margin: 10px 0 0 0; 
+            letter-spacing: 15px; 
+            font-size: 3.5em; 
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px #000; /* Keeps text readable on light metal */
+        }
 
-        /* 4. THE NAVIGATION: Background REMOVED to show the metal skin */
+        /* 4. THE NAVIGATION: Completely transparent */
         .nav-grid { 
             display: grid; grid-template-columns: repeat(3, 1fr); 
             gap: 25px; padding: 40px; 
             max-width: 1200px; 
-            margin: auto auto; /* Perfectly centered on the background */
+            margin: auto auto; 
             width: 100%; 
-            background: transparent; /* Dumped the rectangle! */
+            background: transparent; 
         }
 
         .nav-btn { 
-            background: rgba(15, 15, 15, 0.9); /* Subtle dark glass look for buttons */
+            background: rgba(0, 0, 0, 0.8); /* Dark buttons so they stand out on light metal */
             border: 3px solid #00ff00; 
             color: #00ff00; padding: 25px; text-align: center; 
             text-decoration: none; font-weight: bold; font-size: 1.5em;
             box-shadow: 8px 8px 0px #004400;
             transition: 0.3s;
-            text-transform: uppercase;
         }
 
-        .nav-btn:hover { 
-            background: #00ff00; 
-            color: #000; 
-            box-shadow: 0 0 30px #00ff00; 
-            transform: translateY(-5px); 
-        }
+        .nav-btn:hover { background: #00ff00; color: #000; }
 
         .rivet { width: 12px; height: 12px; background: #555; border-radius: 50%; position: absolute; box-shadow: inset 2px 2px 4px #000; border: 1px solid #333; }
     </style>
