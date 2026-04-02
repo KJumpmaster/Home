@@ -2,144 +2,156 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>THE CAOC | USA RESEARCH TREE</title>
     <style>
         body { 
             background: #1a1a1a url('metal%20background.png') no-repeat center center fixed; 
-            background-size: cover; color: #00ff00; font-family: 'Courier New', monospace; margin: 0; padding: 0;
+            background-size: cover; color: #00ff00; font-family: 'Courier New', monospace; margin: 0; 
         }
+        
+        .tree-viewport { display: flex; flex-direction: column; gap: 80px; padding: 60px 80px; max-width: 1800px; margin: 0 auto; }
+        .rank-wrapper { display: flex; align-items: stretch; position: relative; margin-bottom: 40px; }
 
-        .usa-hero { width: 100%; height: 180px; overflow: hidden; border-bottom: 3px solid #00ff00; position: relative; background: #000; }
-        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
-        .title-overlay { position: absolute; bottom: 15px; left: 30px; }
-
-        .tree-viewport { padding: 40px; display: flex; flex-direction: column; gap: 80px; max-width: 1600px; margin: 0 auto; }
+        /* ROMAN NUMERAL SIDEBARS */
+        .rank-sidebar {
+            font-size: 5em; font-weight: bold; color: rgba(0, 255, 0, 0.08);
+            writing-mode: vertical-rl; text-orientation: upright;
+            padding: 20px; letter-spacing: -10px; display: flex; align-items: center;
+        }
 
         .rank-container {
-            display: grid; grid-template-columns: repeat(5, 1fr); grid-auto-rows: 150px; gap: 25px;
-            position: relative; padding: 40px; background: rgba(0, 0, 0, 0.5); border-left: 12px solid #00ff00;
+            flex-grow: 1; display: grid; 
+            grid-template-columns: repeat(5, 1fr); grid-auto-rows: 150px;
+            gap: 30px; padding: 40px; background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 0, 0.2); position: relative;
         }
 
-        .rank-label { 
-            font-size: 4em; font-weight: bold; color: rgba(0, 255, 0, 0.1);
-            position: absolute; left: -90px; top: 50%; transform: translateY(-50%) rotate(-90deg);
-            white-space: nowrap; letter-spacing: 15px;
+        /* ARROW SVG LAYER */
+        .arrow-svg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
         }
 
         .v-card {
-            background: rgba(15, 15, 15, 0.95); border: 2px solid #444; padding: 10px;
-            text-align: center; cursor: pointer; transition: 0.2s; position: relative;
+            background: rgba(10, 10, 10, 0.95); border: 2px solid #333;
+            padding: 12px; text-align: center; z-index: 10;
+            display: flex; flex-direction: column; justify-content: center;
+            box-shadow: 5px 5px 15px #000;
         }
-        .v-card:hover { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; transform: scale(1.03); }
+        .v-img { width: 100%; height: 75px; object-fit: contain; }
+        .v-name { font-size: 0.7em; font-weight: bold; margin-top: 5px; color: #fff; text-transform: uppercase; }
         
-        .premium { border-color: #d4af37 !important; color: #d4af37; }
-        .squadron { border-color: #55efc4 !important; color: #55efc4; }
-
-        .v-img { width: 100%; height: 80px; object-fit: contain; }
-        .v-name { font-size: 0.75em; font-weight: bold; margin-top: 5px; text-transform: uppercase; }
-
-        .back-btn {
-            position: fixed; bottom: 20px; left: 20px;
-            background: #000; border: 2px solid #00ff00;
-            color: #00ff00; padding: 10px 20px;
-            text-decoration: none; font-weight: bold; z-index: 100;
-        }
-
-        /* Error Display */
-        #status-msg { color: #ff0000; padding: 20px; text-align: center; font-weight: bold; }
+        .premium { border-color: #d4af37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        .squadron { border-color: #55efc4; box-shadow: 0 0 10px rgba(85, 239, 196, 0.3); }
     </style>
 </head>
 <body>
 
-    <div class="usa-hero">
-        <video class="usa-banner-video" autoplay muted loop playsinline>
-            <source src="usa_banner.mp4" type="video/mp4">
-        </video>
-        <div class="title-overlay">
-            <h1 style="font-size: 3.5em; margin: 0; letter-spacing: 15px;">USA AIR BRANCH</h1>
-            <p>DATA LINK: <span id="sync-status">INITIALIZING...</span></p>
-        </div>
-    </div>
-
-    <div id="status-msg"></div>
     <div id="research-theater" class="tree-viewport"></div>
 
-    <a href="index.html" class="back-btn">RETURN TO COMMAND</a>
-
     <script>
-        // CONFIGURATION: Pointing to your external pics repo
-        const PIC_REPO_BASE = "https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/";
+        const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/";
+        const clean = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 
-        async function startSync() {
-            const status = document.getElementById('sync-status');
-            const msg = document.getElementById('status-msg');
-            
+        async function buildTree() {
             try {
-                // 1. Load Registry
-                const regRes = await fetch('./SP_Registry_CANON_3_31.csv');
-                if(!regRes.ok) throw new Error("Registry CSV Not Found");
+                const [regRes, treeRes, edgeRes] = await Promise.all([
+                    fetch('./SP_Registry_CANON_3_31.csv'),
+                    fetch('./usa_tree_v4.json'),
+                    fetch('./usa_tree_pass2_edges.csv')
+                ]);
+
                 const regText = await regRes.text();
-                
+                const treeData = await treeRes.json();
+                const edgeText = await edgeRes.text();
                 const registry = {};
+
+                // 1. DEEP SCAN IMAGES
                 regText.split('\n').slice(1).forEach(row => {
                     const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if(cols.length > 14) {
+                    if (cols.length > 14) {
                         const img = cols[2]?.replace(/"/g, '').trim();
-                        // Map multiple columns to catch the match
-                        [cols[0], cols[3], cols[6], cols[14]].forEach(k => { if(k) registry[k.trim()] = img; });
+                        [cols[0], cols[3], cols[6], cols[14]].forEach(val => {
+                            if (val) registry[clean(val)] = img;
+                        });
                     }
                 });
 
-                // 2. Load Tree JSON
-                const treeRes = await fetch('./usa_tree_v4.json');
-                if(!treeRes.ok) throw new Error("USA Tree JSON Not Found");
-                const treeData = await treeRes.json();
+                const theater = document.getElementById('research-theater');
 
-                status.innerText = "ONLINE";
-                status.style.color = "#00ff00";
-                renderTree(treeData, registry);
+                // 2. RENDER THE RANKS
+                [1,2,3,4,5,6,7,8,9].forEach(r => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'rank-wrapper';
+                    wrapper.innerHTML = `<div class="rank-sidebar">${ROMAN[r]}</div>`;
 
-            } catch (err) {
-                status.innerText = "FAILED";
-                status.style.color = "#ff0000";
-                msg.innerText = "CRITICAL ERROR: " + err.message;
-                console.error(err);
-            }
+                    const container = document.createElement('div');
+                    container.className = 'rank-container';
+                    container.id = `rank-box-${r}`;
+                    
+                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svg.setAttribute("class", "arrow-svg");
+                    svg.id = `svg-rank-${r}`;
+                    container.appendChild(svg);
+
+                    const cells = treeData.cells.filter(c => c.rank === r);
+                    cells.forEach(cell => {
+                        const icon = registry[clean(cell.cell_id)] || registry[clean(cell.display_name)] || 'placeholder.png';
+                        const card = document.createElement('div');
+                        card.className = `v-card ${cell.flags.is_premium ? 'premium' : ''} ${cell.flags.is_squadron ? 'squadron' : ''}`;
+                        card.style.gridColumn = cell.column;
+                        card.style.gridRow = cell.row;
+                        card.id = `unit-${cell.cell_id}`;
+
+                        card.innerHTML = `
+                            <img src="${PIC_BASE}${icon}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
+                            <div class="v-name">${cell.display_name.replace(/_/g, ' ')}</div>
+                        `;
+                        container.appendChild(card);
+                    });
+
+                    const rightBar = document.createElement('div');
+                    rightBar.className = 'rank-sidebar';
+                    rightBar.innerText = ROMAN[r];
+                    wrapper.appendChild(container);
+                    wrapper.appendChild(rightBar);
+                    theater.appendChild(wrapper);
+                });
+
+                // 3. DRAW THE ARROWS FROM CSV
+                setTimeout(() => drawArrows(edgeText), 500); // Small delay to ensure cards exist
+
+            } catch (err) { console.error("Sync Failure:", err); }
         }
 
-        function renderTree(data, registry) {
-            const theater = document.getElementById('research-theater');
-            [1,2,3,4,5,6,7,8,9].forEach(r => {
-                const container = document.createElement('div');
-                container.className = 'rank-container';
-                container.innerHTML = `<div class="rank-label">RANK ${r}</div>`;
-                
-                const cells = data.cells.filter(c => c.rank === r);
-                cells.forEach(cell => {
-                    // Try to match the cell_id or display_name to the registry
-                    const icon = registry[cell.cell_id] || registry[cell.display_name] || 'placeholder.png';
-                    
-                    let specialClass = "";
-                    if (cell.flags.is_premium || cell.flags.is_pack) specialClass = "premium";
-                    else if (cell.flags.is_squadron || cell.flags.is_event) specialClass = "squadron";
+        function drawArrows(csv) {
+            const lines = csv.split('\n').slice(1);
+            lines.forEach(line => {
+                const [fromId, toId, , , fromRank, toRank] = line.split(',');
+                if (fromId && toId && fromRank === toRank) { // Only draw within same rank for now
+                    const start = document.getElementById(`unit-${fromId.trim()}`);
+                    const end = document.getElementById(`unit-${toId.trim()}`);
+                    const svg = document.getElementById(`svg-rank-${fromRank.trim()}`);
 
-                    const card = document.createElement('div');
-                    card.className = `v-card ${specialClass}`;
-                    card.style.gridColumn = cell.column;
-                    card.style.gridRow = cell.row;
-                    
-                    card.innerHTML = `
-                        <img src="${PIC_REPO_BASE}${icon}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=NOT+FOUND';">
-                        <div class="v-name">${cell.display_name.replace(/_/g, ' ')}</div>
-                    `;
-                    container.appendChild(card);
-                });
-                if(cells.length > 0) theater.appendChild(container);
+                    if (start && end && svg) {
+                        const sX = start.offsetLeft + (start.offsetWidth / 2);
+                        const sY = start.offsetTop + start.offsetHeight;
+                        const eX = end.offsetLeft + (end.offsetWidth / 2);
+                        const eY = end.offsetTop;
+
+                        const lineEl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        lineEl.setAttribute("x1", sX); lineEl.setAttribute("y1", sY);
+                        lineEl.setAttribute("x2", eX); lineEl.setAttribute("y2", eY);
+                        lineEl.setAttribute("stroke", "rgba(0, 255, 0, 0.4)");
+                        lineEl.setAttribute("stroke-width", "3");
+                        svg.appendChild(lineEl);
+                    }
+                }
             });
         }
 
-        startSync();
+        buildTree();
     </script>
 </body>
 </html>
