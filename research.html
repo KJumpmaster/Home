@@ -1,22 +1,25 @@
-// THE MASTER DATA LINK
+// THE MASTER DATA LINKS
 const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
 
 async function initiateSystem() {
     const overlay = document.getElementById('loading-overlay');
     try {
-        console.log("GEM: Initiating Stable Recovery...");
+        console.log("GEM: Initiating 100% Combat-Ready Handshake...");
 
-        // 1. ACQUIRE ASSETS (Tree and Registry Only)
-        // We are NOT fetching usa_groups.json or shop.blkx here to ensure it works.
-        const [treeRes, regRes] = await Promise.all([
+        // 1. DATA ACQUISITION (The Triple Threat)
+        const [treeRes, groupRes, regRes] = await Promise.all([
             fetch('./usa_tree_v4.json'),
+            fetch('./usa_groups.json'),
             fetch('./SP_Registry_CANON_3_31.csv')
         ]);
 
-        if (!treeRes.ok) throw new Error("usa_tree_v4.json is missing from the folder");
-        if (!regRes.ok) throw new Error("SP_Registry_CANON_3_31.csv is missing from the folder");
+        // Error checking to make sure your files are actually there
+        if (!treeRes.ok) throw new Error("usa_tree_v4.json MISSING");
+        if (!groupRes.ok) throw new Error("usa_groups.json MISSING");
+        if (!regRes.ok) throw new Error("SP_Registry_CANON_3_31.csv MISSING");
 
         const treeData = await treeRes.json();
+        const groupData = await groupRes.json();
         const regText = await regRes.text();
 
         // 2. MAP REGISTRY (ID to Image Filename)
@@ -39,36 +42,56 @@ async function initiateSystem() {
             if (!cell.cell_id) return;
             
             const id = cell.cell_id.toLowerCase();
-            const imageName = registry[id] || 'placeholder.png';
+            
+            // GROUP LOGIC: Does this aircraft have "wingmen" in the groups file?
+            const squadMembers = groupData[id] || null;
+            const isGroup = squadMembers !== null;
 
+            // IMAGE SELECTION: If it's a group, force the "Group.png" icon
+            let imageName = registry[id] || 'placeholder.png';
+            if (isGroup && !imageName.includes('Group')) {
+                imageName = imageName.split('.')[0] + ' Group.png';
+            }
+
+            // CREATE THE CARD
             const card = document.createElement('div');
-            card.className = 'v-card'; // Regular card only
+            // 'group-stack' adds the double-border CSS you built
+            card.className = `v-card ${isGroup ? 'group-stack' : ''}`;
             card.style.gridColumn = cell.column;
             card.style.gridRow = cell.row;
 
+            // MANIFEST LIST: The list of planes that shows up inside the folder
+            let manifestHtml = "";
+            if (isGroup) {
+                manifestHtml = `<div class="manifest-list">${squadMembers.join('<br>')}</div>`;
+            }
+
+            // FINAL INJECTION
             card.innerHTML = `
                 <img src="${PIC_BASE}${imageName}" class="v-img" 
-                     onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=MISSING+ICON';">
+                     onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
                 <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
+                ${manifestHtml}
             `;
             
             theater.appendChild(card);
         });
 
-        // 4. SYSTEM ONLINE
+        // 4. MISSION SUCCESS
         overlay.style.display = 'none';
-        console.log("GEM: System Stable. Grid Rendered.");
+        console.log("GEM: SYSTEM 100% OPERATIONAL. HOORAY!");
 
     } catch (err) {
-        console.error("DATA LINK FAILURE:", err);
+        console.error("CRITICAL FAILURE:", err);
         overlay.innerHTML = `
             <div style="color:red; padding:40px; text-align:center; background:black; border:2px solid red;">
                 <h1 style="letter-spacing:10px;">OFFLINE</h1>
                 <p style="font-family:monospace; font-size:20px;">${err.message.toUpperCase()}</p>
+                <p style="color:white;">Verify your filenames in the folder!</p>
             </div>
         `;
     }
 }
 
-// Start the sequence immediately
+// Kickstart the system
 window.onload = initiateSystem;
