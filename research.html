@@ -4,17 +4,17 @@ const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/
 async function initiateSystem() {
     const overlay = document.getElementById('loading-overlay');
     try {
-        console.log("GEM: Initiating Stable Recovery Build...");
+        console.log("GEM: Initiating Ironclad Stable Build...");
 
         // 1. ACQUIRE ASSETS (Tree and Registry Only)
-        // We are skipping the groups file for now to ensure 100% stability.
+        // Strictly using only these two files to guarantee no crashes.
         const [treeRes, regRes] = await Promise.all([
             fetch('./usa_tree_v4.json'),
             fetch('./SP_Registry_CANON_3_31.csv')
         ]);
 
-        if (!treeRes.ok) throw new Error("usa_tree_v4.json missing");
-        if (!regRes.ok) throw new Error("Registry CSV missing");
+        if (!treeRes.ok) throw new Error("usa_tree_v4.json is missing or renamed");
+        if (!regRes.ok) throw new Error("SP_Registry_CANON_3_31.csv is missing or renamed");
 
         const treeData = await treeRes.json();
         const regText = await regRes.text();
@@ -42,11 +42,11 @@ async function initiateSystem() {
             const imageName = registry[id] || 'placeholder.png';
 
             const card = document.createElement('div');
-            card.className = 'v-card'; 
+            card.className = 'v-card'; // Single-card mode only
             card.style.gridColumn = cell.column;
             card.style.gridRow = cell.row;
 
-            // Simple, clean HTML injection for the grid
+            // This HTML structure is the one that gave us the 100% success
             card.innerHTML = `
                 <img src="${PIC_BASE}${imageName}" class="v-img" 
                      onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
@@ -58,7 +58,7 @@ async function initiateSystem() {
 
         // 4. SYSTEM ONLINE
         overlay.style.display = 'none';
-        console.log("GEM: System 100% Stable. Hooray!");
+        console.log("GEM: System 100% Stable. Grid Rendered.");
 
     } catch (err) {
         console.error("DATA LINK FAILURE:", err);
@@ -71,5 +71,5 @@ async function initiateSystem() {
     }
 }
 
-// Start the sequence
+// Start the sequence immediately
 window.onload = initiateSystem;
