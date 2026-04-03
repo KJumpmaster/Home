@@ -4,23 +4,19 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
-        /* 1. UI BASE: FIXED METAL */
         body, html {
             margin: 0; padding: 0; min-height: 100vh;
-            background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
-            background-size: cover !important;
-            color: white; font-family: 'Segoe UI', Arial, sans-serif;
-            overflow-x: auto;
+            background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed;
+            background-size: cover; color: white; font-family: 'Segoe UI', Arial, sans-serif;
         }
 
-        /* 2. HEADER & HUD */
         #strategic-header {
             width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0 10px 0;
             background: rgba(0, 0, 0, 0.85); border-bottom: 2px solid #00ff00;
         }
         #banner-container { width: 75%; height: 180px; overflow: hidden; border: 1px solid #444; position: relative; }
         #banner-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8); }
-        #main-title { font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px; text-transform: uppercase; margin: 10px 0; text-shadow: 0 0 10px #00ff00; }
+        #main-title { font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px; text-transform: uppercase; margin: 10px 0; }
 
         .tactical-hud {
             width: 100%; background: rgba(0, 20, 0, 0.95);
@@ -35,55 +31,41 @@
             cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
         }
 
-        /* 3. RESEARCH GRID (Zero-Logic 0-7) */
-        #research-wrapper { display: flex; flex-direction: column; padding: 30px 0 150px 15px; position: relative; }
-        
+        /* THE GRID */
         #research-theater {
             display: grid;
             grid-template-columns: 140px repeat(5, 210px) repeat(2, 210px); 
             grid-auto-rows: min-content; grid-gap: 45px 15px;
-            position: relative; min-width: max-content;
+            position: relative; min-width: max-content; padding: 30px;
         }
 
-        /* ARROW OVERLAY: FIXED TO VIEWPORT */
         #arrow-canvas {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 5; overflow: visible;
         }
-
-        .col-header {
-            height: 40px; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
-            border: 1px solid rgba(255,255,255,0.2); grid-row: 1; margin-bottom: 20px;
-        }
-        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.3); color: #8cff8c; border-color: #00ff00; }
-        .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
 
         .rank-marker {
             grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; font-weight: 900; color: #00ff00; font-size: 50px; opacity: 0.15; 
-            text-transform: uppercase; line-height: 1; z-index: 1;
+            text-transform: uppercase; line-height: 1;
         }
         .rank-small { font-size: 37px !important; }
 
         .v-card {
             width: 200px; height: 130px; background: rgba(5, 5, 5, 0.98); border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; transition: 0.3s; filter: grayscale(1); opacity: 0.6; z-index: 10;
+            cursor: pointer; position: relative; z-index: 10;
         }
-        .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00 !important; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
+        .v-card.obtained { border-color: #00ff00 !important; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
         .v-card.premium { border-color: #b8860b !important; }
-        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; }
 
         .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
         .v-name { font-size: 11px; padding: 5px; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; background: rgba(0,255,0,0.2); text-transform: uppercase; }
 
-        /* ARROWS & PULSE */
         .research-line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
         .line-solid { stroke: #ffd84d; stroke-width: 4; filter: drop-shadow(0 0 5px #ffd84d); }
         .line-dashed { stroke: #ffd84d; stroke-width: 3; stroke-dasharray: 8,6; }
         .line-faint { stroke: rgba(100, 170, 255, 0.4); stroke-width: 4; }
-        .pulse-dot { fill: #fff; filter: drop-shadow(0 0 8px #fff); }
     </style>
 </head>
 <body>
@@ -96,132 +78,112 @@
     </header>
 
     <div class="tactical-hud">
-        <div class="hud-stats">OBTAINED: <span id="count-num">0</span> / <span id="total-num">0</span></div>
+        <div class="hud-stats">UNITS: <span id="count-num">0</span> / <span id="total-num">0</span></div>
         <div id="hud-progress-bg"><div id="hud-progress-fill"></div></div>
         <div class="hud-btns">
-            <button onclick="window.print()">Print</button>
             <button onclick="exportData()">Export</button>
             <button onclick="document.getElementById('import-input').click()">Import</button>
         </div>
     </div>
 
-    <svg id="arrow-canvas">
-        <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#ffd84d" /></marker>
-        </defs>
-    </svg>
-
-    <div id="research-wrapper">
-        <div id="research-theater">
-            <div class="col-header header-research">Researchable Airframes</div>
-            <div class="col-header header-premium">Premium Vehicles</div>
+    <div id="research-theater">
+        <svg id="arrow-canvas"><defs><marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#ffd84d" /></marker></defs></svg>
         </div>
-    </div>
 
     <input type="file" id="import-input" style="display:none" onchange="importData(event)">
 
     <script>
-        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
         const JSON_URL = "https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json";
+        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
         const NAUGHTY_LIST = ['o3u_1', 'ucav_mq_1_predator', 'uav_quadcopter'];
 
         let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
         let totalCount = 0;
         let globalLinks = [];
 
-        function normalize(id) { return id ? String(id).toLowerCase().replace(/[^a-z0-9]/g, '') : ""; }
-
-        async function initiateSystem() {
+        async function startSystem() {
             const theater = document.getElementById('research-theater');
-            if (!theater) return;
-
             try {
-                const treeRes = await fetch(JSON_URL);
-                if (!treeRes.ok) throw new Error("JSON LINK BROKEN");
-                const treeData = await treeRes.json();
-                globalLinks = treeData.arrows || [];
+                const response = await fetch(JSON_URL);
+                if (!response.ok) throw new Error("Could not find JSON file on GitHub.");
+                const data = await response.json();
                 
-                // 1. BUILD RANKS
+                globalLinks = data.arrows || [];
+
+                // 1. Ranks
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
-                    const marker = document.createElement('div');
-                    marker.className = 'rank-marker' + (i >= 6 ? ' rank-small' : '');
-                    marker.style.gridRow = `${(i * 8) + 2} / span 7`;
-                    marker.innerHTML = label.split(" ")[0].split("").join("<br>") + "<br><br>" + (label.split(" ")[1] || "");
-                    theater.appendChild(marker);
+                    const div = document.createElement('div');
+                    div.className = 'rank-marker' + (i >= 6 ? ' rank-small' : '');
+                    div.style.gridRow = `${(i * 8) + 2} / span 7`;
+                    div.innerHTML = label.split(" ")[0].split("").join("<br>") + "<br><br>" + (label.split(" ")[1] || "");
+                    theater.appendChild(div);
                 });
 
-                // 2. BUILD CARDS
-                if (treeData.cells) {
-                    treeData.cells.forEach(cell => {
-                        if (NAUGHTY_LIST.includes(cell.cell_key)) return;
-                        totalCount++;
-                        const normID = normalize(cell.cell_key);
-                        const card = document.createElement('div');
-                        card.className = 'v-card'; card.id = `unit-${normID}`;
-                        if (ownedAircraft.includes(normID)) card.classList.add('obtained');
-                        
-                        const col = parseInt(cell.column ?? 0, 10);
-                        if (col >= 6) card.classList.add('premium');
+                // 2. Cells
+                data.cells.forEach(cell => {
+                    if (NAUGHTY_LIST.includes(cell.cell_key)) return;
+                    totalCount++;
+                    const id = cell.cell_key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const card = document.createElement('div');
+                    card.className = 'v-card';
+                    card.id = `unit-${id}`;
+                    if (ownedAircraft.includes(id)) card.classList.add('obtained');
+                    
+                    const col = parseInt(cell.column ?? 0);
+                    if (col >= 6) card.classList.add('premium');
 
-                        card.style.gridColumn = col + 1; 
-                        card.style.gridRow = ((parseInt(cell.rank ?? 1, 10) - 1) * 8) + parseInt(cell.row_in_rank ?? 1, 10) + 1;
+                    card.style.gridColumn = col + 1;
+                    card.style.gridRow = ((parseInt(cell.rank ?? 1) - 1) * 8) + parseInt(cell.row_in_rank ?? 1) + 1;
 
-                        card.innerHTML = `<img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';">
-                                          <div class="v-name">${String(cell.display_name || cell.cell_key).toUpperCase().replace(/_/g, ' ')}</div>`;
-                        card.onclick = () => toggleObtained(normID);
-                        theater.appendChild(card);
-                    });
-                }
+                    card.innerHTML = `<img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130?text=MISSING';">
+                                      <div class="v-name">${cell.display_name.toUpperCase()}</div>`;
+                    
+                    card.onclick = () => {
+                        if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(x => x !== id);
+                        else ownedAircraft.push(id);
+                        localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
+                        location.reload();
+                    };
+                    theater.appendChild(card);
+                });
 
-                updateHUD();
-                
-                // 3. ATTACH SCROLL LISTENERS FOR ARROWS
-                window.addEventListener('scroll', drawArrows);
-                window.addEventListener('resize', drawArrows);
-                setTimeout(drawArrows, 1200);
+                document.getElementById('count-num').innerText = ownedAircraft.length;
+                document.getElementById('total-num').innerText = totalCount;
+                document.getElementById('hud-progress-fill').style.width = ((ownedAircraft.length / totalCount) * 100) + "%";
 
-            } catch (err) { 
-                console.error("FATAL ERROR:", err);
-                alert("SYSTEM MALFUNCTION: CHECK CONSOLE (F12)");
+                // 3. Arrows
+                setTimeout(drawArrows, 1000);
+
+            } catch (e) {
+                theater.innerHTML = `<h1 style="color:red; grid-column: 1/-1;">TACTICAL ERROR: ${e.message}</h1>`;
             }
         }
 
         function drawArrows() {
             const canvas = document.getElementById('arrow-canvas');
-            if (!canvas) return;
-            
-            const defs = canvas.querySelector('defs').outerHTML;
-            canvas.innerHTML = defs;
+            const theater = document.getElementById('research-theater');
+            canvas.setAttribute('width', theater.offsetWidth);
+            canvas.setAttribute('height', theater.offsetHeight);
 
-            globalLinks.forEach(link => {
-                const p = document.getElementById(`unit-${normalize(link.from)}`);
-                const c = document.getElementById(`unit-${normalize(link.to)}`);
+            globalLinks.forEach(l => {
+                const p = document.getElementById(`unit-${l.from.toLowerCase().replace(/[^a-z0-9]/g, '')}`);
+                const c = document.getElementById(`unit-${l.to.toLowerCase().replace(/[^a-z0-9]/g, '')}`);
                 if (p && c) {
-                    const pOwned = ownedAircraft.includes(normalize(link.from));
-                    const cOwned = ownedAircraft.includes(normalize(link.to));
-                    
-                    const pRect = p.getBoundingClientRect();
-                    const cRect = c.getBoundingClientRect();
-
-                    // SKIP IF OFF-SCREEN
-                    if (pRect.bottom < 0 || cRect.top > window.innerHeight) return;
-
-                    const x1 = pRect.left + (pRect.width / 2);
-                    const y1 = pRect.bottom;
-                    const x2 = cRect.left + (cRect.width / 2);
-                    const y2 = cRect.top;
+                    const x1 = p.offsetLeft + (p.offsetWidth / 2);
+                    const y1 = p.offsetTop + p.offsetHeight;
+                    const x2 = c.offsetLeft + (c.offsetWidth / 2);
+                    const y2 = c.offsetTop;
 
                     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                     path.setAttribute("d", `M ${x1} ${y1} L ${x1} ${y1+20} L ${x2} ${y1+20} L ${x2} ${y2-10}`);
                     path.classList.add("research-line");
 
-                    if (pOwned && cOwned) { 
-                        path.classList.add("line-solid"); 
-                        path.setAttribute("marker-end", "url(#arrowhead)"); 
-                        animateDot(path, canvas);
-                    }
-                    else if (pOwned && !cOwned) path.classList.add("line-dashed");
+                    const pOwn = ownedAircraft.includes(l.from.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                    const cOwn = ownedAircraft.includes(l.to.toLowerCase().replace(/[^a-z0-9]/g, ''));
+
+                    if (pOwn && cOwn) { path.classList.add("line-solid"); path.setAttribute("marker-end", "url(#arrowhead)"); }
+                    else if (pOwn) path.classList.add("line-dashed");
                     else path.classList.add("line-faint");
                     
                     canvas.appendChild(path);
@@ -229,52 +191,22 @@
             });
         }
 
-        function animateDot(path, svg) {
-            const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            dot.setAttribute("r", "3.5"); dot.classList.add("pulse-dot");
-            svg.appendChild(dot);
-            let pos = 0;
-            function run() {
-                pos = (pos + 0.0035) % 1;
-                const pt = path.getPointAtLength(pos * path.getTotalLength());
-                dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y);
-                requestAnimationFrame(run);
-            }
-            run();
-        }
-
-        function toggleObtained(id) {
-            if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(i => i !== id);
-            else ownedAircraft.push(id);
-            localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
-            updateHUD();
-            drawArrows();
-        }
-
-        function updateHUD() {
-            document.getElementById('count-num').innerText = ownedAircraft.length;
-            document.getElementById('total-num').innerText = totalCount;
-            const percent = Math.round((ownedAircraft.length / totalCount) * 100) || 0;
-            document.getElementById('hud-progress-fill').style.width = percent + "%";
-        }
-
         function exportData() {
-            const blob = new Blob([JSON.stringify(ownedAircraft)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_USA.json"; a.click();
+            const blob = new Blob([JSON.stringify(ownedAircraft)], {type:"application/json"});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download="progress.json"; a.click();
         }
 
         function importData(e) {
             const reader = new FileReader();
-            reader.onload = (event) => {
-                ownedAircraft = JSON.parse(event.target.result);
+            reader.onload = (ev) => {
+                ownedAircraft = JSON.parse(ev.target.result);
                 localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
                 location.reload();
             };
             reader.readAsText(e.target.files[0]);
         }
 
-        window.onload = initiateSystem;
+        window.onload = startSystem;
     </script>
 </body>
 </html>
