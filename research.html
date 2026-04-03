@@ -14,7 +14,7 @@
             color: white; 
             margin: 0; 
             font-family: sans-serif; 
-            overflow-x: auto; 
+            overflow-x: auto;
         }
         
         #loading-overlay {
@@ -22,59 +22,58 @@
             background: #000 url('https://raw.githubusercontent.com/KJumpmaster/Home/main/Comms_Pic.png') no-repeat center;
             background-size: contain;
             z-index: 9999;
-            display: flex; align-items: center; justify-content: flex-end; 
-            font-size: 24px; color: #00ff00;
-            padding-bottom: 50px;
+            display: flex; align-items: center; justify-content: center;
         }
 
         #research-wrapper {
-            position: relative;
             width: max-content;
-            margin: 80px auto; /* Increased top margin for the 'Holy Grail' header space */
-            padding: 40px;
+            margin: 0 auto;
+            padding: 80px 40px;
         }
 
-        /* REINFORCED GRID STRUCTURE */
+        /* GRID: Ranks 0-4 (Research) + Ranks 5-8 (Special/Premium) */
         #research-theater {
             display: grid;
-            /* Creates a flexible grid; columns and rows are defined by the JSON data */
-            grid-gap: 30px 15px; 
-            z-index: 2;
+            grid-template-columns: repeat(12, 190px); 
+            /* Expanded to 9 Rows to fit Ranks 0 through 8 */
+            grid-template-rows: repeat(9, 125px); 
+            grid-gap: 25px 15px;
+            position: relative;
         }
 
         .v-card {
-            width: 170px; 
-            height: 90px;
-            background: rgba(20, 20, 20, 0.85); 
-            border: 1px solid #555;
+            width: 180px; 
+            height: 110px;
+            background: rgba(20, 20, 20, 0.9); 
+            border: 2px solid #444;
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             justify-content: center;
-            backdrop-filter: blur(4px);
-            transition: transform 0.2s;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        .v-card:hover {
-            border-color: #00ff00;
-            transform: scale(1.05);
-            z-index: 10;
+        .v-img { 
+            width: 95%; 
+            height: 70%; 
+            object-fit: contain; 
         }
 
-        .v-img { width: 90%; height: 65%; object-fit: contain; pointer-events: none; }
         .v-name { 
             font-size: 10px; 
             padding: 4px; 
             text-transform: uppercase; 
             text-align: center; 
-            color: #ccc;
-            letter-spacing: 1px;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay">INITIALIZING VETERAN HANDSHAKE...</div>
+    <div id="loading-overlay"></div>
 
     <div id="research-wrapper">
         <div id="research-theater"></div>
@@ -95,12 +94,12 @@
                     handshake
                 ]);
 
-                if (!treeRes.ok || !regRes.ok) throw new Error("CRITICAL DATA OFFLINE");
+                if (!treeRes.ok || !regRes.ok) throw new Error("CRITICAL ASSETS OFFLINE");
 
                 const treeData = await treeRes.json();
                 const regText = await regRes.text();
 
-                // Registry Parsing (Column C / Index 2)
+                // Registry Parsing from Column 3
                 const registry = {};
                 const lines = regText.split('\n');
                 for (let i = 1; i < lines.length; i++) {
@@ -114,15 +113,14 @@
 
                 theater.innerHTML = '';
                 
-                // RESTORING GRID PLACEMENT
                 treeData.cells.forEach(cell => {
                     const id = String(cell.cell_id).toLowerCase();
                     const card = document.createElement('div');
                     card.className = 'v-card';
                     
-                    /* CRITICAL: Applying row/column coordinates from usa_tree_v4.json */
-                    card.style.gridColumn = cell.column;
-                    card.style.gridRow = cell.row;
+                    // Column & Row mapping with +1 offset for CSS Grid (0-8 maps to 1-9)
+                    card.style.gridColumn = parseInt(cell.column) + 1;
+                    card.style.gridRow = parseInt(cell.row) + 1;
 
                     const imgFile = registry[id] || 'placeholder.png';
                     
@@ -138,7 +136,7 @@
                 overlay.style.display = 'none';
 
             } catch (err) {
-                overlay.innerHTML = `<div style="color:red; background:black; padding:20px;">SYSTEM ERROR: ${err.message}</div>`;
+                overlay.innerHTML = `<h1 style="color:red; background:black; padding:20px;">ERROR: ${err.message}</h1>`;
             }
         }
 
