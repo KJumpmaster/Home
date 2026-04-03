@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
-        /* 1. CORE UI & METAL BASE */
         body, html {
             margin: 0; padding: 0;
             background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
@@ -12,45 +11,45 @@
             color: white; font-family: 'Segoe UI', Arial, sans-serif;
         }
 
-        /* 2. STRATEGIC HEADER (Banner First) */
+        /* STRATEGIC HEADER & HUD */
         #strategic-header {
             width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0 10px 0;
             background: rgba(0, 0, 0, 0.85); border-bottom: 1px solid #444;
         }
-        #banner-container { width: 75%; height: 180px; overflow: hidden; border: 1px solid #00ff00; position: relative; box-shadow: 0 0 20px #000; }
+        #banner-container { width: 75%; height: 180px; overflow: hidden; border: 1px solid #00ff00; position: relative; }
         #banner-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8); }
         #main-title { font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px; text-transform: uppercase; margin-top: 10px; text-shadow: 0 0 10px #00ff00; }
 
-        /* 3. TACTICAL HUD (Now under Banner) */
         .tactical-hud {
             width: 100%; background: rgba(0, 20, 0, 0.95);
             border-bottom: 2px solid #00ff00; padding: 15px 40px;
             display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;
         }
         .hud-stats { font-family: monospace; color: #00ff00; font-size: 20px; font-weight: bold; }
-        .hud-progress-bg { width: 300px; height: 18px; background: #111; border: 1px solid #00ff00; position: relative; overflow: hidden; }
+        .hud-progress-bg { width: 300px; height: 18px; background: #111; border: 1px solid #00ff00; overflow: hidden; }
         .hud-progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 15px #00ff00; transition: width 0.6s; }
         
-        .hud-btns button, .print-btn {
+        .hud-btns button {
             background: #000; border: 1px solid #00ff00; color: #00ff00; padding: 8px 15px; 
-            cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px; transition: 0.2s;
+            cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
         }
-        .hud-btns button:hover { background: #00ff00; color: #000; }
 
-        /* 4. RESEARCH THEATER & GRID */
-        #research-wrapper { display: flex; flex-direction: column; align-items: flex-start; padding: 30px 0 100px 15px; }
+        /* THEATER & GRID */
+        #research-wrapper { display: flex; flex-direction: column; padding: 30px 0 100px 15px; position: relative; }
         
         #research-theater {
             display: grid;
-            /* ZERO LOGIC: Column 0 (Rank) | Col 1-5 (Research) | Col 6-7 (Premium) */
             grid-template-columns: 140px repeat(5, 210px) repeat(2, 210px); 
             grid-auto-rows: min-content; grid-gap: 40px 15px;
             position: relative; min-width: max-content;
         }
 
-        #arrow-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        /* SVG CANVAS FIXED */
+        #arrow-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 5; overflow: visible;
+        }
 
-        /* RIBBONS (Space after HUD) */
         .col-header {
             height: 40px; display: flex; align-items: center; justify-content: center;
             font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
@@ -59,7 +58,6 @@
         .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.3); color: #8cff8c; border-color: #00ff00; }
         .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
 
-        /* RANK MARKERS (Centered) */
         .rank-marker {
             grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; font-weight: 900; color: #00ff00; font-size: 50px; opacity: 0.15; 
@@ -67,43 +65,24 @@
         }
         .rank-small { font-size: 37px !important; }
 
-        /* CARDS */
         .v-card {
             width: 200px; height: 130px; background: rgba(5, 5, 5, 0.98); border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer; position: relative; transition: 0.3s; filter: grayscale(1); opacity: 0.6; z-index: 10;
         }
-        .v-card:hover { transform: scale(1.05); border-color: #fff; z-index: 100; opacity: 1; }
         .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00 !important; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
-        
         .v-card.premium { border-color: #b8860b !important; }
         .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; }
-        .v-card.squadron { border-color: #4b6cb7 !important; border-width: 3px; }
-        .v-card.squadron .v-name { background: rgba(75, 108, 183, 0.7) !important; }
 
         .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
         .v-name { font-size: 11px; padding: 5px; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; background: rgba(0,255,0,0.2); text-transform: uppercase; }
 
-        /* 5. ARROWS & PIZAZZ */
-        .research-line { fill: none; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.3s, filter 0.3s; }
+        /* ARROWS & PULSE */
+        .research-line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
         .line-solid { stroke: #ffd84d; stroke-width: 4; filter: drop-shadow(0 0 5px #ffd84d); }
         .line-dashed { stroke: #ffd84d; stroke-width: 3; stroke-dasharray: 8,6; }
-        .line-faint { stroke: rgba(100, 170, 255, 0.4); stroke-width: 4; } /* Blue lines Thicker */
-
-        /* HOVER GLOW FOR ARROWS */
-        .v-card:hover ~ #arrow-canvas .research-line { stroke-width: 6; filter: brightness(1.5) drop-shadow(0 0 10px #ffd84d); }
-
-        /* DOT PULSE ANIMATION */
+        .line-faint { stroke: rgba(100, 170, 255, 0.4); stroke-width: 4; }
         .pulse-dot { fill: #fff; filter: drop-shadow(0 0 8px #fff); }
-
-        /* BOTTOM HUD */
-        #bottom-hud { margin-top: 50px; padding: 40px; border-top: 1px solid #444; background: rgba(0,0,0,0.9); }
-
-        @media print {
-            #strategic-header, .hud-btns, #arrow-canvas, .tactical-hud { display: none !important; }
-            body { background: white !important; color: black !important; }
-            .v-card { filter: none !important; border: 1px solid #000 !important; page-break-inside: avoid; }
-        }
     </style>
 </head>
 <body>
@@ -119,29 +98,17 @@
         <div class="hud-stats">OBTAINED: <span class="count-num">0</span> / <span class="total-num">0</span> (<span class="percent-num">0</span>%)</div>
         <div class="hud-progress-bg"><div class="hud-progress-fill"></div></div>
         <div class="hud-btns">
-            <button onclick="window.print()" class="print-btn">🖨️ Print Tree</button>
-            <button onclick="exportData()">Export Data Disk</button>
-            <button onclick="document.getElementById('import-input').click()">Import Data Disk</button>
+            <button onclick="window.print()">🖨️ Print</button>
+            <button onclick="exportData()">Export</button>
+            <button onclick="document.getElementById('import-input').click()">Import</button>
         </div>
     </div>
 
     <div id="research-wrapper">
         <div id="research-theater">
-            <svg id="arrow-canvas">
-                <defs>
-                    <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#ffd84d" /></marker>
-                </defs>
-            </svg>
+            <svg id="arrow-canvas"><defs><marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#ffd84d" /></marker></defs></svg>
             <div class="col-header header-research">Researchable Airframes</div>
             <div class="col-header header-premium">Premium Vehicles</div>
-        </div>
-    </div>
-
-    <div class="tactical-hud" id="bottom-hud-control">
-        <div class="hud-stats">COMMAND DATA: <span class="percent-num">0</span>% COMPLETE</div>
-        <div class="hud-btns">
-            <button onclick="exportData()">Export Progress</button>
-            <button onclick="location.href='#top-hud'">Scroll to Top</button>
         </div>
     </div>
 
@@ -154,23 +121,23 @@
 
         let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
         let totalCount = 0;
+        let globalLinks = [];
 
         function normalize(id) { return id ? String(id).toLowerCase().replace(/[^a-z0-9]/g, '') : ""; }
 
         async function initiateSystem() {
             const theater = document.getElementById('research-theater');
-            const canvas = document.getElementById('arrow-canvas');
-
             try {
                 const treeRes = await fetch(JSON_URL);
                 const treeData = await treeRes.json();
+                globalLinks = treeData.arrows || [];
                 
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
                     const rowStart = (i * 8) + 2; 
                     const marker = document.createElement('div');
                     marker.className = 'rank-marker';
-                    if (i >= 6) marker.classList.add('rank-small'); // VII, VIII, IX
+                    if (i >= 6) marker.classList.add('rank-small');
                     marker.style.gridRow = `${rowStart} / span 7`;
                     marker.innerHTML = label.split(" ")[0].split("").join("<br>") + "<br><br>" + (label.split(" ")[1] || "");
                     theater.appendChild(marker);
@@ -181,15 +148,11 @@
                     totalCount++;
                     const normID = normalize(cell.cell_key);
                     const card = document.createElement('div');
-                    card.className = 'v-card';
-                    card.id = `unit-${normID}`;
-                    
+                    card.className = 'v-card'; card.id = `unit-${normID}`;
                     if (ownedAircraft.includes(normID)) card.classList.add('obtained');
                     
-                    // ZERO LOGIC: Col 0-5 Research, 6-7 Premium
                     const col = parseInt(cell.column ?? 0, 10);
-                    if (cell.kind === 'squadron') card.classList.add('squadron');
-                    else if (col >= 6) card.classList.add('premium');
+                    if (col >= 6) card.classList.add('premium');
 
                     card.style.gridColumn = col + 1; 
                     card.style.gridRow = ((parseInt(cell.rank ?? 1, 10) - 1) * 8) + parseInt(cell.row_in_rank ?? 1, 10) + 1;
@@ -201,101 +164,84 @@
                 });
 
                 updateHUD();
-
-                setTimeout(() => {
-                    canvas.setAttribute('width', theater.scrollWidth);
-                    canvas.setAttribute('height', theater.scrollHeight);
-                    drawAllArrows(treeData.arrows || [], theater, canvas);
-                }, 1500);
+                
+                // ARROW STABILIZER: Wait for grid reflow then draw
+                const observer = new ResizeObserver(() => {
+                    drawAllArrows();
+                });
+                observer.observe(theater);
 
             } catch (err) { console.error(err); }
         }
 
-        function drawAllArrows(links, theater, canvas) {
-            links.forEach(link => {
+        function drawAllArrows() {
+            const theater = document.getElementById('research-theater');
+            const canvas = document.getElementById('arrow-canvas');
+            canvas.innerHTML = canvas.querySelector('defs').outerHTML; // Clear lines but keep defs
+            
+            canvas.setAttribute('width', theater.offsetWidth);
+            canvas.setAttribute('height', theater.offsetHeight);
+
+            globalLinks.forEach(link => {
                 const p = document.getElementById(`unit-${normalize(link.from)}`);
                 const c = document.getElementById(`unit-${normalize(link.to)}`);
                 if (p && c) {
                     const pOwned = ownedAircraft.includes(normalize(link.from));
                     const cOwned = ownedAircraft.includes(normalize(link.to));
-                    const path = drawArrow(p, c, theater, canvas, pOwned, cOwned);
                     
-                    // PIZAZZ: Pulsing Dot for Completed Research
-                    if (pOwned && cOwned) {
+                    // COORDINATE CALCULATION
+                    const x1 = p.offsetLeft + (p.offsetWidth / 2);
+                    const y1 = p.offsetTop + p.offsetHeight;
+                    const x2 = c.offsetLeft + (c.offsetWidth / 2);
+                    const y2 = c.offsetTop;
+
+                    const pathData = `M ${x1} ${y1} L ${x1} ${y1+20} L ${x2} ${y1+20} L ${x2} ${y2-10}`;
+                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                    path.setAttribute("d", pathData);
+                    path.classList.add("research-line");
+
+                    if (pOwned && cOwned) { 
+                        path.classList.add("line-solid"); 
+                        path.setAttribute("marker-end", "url(#arrowhead)"); 
                         createPulseDot(path, canvas);
                     }
+                    else if (pOwned && !cOwned) path.classList.add("line-dashed");
+                    else path.classList.add("line-faint");
+                    
+                    canvas.appendChild(path);
                 }
             });
         }
 
-        function drawArrow(p, c, theater, svg, pOwned, cOwned) {
-            const pRect = p.getBoundingClientRect(); const cRect = c.getBoundingClientRect(); const tRect = theater.getBoundingClientRect();
-            const x1 = pRect.left + (pRect.width / 2) - tRect.left;
-            const y1 = pRect.bottom - tRect.top;
-            const x2 = cRect.left + (cRect.width / 2) - tRect.left;
-            const y2 = cRect.top - tRect.top;
-
-            const pathData = `M ${x1} ${y1} L ${x1} ${y1+20} L ${x2} ${y1+20} L ${x2} ${y2-10}`;
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("d", pathData);
-            path.classList.add("research-line");
-
-            if (pOwned && cOwned) { path.classList.add("line-solid"); path.setAttribute("marker-end", "url(#arrowhead)"); }
-            else if (pOwned && !cOwned) { path.classList.add("line-dashed"); }
-            else { path.classList.add("line-faint"); }
-            svg.appendChild(path);
-            return path;
-        }
-
         function createPulseDot(path, svg) {
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            dot.setAttribute("r", "4");
-            dot.classList.add("pulse-dot");
+            dot.setAttribute("r", "3"); dot.classList.add("pulse-dot");
             svg.appendChild(dot);
-
-            let progress = 0;
-            function animate() {
-                progress = (progress + 0.005) % 1;
-                const point = path.getPointAtLength(progress * path.getTotalLength());
-                dot.setAttribute("cx", point.x);
-                dot.setAttribute("cy", point.y);
-                requestAnimationFrame(animate);
+            let pos = 0;
+            function move() {
+                pos = (pos + 0.004) % 1;
+                const pt = path.getPointAtLength(pos * path.getTotalLength());
+                dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y);
+                requestAnimationFrame(move);
             }
-            animate();
+            move();
         }
 
         function toggleObtained(id) {
             if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(i => i !== id);
             else ownedAircraft.push(id);
             localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
-            location.reload();
+            updateHUD();
+            drawAllArrows(); // Redraw without reloading
         }
 
         function updateHUD() {
             const count = ownedAircraft.length;
             const percent = Math.round((count / totalCount) * 100) || 0;
-            document.querySelectorAll('.count-num').forEach(el => el.innerText = count);
-            document.querySelectorAll('.total-num').forEach(el => el.innerText = totalCount);
-            document.querySelectorAll('.percent-num').forEach(el => el.innerText = percent);
-            document.querySelectorAll('.hud-progress-fill').forEach(el => el.style.width = percent + "%");
+            document.querySelector('.count-num').innerText = count;
+            document.querySelector('.total-num').innerText = totalCount;
+            document.querySelector('.percent-num').innerText = percent;
+            document.querySelector('.hud-progress-fill').style.width = percent + "%";
         }
 
-        function exportData() {
-            const blob = new Blob([JSON.stringify(ownedAircraft)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_PROGRESS.json"; a.click();
-        }
-
-        function importData(e) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                ownedAircraft = JSON.parse(event.target.result);
-                localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
-                location.reload();
-            };
-            reader.readAsText(e.target.files[0]);
-        }
-        window.onload = initiateSystem;
-    </script>
-</body>
-</html>
+        function exportData
