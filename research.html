@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
-        /* UI BASE */
+        /* 1. UI BASE */
         body, html {
-            margin: 0; padding: 0; height: 100%;
+            margin: 0; padding: 0;
             background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
             background-size: cover !important;
             color: white; font-family: 'Segoe UI', Arial, sans-serif;
             overflow-x: hidden;
         }
 
-        /* HUD & HEADER */
+        /* HUD */
         #tactical-hud {
-            position: sticky; top: 0; width: 100%; background: rgba(0, 20, 0, 0.98);
+            position: sticky; top: 0; width: 100%; background: rgba(0, 15, 0, 0.98);
             border-bottom: 2px solid #00ff00; padding: 12px 30px; z-index: 5000;
             display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;
         }
@@ -23,55 +23,61 @@
         #hud-progress-bg { width: 300px; height: 16px; background: #111; border: 1px solid #00ff00; overflow: hidden; }
         #hud-progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 15px #00ff00; transition: width 0.6s; }
 
+        .hud-btns button {
+            background: #000; border: 1px solid #00ff00; color: #00ff00; padding: 8px 18px; 
+            cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
+        }
+
         #strategic-header {
             width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0;
-            background: rgba(0, 0, 0, 0.8); border-bottom: 2px solid #00ff00;
+            background: rgba(0, 0, 0, 0.85); border-bottom: 2px solid #00ff00;
         }
         #banner-container { width: 75%; height: 180px; overflow: hidden; border: 1px solid #444; position: relative; }
         #banner-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7); }
         #main-title { font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px; text-transform: uppercase; margin-top: 15px; }
 
-        /* RESEARCH THEATER */
+        /* 3. RESEARCH THEATER */
         #research-wrapper { display: flex; justify-content: flex-start; padding: 10px 0 150px 15px; position: relative; }
         
         #research-theater {
             display: grid;
             grid-template-columns: 140px repeat(5, 210px) repeat(2, 210px); 
             grid-auto-rows: min-content; grid-gap: 35px 15px;
-            position: relative; /* All coords relative to this */
+            position: relative; 
         }
 
-        /* SVG OVERLAY: ARROWS */
         #arrow-canvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; 
+            width: 100%; height: 100%; 
             pointer-events: none; z-index: 5;
         }
 
-        /* HEADER RIBBONS */
         .col-header {
             height: 40px; display: flex; align-items: center; justify-content: center;
             font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
-            border: 1px solid rgba(255,255,255,0.2); grid-row: 1; margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2); grid-row: 1; margin-bottom: 10px;
         }
-        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.25); color: #8cff8c; border-color: #00ff00; }
+        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.3); color: #8cff8c; border-color: #00ff00; }
         .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
 
-        /* RANK LABELS: 60px */
+        /* RANK MARKERS */
         .rank-marker {
             grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-weight: 900; color: #00ff00; font-size: 60px; opacity: 0.15; 
-            text-transform: uppercase; pointer-events: none; line-height: 1.1;
+            font-weight: 900; color: #00ff00; font-size: 50px; opacity: 0.12; 
+            text-transform: uppercase; pointer-events: none; line-height: 1;
         }
+        /* Compression applied to VII, VIII, and IX */
+        .rank-small { font-size: 37px !important; }
 
-        /* UNIT CARDS */
+        /* CARDS */
         .v-card {
             width: 200px; height: 130px; background: rgba(5, 5, 5, 0.98); border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer; position: relative; transition: 0.2s; filter: grayscale(1); opacity: 0.6; z-index: 10;
         }
-        .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00; box-shadow: 0 0 15px rgba(0,255,0,0.4); }
-        .v-card.premium { border-color: #b8860b; }
-        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; color: #fff; }
+        .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00 !important; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
+        .v-card.premium { border-color: #b8860b !important; }
+        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; }
 
         .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
         .v-name { 
@@ -79,10 +85,10 @@
             box-sizing: border-box; background: rgba(0,255,0,0.2); text-transform: uppercase;
         }
 
-        /* TACTICAL ARROWS */
-        .research-line { stroke: yellow; stroke-width: 3.5; fill: none; transition: 0.3s; }
-        .line-solid { stroke: #00ff00; stroke-width: 5; filter: drop-shadow(0 0 8px #00ff00); }
-        .line-dashed { stroke: yellow; stroke-width: 2.5; stroke-dasharray: 8,5; opacity: 0.7; }
+        /* ARROWS */
+        .research-line { stroke: yellow; stroke-width: 5; fill: none; transition: 0.4s; stroke-linecap: round; }
+        .line-solid { stroke: #00ff00; stroke-width: 7; filter: drop-shadow(0 0 12px #00ff00); }
+        .line-dashed { stroke: yellow; stroke-width: 4; stroke-dasharray: 12,8; opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -91,8 +97,8 @@
         <div class="hud-stats">OBTAINED: <span id="count-num">0</span> / <span id="total-num">0</span> (<span id="percent-num">0</span>%)</div>
         <div id="hud-progress-bg"><div id="hud-progress-fill"></div></div>
         <div class="hud-btns">
-            <button onclick="exportData()" style="background:#000; color:#00ff00; border:1px solid #00ff00; padding:5px 15px; cursor:pointer;">Export Data Disk</button>
-            <button onclick="document.getElementById('import-input').click()" style="background:#000; color:#00ff00; border:1px solid #00ff00; padding:5px 15px; cursor:pointer;">Import Data Disk</button>
+            <button onclick="exportData()">Export Data Disk</button>
+            <button onclick="document.getElementById('import-input').click()">Import Data Disk</button>
             <input type="file" id="import-input" style="display:none" onchange="importData(event)">
         </div>
     </div>
@@ -106,8 +112,13 @@
 
     <div id="research-wrapper">
         <div id="research-theater">
-            <svg id="arrow-canvas"><defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="yellow" /></marker></defs></svg>
-            
+            <svg id="arrow-canvas">
+                <defs>
+                    <marker id="arrowhead" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
+                        <polygon points="0 0, 12 4.5, 0 9" fill="yellow" />
+                    </marker>
+                </defs>
+            </svg>
             <div class="col-header header-research">Researchable Airframes</div>
             <div class="col-header header-premium">Premium Vehicles</div>
         </div>
@@ -117,6 +128,9 @@
         const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
         const JSON_URL = "https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json";
         
+        // HARD-CODED SECURITY FILTER
+        const NAUGHTY_LIST = ['o3u_1', 'ucav_mq_1_predator', 'uav_quadcopter'];
+
         let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
         let totalCount = 0;
 
@@ -135,25 +149,26 @@
                     const rowStart = (i * 8) + 2; 
                     const marker = document.createElement('div');
                     marker.className = 'rank-marker';
+                    if (i >= 6) marker.classList.add('rank-small'); // VII, VIII, IX reduced
                     marker.style.gridRow = `${rowStart} / span 7`;
                     marker.innerHTML = label.split(" ")[0].split("").join("<br>") + "<br><br>" + (label.split(" ")[1] || "");
                     theater.appendChild(marker);
                 });
 
                 treeData.cells.forEach(cell => {
+                    // NAUGHTY LIST INTERCEPTION
+                    if (NAUGHTY_LIST.includes(cell.cell_key)) return;
+
                     totalCount++;
                     const card = document.createElement('div');
                     const normID = normalize(cell.cell_key);
                     card.className = 'v-card';
-                    card.id = `cell-${normID}`;
+                    card.id = `unit-${normID}`; 
                     
                     if (ownedAircraft.includes(normID)) card.classList.add('obtained');
-                    
-                    // CORRECTED LOGIC: Premium starts at CSV Column 6
-                    const col = parseInt(cell.column);
-                    if (col >= 6) card.classList.add('premium');
+                    if (parseInt(cell.column) >= 6) card.classList.add('premium');
 
-                    card.style.gridColumn = col + 1; // Correct column alignment
+                    card.style.gridColumn = parseInt(cell.column) + 1; 
                     card.style.gridRow = ((parseInt(cell.rank) - 1) * 8) + (parseInt(cell.row_in_rank || 1)) + 1;
 
                     card.innerHTML = `
@@ -167,39 +182,42 @@
                 updateHUD();
 
                 if (treeData.arrows) {
-                    // Slight delay to allow browser to calculate card positions
                     setTimeout(() => {
+                        canvas.style.height = theater.scrollHeight + "px";
+                        canvas.style.width = theater.scrollWidth + "px";
+                        
                         treeData.arrows.forEach(link => {
                             const pID = normalize(link.from);
                             const cID = normalize(link.to);
-                            const achieved = ownedAircraft.includes(pID) && ownedAircraft.includes(cID);
-                            const potential = ownedAircraft.includes(pID) && !ownedAircraft.includes(cID);
-                            drawArrow(pID, cID, canvas, achieved, potential);
+                            const p = document.getElementById(`unit-${pID}`);
+                            const c = document.getElementById(`unit-${cID}`);
+                            
+                            if (p && c) {
+                                const achieved = ownedAircraft.includes(pID) && ownedAircraft.includes(cID);
+                                const potential = ownedAircraft.includes(pID) && !ownedAircraft.includes(cID);
+                                drawArrow(p, c, canvas, achieved, potential);
+                            }
                         });
-                    }, 1000);
+                    }, 1200);
                 }
 
             } catch (err) { console.error("HUD Error:", err); }
         }
 
-        function drawArrow(pID, cID, svg, achieved, potential) {
-            const p = document.getElementById(`cell-${pID}`);
-            const c = document.getElementById(`cell-${cID}`);
-            if (!p || !c) return;
-            
+        function drawArrow(p, c, svg, achieved, potential) {
             const theater = document.getElementById('research-theater');
             const pRect = p.getBoundingClientRect(); 
             const cRect = c.getBoundingClientRect();
-            const theaterRect = theater.getBoundingClientRect();
+            const tRect = theater.getBoundingClientRect();
             
-            const x1 = pRect.left + pRect.width / 2 - theaterRect.left;
-            const y1 = pRect.bottom - theaterRect.top;
-            const x2 = cRect.left + cRect.width / 2 - theaterRect.left;
-            const y2 = cRect.top - theaterRect.top;
+            const x1 = pRect.left + pRect.width / 2 - tRect.left;
+            const y1 = pRect.bottom - tRect.top;
+            const x2 = cRect.left + cRect.width / 2 - tRect.left;
+            const y2 = cRect.top - tRect.top;
             
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", x1); line.setAttribute("y1", y1); 
-            line.setAttribute("x2", x2); line.setAttribute("y2", y2 - 8);
+            line.setAttribute("x2", x2); line.setAttribute("y2", y2 - 12);
             line.classList.add("research-line");
             
             if (achieved) line.classList.add("line-solid");
