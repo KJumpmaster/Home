@@ -575,11 +575,11 @@
       "tree.json"
     ];
 
-    const IMAGE_BASES = [
-      "unit_images/",
-      "Graphics/Planes/Icons/",
-      "images/"
-    ];
+    const REGISTRY_CSV_URL =
+      "https://raw.githubusercontent.com/KJumpmaster/Home/main/SP_Registry_CANON_3_31.csv";
+
+    const IMAGE_RAW_BASE =
+      "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
 
     const LAYOUT = {
       leftPad: 110,
@@ -594,6 +594,8 @@
       totalColumns: 7,
       mainColumns: 5
     };
+
+    let registryImageMap = new Map();
 
     const statusEl = document.getElementById("status");
     const viewportEl = document.getElementById("viewport");
@@ -613,6 +615,9 @@
 
     async function init() {
       try {
+        setStatus("Loading registry…");
+        registryImageMap = await loadRegistryImageMap(REGISTRY_CSV_URL);
+
         setStatus("Loading tree data…");
         const payload = await loadFirstAvailableJson(DATA_CANDIDATES);
         const normalized = normalizePayload(payload.data);
@@ -655,6 +660,89 @@
         names.join("\n- ") +
         "\n\nDetails:\n" + errors.join("\n")
       );
+    }
+
+    async function loadRegistryImageMap(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error(`Registry CSV failed to load: HTTP ${res.status}`);
+      }
+
+      const csvText = await res.text();
+      const rows = parseCSV(csvText);
+      if (!rows.length) {
+        throw new Error("Registry CSV parsed to zero rows.");
+      }
+
+      const header = rows[0].map(v => String(v || "").trim());
+      const masterKeyIndex = header.findIndex(h => h === "master_key");
+      const wtImageIndex = header.findIndex(h => h === "wt_image");
+
+      if (masterKeyIndex === -1 || wtImageIndex === -1) {
+        throw new Error(
+          "Registry CSV is missing required columns master_key and/or wt_image."
+        );
+      }
+
+      const map = new Map();
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const masterKey = String(row[masterKeyIndex] || "").trim();
+        const wtImage = String(row[wtImageIndex] || "").trim();
+
+        if (!masterKey || !wtImage) continue;
+
+        map.set(masterKey, wtImage);
+      }
+
+      return map;
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i + 1];
+
+        if (ch === '"') {
+          if (inQuotes && next === '"') {
+            cell += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+          continue;
+        }
+
+        if (ch === ',' && !inQuotes) {
+          row.push(cell);
+          cell = "";
+          continue;
+        }
+
+        if ((ch === '\n' || ch === '\r') && !inQuotes) {
+          if (ch === '\r' && next === '\n') i++;
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = "";
+          continue;
+        }
+
+        cell += ch;
+      }
+
+      if (cell.length || row.length) {
+        row.push(cell);
+        rows.push(row);
+      }
+
+      return rows;
     }
 
     function normalizePayload(raw) {
@@ -757,7 +845,9 @@
       const rectMap = renderCells(cells, rowCountsByRank);
       renderEdges(edges, rectMap);
 
-      setStatus(`Loaded ${sourceName} · Cells: ${cells.length} · Edges: ${edges.length} · Ranks: ${rankCount}`);
+      setStatus(
+        `Loaded ${sourceName} · Registry image map: ${registryImageMap.size} · Cells: ${cells.length} · Edges: ${edges.length} · Ranks: ${rankCount}`
+      );
     }
 
     function renderScaffold(rankCount, columnCount) {
@@ -864,11 +954,12 @@
       body.appendChild(grid);
 
       if (cell.type === "group") {
-        const heroId = getGroupHeroId(cell);
-        if (heroId) {
+        const heroFilename = resolveCellImageFilename(cell);
+        if (heroFilename) {
           const hero = document.createElement("img");
           hero.className = "group-hero";
-          trySetImage(hero, heroId);
+          hero.src = IMAGE_RAW_BASE + heroFilename;
+          hero.onerror = () => hero.remove();
           body.appendChild(hero);
         }
 
@@ -918,13 +1009,15 @@
         imageWrap.appendChild(fade);
         body.appendChild(imageWrap);
 
-        const imageId = getUnitImageId(cell);
-        if (imageId) {
-          trySetImage(img, imageId, () => {
+        const imageFilename = resolveCellImageFilename(cell);
+        if (imageFilename) {
+          img.src = IMAGE_RAW_BASE + imageFilename;
+          img.onload = () => {
             fallback.style.display = "none";
-          }, () => {
+          };
+          img.onerror = () => {
             img.remove();
-          });
+          };
         } else {
           img.remove();
         }
@@ -937,59 +1030,33 @@
       return el;
     }
 
+    function resolveCellImageFilename(cell) {
+      const candidates = [];
+
+      if (cell.cell_id) candidates.push(cell.cell_id);
+      if (Array.isArray(cell.unit_ids)) candidates.push(...cell.unit_ids);
+      if (Array.isArray(cell.units)) {
+        for (const u of cell.units) {
+          if (u && u.id) candidates.push(u.id);
+        }
+      }
+
+      for (const key of candidates) {
+        const cleaned = String(key || "").trim();
+        if (!cleaned) continue;
+
+        const filename = registryImageMap.get(cleaned);
+        if (filename) return filename;
+      }
+
+      return null;
+    }
+
     function getAccentColors(cell) {
       if (cell.type === "group") return ["var(--group-top-1)", "var(--group-top-2)"];
       if (cell.column === 6) return ["var(--side1-top-1)", "var(--side1-top-2)"];
       if (cell.column >= 7) return ["var(--side2-top-1)", "var(--side2-top-2)"];
       return ["var(--unit-top-1)", "var(--unit-top-2)"];
-    }
-
-    function getUnitImageId(cell) {
-      if (cell.unit_ids && cell.unit_ids.length) return cell.unit_ids[0];
-      if (cell.units && cell.units.length && cell.units[0].id) return cell.units[0].id;
-      return cell.cell_id || null;
-    }
-
-    function getGroupHeroId(cell) {
-      if (cell.unit_ids && cell.unit_ids.length) return cell.unit_ids[0];
-      if (cell.units && cell.units.length && cell.units[0].id) return cell.units[0].id;
-      return null;
-    }
-
-    function trySetImage(imgEl, imageId, onLoad = null, onFail = null) {
-      const candidates = buildImageCandidates(imageId);
-      let idx = 0;
-
-      function tryNext() {
-        if (idx >= candidates.length) {
-          if (onFail) onFail();
-          return;
-        }
-
-        const src = candidates[idx++];
-        imgEl.onload = () => {
-          if (onLoad) onLoad(src);
-        };
-        imgEl.onerror = () => {
-          tryNext();
-        };
-        imgEl.src = src;
-      }
-
-      tryNext();
-    }
-
-    function buildImageCandidates(imageId) {
-      const clean = String(imageId || "").trim();
-      if (!clean) return [];
-
-      const out = [];
-      for (const base of IMAGE_BASES) {
-        out.push(`${base}${clean}.png`);
-        out.push(`${base}${clean}.webp`);
-        out.push(`${base}${clean}.jpg`);
-      }
-      return out;
     }
 
     function renderEdges(edges, rectMap) {
