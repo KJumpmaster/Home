@@ -1,37 +1,101 @@
-const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SKY PILOT - USA STABLE V4</title>
+    <style>
+        /* UI BASE: Fixed 7-Column Grid */
+        body { 
+            background: #1a1a1a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png'); 
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: white; margin: 0; font-family: Arial, Helvetica, sans-serif;
+            overflow-x: hidden; /* Lock horizontal scroll */
+        }
+        
+        #loading-overlay {
+            position: fixed; inset: 0; background: #000 url('https://raw.githubusercontent.com/KJumpmaster/Home/main/Comms_Pic.png') no-repeat center;
+            background-size: contain; z-index: 9999; display: flex; align-items: center; justify-content: center;
+        }
+
+        #research-wrapper { width: 100vw; display: flex; justify-content: center; padding: 60px 0; }
+
+        /* FIXED 7-COLUMN THEATER */
+        #research-theater {
+            display: grid;
+            grid-template-columns: repeat(7, 190px); 
+            grid-template-rows: repeat(9, 140px); /* Rank I through IX */
+            grid-gap: 30px 15px;
+            position: relative;
+        }
+
+        .v-card {
+            width: 180px; height: 120px;
+            background: rgba(10, 10, 10, 0.95); border: 2px solid #666;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 10; position: relative;
+        }
+
+        .v-img { width: 95%; height: 70%; object-fit: contain; }
+
+        /* READABILITY FOCUS */
+        .v-name { 
+            font-size: 14px; padding: 6px; text-transform: uppercase; text-align: center; 
+            color: #00ff00; font-weight: bold; width: 100%; box-sizing: border-box;
+            background: rgba(0,0,0,0.7);
+        }
+
+        /* Sub-stack Expansion (No Arrows) */
+        .sub-unit-container {
+            position: absolute; top: 105%; left: -2px; width: 180px;
+            display: flex; flex-direction: column; gap: 5px; z-index: 100;
+        }
+
+        .sub-card {
+            width: 180px; height: 120px;
+            background: rgba(20, 20, 20, 0.98); border: 2px solid #00ff00;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay"></div>
+    <div id="research-wrapper">
+        <div id="research-theater"></div>
+    </div>
+
+    <script>
+        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
 
         async function initiateSystem() {
             const overlay = document.getElementById('loading-overlay');
             const theater = document.getElementById('research-theater');
 
             try {
-                // Fetching the JSON you are about to upload
-                const [treeRes] = await Promise.all([
-                    fetch('./usa_tree_pass2_with_arrows.json'),
-                    new Promise(res => setTimeout(res, 2000))
-                ]);
-
-                if (!treeRes.ok) throw new Error("JSON DATA OFFLINE - UPLOAD TO HOME REPO");
+                const treeRes = await fetch('./usa_tree_pass2_with_arrows.json');
+                if (!treeRes.ok) throw new Error("JSON OFFLINE - UPLOAD TO HOME REPO");
+                
                 const treeData = await treeRes.json();
-
                 theater.innerHTML = '';
                 
                 treeData.cells.forEach(cell => {
                     const card = document.createElement('div');
                     card.className = 'v-card';
+                    
+                    // Fixed Grid Mapping
                     card.style.gridColumn = parseInt(cell.column) + 1;
-                    card.style.gridRow = parseInt(cell.rank) + 1;
+                    card.style.gridRow = parseInt(cell.rank); // Rank I is top (Row 1)
 
-                    // DIRECT MATCH LOGIC: 
-                    // If it's a group, use cell_key.png directly. No registry check.
+                    // Direct Match Logic
                     const imgName = `${cell.cell_key}.png`;
                     
                     card.innerHTML = `
-                        <img src="${PIC_BASE}${imgName}" class="v-img" onerror="this.src='https://placehold.co/200x125/1a1a1a/00ff00?text=SCANNING...';">
+                        <img src="${PIC_BASE}${imgName}" class="v-img" onerror="this.src='https://placehold.co/180x120/1a1a1a/00ff00?text=SCANNING...';">
                         <div class="v-name">${(cell.display_name).replace(/_/g, ' ')}</div>
                     `;
 
-                    // Expand logic for Group Stacks
+                    // Sub-stack Logic (Click to expand)
                     if (cell.kind === 'group' && cell.units) {
                         const subContainer = document.createElement('div');
                         subContainer.className = 'sub-unit-container hidden';
@@ -52,13 +116,15 @@ const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/ma
                             subContainer.classList.toggle('hidden');
                         };
                     }
-
                     theater.appendChild(card);
                 });
 
                 overlay.style.display = 'none';
             } catch (err) {
-                overlay.innerHTML = `<h1 style="color:red; background:black; padding:20px;">ERROR: ${err.message}</h1>`;
+                overlay.innerHTML = `<h1 style="color:red">ERROR: ${err.message}</h1>`;
             }
         }
         window.onload = initiateSystem;
+    </script>
+</body>
+</html>
