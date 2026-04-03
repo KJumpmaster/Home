@@ -1,117 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>SKY PILOT - 2PM STABLE BUILD</title>
+    <title>SKY PILOT - GROUND ZERO</title>
     <style>
-        /* AUTHENTIC DARK THEME */
-        body { 
-            background: #1a1a1a; 
-            color: white; 
-            margin: 0; 
-            font-family: sans-serif; 
-            overflow-x: auto; 
-        }
+        body { background: #111; color: #0f0; font-family: monospace; margin: 0; padding: 20px; }
         
-        #loading-overlay {
-            position: fixed; inset: 0; background: black; z-index: 9999;
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; color: #00ff00; font-family: monospace;
-        }
-
-        #research-wrapper {
-            position: relative;
-            width: max-content;
-            margin: 50px auto;
-            padding: 20px;
-        }
-
+        /* The Grid: 10 columns for the USA Tree */
         #research-theater {
-            position: relative;
             display: grid;
-            /* Standard WT Grid Spacing confirmed at 2PM */
-            grid-gap: 35px 20px; 
-            z-index: 2;
+            grid-template-columns: repeat(10, 180px);
+            grid-gap: 20px;
+            margin-top: 50px;
         }
 
+        /* The Card: Simple and Bold */
         .v-card {
-            width: 170px; 
-            height: 90px;
-            background: #2a2a2a; 
-            border: 1px solid #444;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
+            width: 180px;
+            height: 100px;
+            background: #222;
+            border: 2px solid #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            text-align: center;
         }
 
-        .v-img { 
-            width: 100%; 
-            height: 70%; 
-            object-fit: contain; 
-        }
-
-        .v-name { 
-            font-size: 11px; 
-            padding: 4px; 
-            text-transform: uppercase; 
-            text-align: center; 
-            background: rgba(0,0,0,0.6);
-            width: 100%;
-        }
+        .v-img { width: 100%; height: 70%; object-fit: contain; }
+        .v-name { font-size: 10px; color: white; padding: 5px; text-transform: uppercase; }
+        
+        #status { font-size: 20px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay">RESTORING 2PM STABLE SYSTEM...</div>
-
-    <div id="research-wrapper">
-        <div id="research-theater"></div>
-    </div>
+    <div id="status">SYSTEM RESET: INITIALIZING V4...</div>
+    <div id="research-theater"></div>
 
     <script>
-        // TARGETING GITHUB REPO FOR ICONS
+        // MASTER LINK TO YOUR GITHUB ICONS
         const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
 
-        async function initiateSystem() {
-            const overlay = document.getElementById('loading-overlay');
+        async function startOver() {
             const theater = document.getElementById('research-theater');
+            const status = document.getElementById('status');
 
             try {
-                // 1. DATA ACQUISITION
+                // 1. GET THE DATA
                 const [treeRes, regRes] = await Promise.all([
                     fetch('./usa_tree_v4.json'),
                     fetch('./SP_Registry_CANON_3_31.csv')
                 ]);
 
-                if (!treeRes.ok || !regRes.ok) throw new Error("V4 DATA FILES MISSING");
+                if (!treeRes.ok || !regRes.ok) throw new Error("FILES MISSING IN FOLDER");
 
                 const treeData = await treeRes.json();
                 const regText = await regRes.text();
 
-                // 2. PARSE REGISTRY (Targeting Column 3 for Images)
+                // 2. BUILD THE IMAGE MAP (Column 3)
                 const registry = {};
                 const lines = regText.split('\n');
-                for (let i = 1; i < lines.length; i++) {
-                    const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                lines.forEach(line => {
+                    const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (cols.length > 2) {
                         const id = cols[0].replace(/"/g, '').trim().toLowerCase();
-                        const img = cols[2].replace(/"/g, '').trim(); // Grabs Column 3
-                        if (id) registry[id] = img;
+                        const img = cols[2].replace(/"/g, '').trim(); 
+                        registry[id] = img;
                     }
-                }
+                });
 
-                // 3. RENDER THEATER GRID
+                // 3. DRAW THE CARDS
                 theater.innerHTML = '';
                 treeData.cells.forEach(cell => {
                     const id = String(cell.cell_id).toLowerCase();
                     const card = document.createElement('div');
                     card.className = 'v-card';
+                    
+                    // Placement from V4 JSON
                     card.style.gridColumn = cell.column;
                     card.style.gridRow = cell.row;
 
-                    // Building the card with Image + Auto-Formatted Name
                     card.innerHTML = `
                         <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" class="v-img" 
                              onerror="this.src='https://placehold.co/200x100/000?text=MISSING';">
@@ -120,16 +88,15 @@
                     theater.appendChild(card);
                 });
 
-                // 4. MISSION SUCCESS
-                overlay.style.display = 'none';
+                status.innerText = "SYSTEM ONLINE - V4 GRID ACTIVE";
 
             } catch (err) {
-                console.error("CRITICAL FAILURE:", err);
-                overlay.innerHTML = `<h1 style="color:red">OFFLINE: ${err.message.toUpperCase()}</h1>`;
+                status.style.color = "red";
+                status.innerText = "CRITICAL ERROR: " + err.message;
             }
         }
 
-        window.onload = initiateSystem;
+        window.onload = startOver;
     </script>
 </body>
 </html>
