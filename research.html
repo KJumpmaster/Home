@@ -2,14 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SKY PILOT - USA TREE V4</title>
+    <title>SKY PILOT - USA STABLE V4</title>
     <style>
-        body { background: #1a1a1a; color: white; margin: 0; font-family: sans-serif; overflow-x: auto; }
-        
-        /* THE CRITICAL STRUCTURE CSS */
+        body {
+            background: #1a1a1a;
+            color: white;
+            margin: 0;
+            font-family: sans-serif;
+            overflow-x: auto;
+        }
+
         #loading-overlay {
-            position: fixed; inset: 0; background: black; z-index: 9999;
-            display: flex; align-items: center; justify-content: center; font-size: 24px; color: #00ff00;
+            position: fixed;
+            inset: 0;
+            background: black;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #00ff00;
         }
 
         #research-wrapper {
@@ -21,33 +33,49 @@
 
         #edge-layer {
             position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
+            inset: 20px; /* matches wrapper padding */
+            width: calc(100% - 40px);
+            height: calc(100% - 40px);
             pointer-events: none;
             overflow: visible;
-            z-index: 1; /* Behind cards */
+            z-index: 1;
         }
 
         #research-theater {
             position: relative;
             display: grid;
-            grid-gap: 40px 20px; /* Space for the lines to turn */
-            z-index: 2; /* In front of lines */
+            grid-gap: 40px 20px;
+            z-index: 2;
         }
 
-        /* CARD STYLING */
         .v-card {
-            width: 180px; height: 100px;
-            background: #2a2a2a; border: 2px solid #444;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 180px;
+            height: 100px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 3;
         }
-        .v-img { width: 100%; height: 70%; object-fit: contain; }
-        .v-name { font-size: 11px; padding: 5px; text-transform: uppercase; text-align: center; }
 
-        /* THE LINE STYLING */
+        .v-img {
+            width: 100%;
+            height: 70%;
+            object-fit: contain;
+        }
+
+        .v-name {
+            font-size: 11px;
+            padding: 5px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
         .tree-edge {
-            stroke: rgba(0, 255, 0, 0.5);
+            stroke: rgba(120, 255, 120, 0.70);
             stroke-width: 3;
             fill: none;
             stroke-linecap: round;
@@ -57,7 +85,7 @@
 </head>
 <body>
 
-    <div id="loading-overlay">LOADING SYSTEM...</div>
+    <div id="loading-overlay">LOADING STABLE TREE...</div>
 
     <div id="research-wrapper">
         <svg id="edge-layer"></svg>
@@ -69,28 +97,26 @@
 
         async function initiateSystem() {
             const overlay = document.getElementById('loading-overlay');
-            const wrapper = document.getElementById('research-wrapper');
-            const theater = document.getElementById('research-theater');
-            const edgeLayer = document.getElementById('edge-layer');
 
             try {
-                console.log("GEM: Initiating Ironclad Stable Build...");
-
-                // 1. FETCH DATA
                 const [treeRes, regRes] = await Promise.all([
                     fetch('./usa_tree_v4.json'),
                     fetch('./SP_Registry_CANON_3_31.csv')
                 ]);
 
-                if (!treeRes.ok) throw new Error("usa_tree_v4.json missing");
-                if (!regRes.ok) throw new Error("Registry CSV missing");
+                if (!treeRes.ok) throw new Error("usa_tree_v4.json missing or renamed");
+                if (!regRes.ok) throw new Error("SP_Registry_CANON_3_31.csv missing or renamed");
 
                 const treeData = await treeRes.json();
                 const regText = await regRes.text();
 
-                // 2. PARSE REGISTRY
+                if (!treeData.cells || !Array.isArray(treeData.cells)) {
+                    throw new Error("treeData.cells missing or invalid");
+                }
+
                 const registry = {};
                 const lines = regText.split('\n');
+
                 for (let i = 1; i < lines.length; i++) {
                     const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (cols.length > 2) {
@@ -100,10 +126,23 @@
                     }
                 }
 
-                // 3. RENDER CARDS
+                const wrapper = document.getElementById('research-wrapper');
+                const theater = document.getElementById('research-theater');
+                const edgeLayer = document.getElementById('edge-layer');
+
+                if (!wrapper) throw new Error("research-wrapper not found");
+                if (!theater) throw new Error("research-theater not found");
+                if (!edgeLayer) throw new Error("edge-layer not found");
+
                 theater.innerHTML = '';
+                edgeLayer.innerHTML = '';
+
                 treeData.cells.forEach(cell => {
+                    if (!cell.cell_id) return;
+
                     const id = String(cell.cell_id).toLowerCase();
+                    const imageName = registry[id] || 'placeholder.png';
+
                     const card = document.createElement('div');
                     card.className = 'v-card';
                     card.dataset.cellId = id;
@@ -111,71 +150,93 @@
                     card.style.gridRow = cell.row;
 
                     card.innerHTML = `
-                        <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" class="v-img" onerror="this.src='https://placehold.co/200x100/000?text=SCANNING';">
+                        <img
+                            src="${PIC_BASE}${imageName}"
+                            class="v-img"
+                            onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';"
+                        >
                         <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
                     `;
+
                     theater.appendChild(card);
                 });
 
-                // 4. DRAW EDGES
-                // Need to wait for browser to paint the grid before drawing lines
-                setTimeout(() => {
-                    drawEdges(treeData.edges || [], theater, edgeLayer, wrapper);
-                }, 100);
+                requestAnimationFrame(() => {
+                    drawEdges(treeData.edges || [], theater, edgeLayer);
+                });
 
                 overlay.style.display = 'none';
-                console.log("GEM: System 100% Stable.");
 
             } catch (err) {
                 console.error("DATA LINK FAILURE:", err);
-                overlay.innerHTML = `<h1 style="color:red">OFFLINE: ${err.message.toUpperCase()}</h1>`;
+                document.getElementById('loading-overlay').innerHTML =
+                    `<h1 style="color:red; text-align:center;">OFFLINE: ${String(err.message).toUpperCase()}</h1>`;
             }
         }
 
-        function drawEdges(edges, theater, edgeLayer, wrapper) {
+        function drawEdges(edges, theater, edgeLayer) {
+            edgeLayer.innerHTML = '';
+
             const theaterRect = theater.getBoundingClientRect();
-            
-            // Set SVG canvas size to match the scrollable area
-            const width = theater.scrollWidth;
-            const height = theater.scrollHeight;
+            const width = Math.ceil(theater.scrollWidth || theaterRect.width);
+            const height = Math.ceil(theater.scrollHeight || theaterRect.height);
+
             edgeLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
             edgeLayer.setAttribute('width', width);
             edgeLayer.setAttribute('height', height);
 
             const cardMap = new Map();
+
             theater.querySelectorAll('.v-card').forEach(card => {
-                cardMap.set(card.dataset.cellId, card);
+                const id = card.dataset.cellId;
+                if (id) cardMap.set(id, card);
             });
 
-            edgeLayer.innerHTML = ''; // Clear old lines
-
             edges.forEach(edge => {
-                const fromCard = cardMap.get(String(edge.from || edge.source).toLowerCase());
-                const toCard = cardMap.get(String(edge.to || edge.target).toLowerCase());
+                const fromId = String(edge.from || edge.source || edge.parent || '').toLowerCase();
+                const toId = String(edge.to || edge.target || edge.child || '').toLowerCase();
+
+                if (!fromId || !toId) return;
+
+                const fromCard = cardMap.get(fromId);
+                const toCard = cardMap.get(toId);
 
                 if (!fromCard || !toCard) return;
 
                 const fromRect = fromCard.getBoundingClientRect();
                 const toRect = toCard.getBoundingClientRect();
 
-                // Calculate center points relative to the theater container
                 const x1 = (fromRect.left - theaterRect.left) + (fromRect.width / 2);
                 const y1 = (fromRect.top - theaterRect.top) + fromRect.height;
+
                 const x2 = (toRect.left - theaterRect.left) + (toRect.width / 2);
                 const y2 = (toRect.top - theaterRect.top);
 
                 const midY = y1 + ((y2 - y1) / 2);
+
                 const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                path.setAttribute("d", `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`);
+                path.setAttribute(
+                    "d",
+                    `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`
+                );
                 path.setAttribute("class", "tree-edge");
+
                 edgeLayer.appendChild(path);
             });
         }
 
         window.onload = initiateSystem;
+
         window.addEventListener('resize', () => {
-            // Re-fetch or use local cache to redraw lines on resize
-            location.reload(); 
+            const theater = document.getElementById('research-theater');
+            const edgeLayer = document.getElementById('edge-layer');
+
+            if (!theater || !edgeLayer) return;
+
+            fetch('./usa_tree_v4.json')
+                .then(r => r.json())
+                .then(treeData => drawEdges(treeData.edges || [], theater, edgeLayer))
+                .catch(err => console.warn("Resize redraw skipped:", err));
         });
     </script>
 </body>
