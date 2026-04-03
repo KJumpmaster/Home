@@ -4,16 +4,15 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
-        /* 1. GLOBAL RESET & BACKGROUND - HARD LOCKED */
-        * { box-sizing: border-box; }
-        body, html {
+        /* 1. BACKGROUND HARD-LOCK */
+        html, body {
             margin: 0; padding: 0; min-height: 100vh;
             background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
             background-size: cover !important;
             color: white; font-family: 'Segoe UI', Arial, sans-serif;
         }
 
-        /* 2. COMMAND HEADER */
+        /* 2. COMMAND HUD */
         #strategic-header {
             width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0 10px 0;
             background: rgba(0, 0, 0, 0.85); border-bottom: 2px solid #00ff00;
@@ -22,7 +21,6 @@
         #banner-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8); }
         #main-title { font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px; text-transform: uppercase; margin: 10px 0; }
 
-        /* 3. CONTROL HUD */
         .tactical-hud {
             width: 100%; background: rgba(0, 20, 0, 0.95);
             border-bottom: 2px solid #00ff00; padding: 15px 40px;
@@ -36,16 +34,16 @@
             cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
         }
 
-        /* 4. RESEARCH THEATER */
+        /* 3. RESEARCH THEATER */
         #research-theater {
             display: grid;
-            /* ZERO LOGIC: Col 0 (Rank) | Col 1-5 (Research) | Col 6-7 (Premium) */
-            grid-template-columns: 140px repeat(5, 210px) repeat(2, 210px); 
+            /* ZERO LOGIC: Col 0 (Rank) | Col 1-4 (Research) | Col 5-6 (Premium) */
+            grid-template-columns: 140px repeat(4, 210px) repeat(2, 210px); 
             grid-auto-rows: min-content; grid-gap: 45px 15px;
             position: relative; padding: 40px; min-width: max-content;
         }
 
-        /* ARROW CANVAS: Anchored to Theater */
+        /* ARROW CANVAS: Anchored to Grid */
         #arrow-canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 5; overflow: visible;
@@ -56,9 +54,10 @@
             font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
             border: 1px solid rgba(255,255,255,0.2); grid-row: 1; margin-bottom: 20px;
         }
-        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.3); color: #8cff8c; border-color: #00ff00; }
-        .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
+        .header-research { grid-column: 2 / span 4; background: rgba(0, 255, 0, 0.3); color: #8cff8c; border-color: #00ff00; }
+        .header-premium { grid-column: 6 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
 
+        /* RANK MARKERS */
         .rank-marker {
             grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; font-weight: 900; color: #00ff00; font-size: 50px; opacity: 0.15; 
@@ -66,14 +65,17 @@
         }
         .rank-small { font-size: 37px !important; }
 
-        /* AIRCRAFT CARDS */
+        /* CARDS */
         .v-card {
             width: 200px; height: 130px; background: rgba(5, 5, 5, 0.98); border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer; position: relative; z-index: 10;
         }
         .v-card.obtained { border-color: #00ff00 !important; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
+        
+        /* ZERO LOGIC COLORING: Columns 5 and 6 are Premium */
         .v-card.premium { border-color: #b8860b !important; }
+        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; }
 
         .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
         .v-name { font-size: 11px; padding: 5px; text-align: center; font-weight: bold; width: 100%; background: rgba(0,255,0,0.2); text-transform: uppercase; }
@@ -82,7 +84,7 @@
         .research-line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
         .line-solid { stroke: #ffd84d; stroke-width: 4; filter: drop-shadow(0 0 5px #ffd84d); }
         .line-dashed { stroke: #ffd84d; stroke-width: 3; stroke-dasharray: 8,6; }
-        .line-faint { stroke: rgba(100, 170, 255, 0.4); stroke-width: 4; }
+        .line-faint { stroke: rgba(100, 170, 255, 0.6); stroke-width: 4; } /* Thicker High-Viz Blue */
     </style>
 </head>
 <body>
@@ -124,6 +126,8 @@
         let totalCount = 0;
         let globalArrows = [];
 
+        function normalize(id) { return id ? String(id).toLowerCase().replace(/[^a-z0-9]/g, '') : ""; }
+
         async function initiate() {
             const theater = document.getElementById('research-theater');
             const canvas = document.getElementById('arrow-canvas');
@@ -147,14 +151,15 @@
                 data.cells.forEach(cell => {
                     if (NAUGHTY_LIST.includes(cell.cell_key)) return;
                     totalCount++;
-                    const id = cell.cell_key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const id = normalize(cell.cell_key);
                     const card = document.createElement('div');
                     card.className = 'v-card';
                     card.id = `unit-${id}`;
                     if (ownedAircraft.includes(id)) card.classList.add('obtained');
                     
                     const col = parseInt(cell.column ?? 0);
-                    if (col >= 6) card.classList.add('premium');
+                    // ZERO LOGIC: Only Column 5 and 6 are Gold
+                    if (col === 5 || col === 6) card.classList.add('premium');
 
                     card.style.gridColumn = col + 1;
                     card.style.gridRow = ((parseInt(cell.rank ?? 1) - 1) * 8) + parseInt(cell.row_in_rank ?? 1) + 1;
@@ -175,21 +180,29 @@
                 document.getElementById('total-num').innerText = totalCount;
                 document.getElementById('hud-progress-fill').style.width = ((ownedAircraft.length / totalCount) * 100) + "%";
 
-                // 3. ARROW DEPLOYMENT
-                setTimeout(() => {
+                // 3. ARROW DEPLOYMENT (FORCED MULTI-DRAW)
+                const forceDraw = () => {
                     canvas.setAttribute('width', theater.scrollWidth);
                     canvas.setAttribute('height', theater.scrollHeight);
                     drawArrows();
-                }, 1000);
+                };
+
+                setTimeout(forceDraw, 100);
+                setTimeout(forceDraw, 800);
+                setTimeout(forceDraw, 2000);
 
             } catch (e) { console.error(e); }
         }
 
         function drawArrows() {
             const canvas = document.getElementById('arrow-canvas');
+            const theater = document.getElementById('research-theater');
+            const defs = canvas.querySelector('defs').outerHTML;
+            canvas.innerHTML = defs;
+
             globalArrows.forEach(l => {
-                const p = document.getElementById(`unit-${l.from.toLowerCase().replace(/[^a-z0-9]/g, '')}`);
-                const c = document.getElementById(`unit-${l.to.toLowerCase().replace(/[^a-z0-9]/g, '')}`);
+                const p = document.getElementById(`unit-${normalize(l.from)}`);
+                const c = document.getElementById(`unit-${normalize(l.to)}`);
                 if (p && c) {
                     const x1 = p.offsetLeft + (p.offsetWidth / 2);
                     const y1 = p.offsetTop + p.offsetHeight;
@@ -200,8 +213,8 @@
                     path.setAttribute("d", `M ${x1} ${y1} L ${x1} ${y1+20} L ${x2} ${y1+20} L ${x2} ${y2-10}`);
                     path.classList.add("research-line");
 
-                    const pOwn = ownedAircraft.includes(l.from.toLowerCase().replace(/[^a-z0-9]/g, ''));
-                    const cOwn = ownedAircraft.includes(l.to.toLowerCase().replace(/[^a-z0-9]/g, ''));
+                    const pOwn = ownedAircraft.includes(normalize(l.from));
+                    const cOwn = ownedAircraft.includes(normalize(l.to));
 
                     if (pOwn && cOwn) { path.classList.add("line-solid"); path.setAttribute("marker-end", "url(#arrowhead)"); }
                     else if (pOwn) path.classList.add("line-dashed");
@@ -214,7 +227,7 @@
 
         function exportData() {
             const blob = new Blob([JSON.stringify(ownedAircraft)], {type:"application/json"});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download="progress.json"; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download="sky_pilot_usa.json"; a.click();
         }
 
         function importData(e) {
