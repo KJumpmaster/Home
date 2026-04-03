@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
+        /* 1. UI BASE */
         body, html {
-            margin: 0; padding: 0; min-height: 100vh;
+            margin: 0; padding: 0;
             background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed;
             background-size: cover; color: white; font-family: 'Segoe UI', Arial, sans-serif;
         }
@@ -31,18 +32,29 @@
             cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
         }
 
-        /* THE GRID */
+        /* 3. RESEARCH THEATER */
+        #research-wrapper { padding: 30px; position: relative; min-width: max-content; }
+        
         #research-theater {
             display: grid;
             grid-template-columns: 140px repeat(5, 210px) repeat(2, 210px); 
             grid-auto-rows: min-content; grid-gap: 45px 15px;
-            position: relative; min-width: max-content; padding: 30px;
+            position: relative;
         }
 
+        /* ARROW CANVAS: Positioned absolute inside the theater */
         #arrow-canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 5; overflow: visible;
+            pointer-events: none; z-index: 5;
         }
+
+        .col-header {
+            height: 40px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.2); grid-row: 1; margin-bottom: 20px;
+        }
+        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.3); color: #8cff8c; border-color: #00ff00; }
+        .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
 
         .rank-marker {
             grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -62,6 +74,7 @@
         .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
         .v-name { font-size: 11px; padding: 5px; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; background: rgba(0,255,0,0.2); text-transform: uppercase; }
 
+        /* ARROW STYLES */
         .research-line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
         .line-solid { stroke: #ffd84d; stroke-width: 4; filter: drop-shadow(0 0 5px #ffd84d); }
         .line-dashed { stroke: #ffd84d; stroke-width: 3; stroke-dasharray: 8,6; }
@@ -86,9 +99,13 @@
         </div>
     </div>
 
-    <div id="research-theater">
-        <svg id="arrow-canvas"><defs><marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#ffd84d" /></marker></defs></svg>
+    <div id="research-wrapper">
+        <div id="research-theater">
+            <svg id="arrow-canvas"><defs><marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#ffd84d" /></marker></defs></svg>
+            <div class="col-header header-research">Researchable Airframes</div>
+            <div class="col-header header-premium">Premium Vehicles</div>
         </div>
+    </div>
 
     <input type="file" id="import-input" style="display:none" onchange="importData(event)">
 
@@ -99,28 +116,28 @@
 
         let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
         let totalCount = 0;
-        let globalLinks = [];
+        let arrowData = [];
 
-        async function startSystem() {
+        async function init() {
             const theater = document.getElementById('research-theater');
+            const canvas = document.getElementById('arrow-canvas');
+
             try {
                 const response = await fetch(JSON_URL);
-                if (!response.ok) throw new Error("Could not find JSON file on GitHub.");
                 const data = await response.json();
-                
-                globalLinks = data.arrows || [];
+                arrowData = data.arrows || [];
 
-                // 1. Ranks
+                // 1. RANKS (0-indexed logic)
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
-                    const div = document.createElement('div');
-                    div.className = 'rank-marker' + (i >= 6 ? ' rank-small' : '');
-                    div.style.gridRow = `${(i * 8) + 2} / span 7`;
-                    div.innerHTML = label.split(" ")[0].split("").join("<br>") + "<br><br>" + (label.split(" ")[1] || "");
-                    theater.appendChild(div);
+                    const r = document.createElement('div');
+                    r.className = 'rank-marker' + (i >= 6 ? ' rank-small' : '');
+                    r.style.gridRow = `${(i * 8) + 2} / span 7`;
+                    r.innerHTML = label.split(" ")[0].split("").join("<br>") + "<br><br>" + (label.split(" ")[1] || "");
+                    theater.appendChild(r);
                 });
 
-                // 2. Cells
+                // 2. CARDS
                 data.cells.forEach(cell => {
                     if (NAUGHTY_LIST.includes(cell.cell_key)) return;
                     totalCount++;
@@ -136,8 +153,8 @@
                     card.style.gridColumn = col + 1;
                     card.style.gridRow = ((parseInt(cell.rank ?? 1) - 1) * 8) + parseInt(cell.row_in_rank ?? 1) + 1;
 
-                    card.innerHTML = `<img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130?text=MISSING';">
-                                      <div class="v-name">${cell.display_name.toUpperCase()}</div>`;
+                    card.innerHTML = `<img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130?text=SCANNING';">
+                                      <div class="v-name">${cell.display_name.toUpperCase().replace(/_/g, ' ')}</div>`;
                     
                     card.onclick = () => {
                         if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(x => x !== id);
@@ -152,21 +169,19 @@
                 document.getElementById('total-num').innerText = totalCount;
                 document.getElementById('hud-progress-fill').style.width = ((ownedAircraft.length / totalCount) * 100) + "%";
 
-                // 3. Arrows
-                setTimeout(drawArrows, 1000);
+                // 3. ARROWS (Wait for render)
+                setTimeout(() => {
+                    canvas.setAttribute('width', theater.scrollWidth);
+                    canvas.setAttribute('height', theater.scrollHeight);
+                    drawArrows();
+                }, 1500);
 
-            } catch (e) {
-                theater.innerHTML = `<h1 style="color:red; grid-column: 1/-1;">TACTICAL ERROR: ${e.message}</h1>`;
-            }
+            } catch (e) { console.error("INIT FAILED:", e); }
         }
 
         function drawArrows() {
             const canvas = document.getElementById('arrow-canvas');
-            const theater = document.getElementById('research-theater');
-            canvas.setAttribute('width', theater.offsetWidth);
-            canvas.setAttribute('height', theater.offsetHeight);
-
-            globalLinks.forEach(l => {
+            arrowData.forEach(l => {
                 const p = document.getElementById(`unit-${l.from.toLowerCase().replace(/[^a-z0-9]/g, '')}`);
                 const c = document.getElementById(`unit-${l.to.toLowerCase().replace(/[^a-z0-9]/g, '')}`);
                 if (p && c) {
@@ -206,7 +221,7 @@
             reader.readAsText(e.target.files[0]);
         }
 
-        window.onload = startSystem;
+        window.onload = init;
     </script>
 </body>
 </html>
