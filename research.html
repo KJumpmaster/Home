@@ -4,175 +4,133 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
-        /* UI BASE: FIXED METAL */
+        /* UI BASE */
         body { 
-            margin: 0;
-            background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
-            background-size: cover !important;
-            color: white; font-family: 'Segoe UI', Arial, sans-serif;
-            overflow-x: hidden;
+            margin: 0; background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') fixed;
+            background-size: cover; color: white; font-family: 'Segoe UI', Arial, sans-serif;
         }
+
+        /* TACTICAL HUD: Progress & Controls */
+        #tactical-hud {
+            position: sticky; top: 0; width: 100%; background: rgba(0, 20, 0, 0.9);
+            border-bottom: 2px solid #00ff00; padding: 10px 20px; z-index: 2000;
+            display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;
+        }
+        .hud-stats { font-family: monospace; color: #00ff00; font-size: 18px; font-weight: bold; }
         
-        #strategic-header {
-            width: 100%; display: flex; flex-direction: column; align-items: center; padding: 10px 0;
-            background: rgba(0, 0, 0, 0.85); border-bottom: 2px solid #00ff00;
-        }
+        #progress-container { width: 300px; height: 12px; background: #111; border: 1px solid #00ff00; margin: 0 15px; }
+        #progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 0.5s; }
 
-        /* BANNER: 50% Height, 75% Width */
-        #banner-container { 
-            width: 75%; height: 180px; overflow: hidden; 
-            border: 1px solid #444; position: relative; background: #000;
+        .hud-btns button {
+            background: #000; border: 1px solid #00ff00; color: #00ff00; 
+            padding: 5px 15px; cursor: pointer; font-family: monospace; text-transform: uppercase;
         }
-        #banner-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7); }
+        .hud-btns button:hover { background: #00ff00; color: #000; }
 
-        #main-title {
-            font-size: 30px; font-weight: bold; color: #00ff00; letter-spacing: 8px;
-            text-shadow: 0 0 15px #00ff00; text-transform: uppercase; margin-top: 15px;
-        }
+        /* CARD STATES */
+        .v-card { transition: transform 0.2s; filter: grayscale(1); opacity: 0.6; }
+        .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00; box-shadow: 0 0 15px rgba(0,255,0,0.3); }
+        .v-card:hover { transform: scale(1.05); }
 
-        #research-wrapper { display: flex; justify-content: flex-start; padding: 20px 0 100px 15px; }
-
-        /* THEATER GRID */
-        #research-theater {
-            display: grid;
-            grid-template-columns: 80px repeat(5, 210px) repeat(2, 210px); 
-            grid-auto-rows: min-content; 
-            grid-gap: 20px 15px;
-        }
-
-        /* HEADER RIBBONS: MOVED TO RANK 1 LEVEL */
-        .col-header {
-            height: 30px; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 12px;
-            margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.2);
-            grid-row: 1; /* Locked to the very top of the grid area */
-        }
-        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.2); color: #8cff8c; border-color: #00ff00; }
-        .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.3); color: #d4af37; border-color: #b8860b; }
-
-        /* RANK MARKERS */
-        .rank-marker {
-            grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-weight: 900; color: #00ff00; font-size: 24px; opacity: 0.25; 
-            text-transform: uppercase; pointer-events: none; line-height: 1.1;
-        }
-
-        /* CARD ARCHITECTURE */
-        .v-card {
-            width: 200px; height: 130px; background: rgba(5, 5, 5, 0.96); border: 2px solid #444;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; transition: border 0.2s;
-        }
+        /* SVG LINES */
+        .line-solid { stroke: #00ff00; stroke-width: 4; filter: drop-shadow(0 0 5px #00ff00); }
+        .line-dashed { stroke: yellow; stroke-width: 2; stroke-dasharray: 5,5; opacity: 0.4; }
         
-        /* PREMIUM: Columns 5-6 (0-indexed) */
-        .v-card.premium { border-color: #b8860b; }
-        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.5) !important; color: #fff; }
-
-        /* SQUADRON: Light Green */
-        .v-card.squadron { border-color: #00ff00; }
-        .v-card.squadron .v-name { background: rgba(0, 255, 0, 0.3) !important; color: #fff; }
-
-        .active-group { z-index: 999 !important; box-shadow: 0 0 25px #00ff00; border-color: #00ff00 !important; }
-        .v-img { width: 92%; height: 68%; object-fit: contain; }
-        .v-name { 
-            font-size: 12px; padding: 5px; text-align: center; font-weight: bold; width: 100%; 
-            box-sizing: border-box; background: rgba(0,255,0,0.15); text-transform: uppercase;
-        }
-
-        .sub-unit-container {
-            position: absolute; top: 100%; left: -2px; width: 200px;
-            display: flex; flex-direction: column; gap: 8px; padding-top: 10px;
-        }
-        .sub-card { width: 200px; height: 130px; background: #000; border: 2px solid #00ff00; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .hidden { display: none; }
+        /* Rest of your previous CSS for grid and cards goes here... */
     </style>
 </head>
 <body>
 
-    <header id="strategic-header">
-        <div id="banner-container">
-            <video id="banner-video" autoplay loop muted playsinline>
-                <source src="https://raw.githubusercontent.com/KJumpmaster/Home/main/USA Banner.mp4" type="video/mp4">
-            </video>
+    <div id="tactical-hud">
+        <div class="hud-stats">
+            OBTAINED: <span id="count-num">0</span> / <span id="total-num">0</span> 
+            (<span id="percent-num">0</span>%)
         </div>
-        <div id="main-title">USA AIR GROUP STRATEGIC COMMAND</div>
-    </header>
-
-    <div id="research-wrapper">
-        <div id="research-theater">
-            <div class="col-header header-research">Researchable Airframes</div>
-            <div class="col-header header-premium">Premium Vehicles</div>
+        <div id="progress-container"><div id="progress-fill"></div></div>
+        <div class="hud-btns">
+            <button onclick="exportData()">Export Data Disk</button>
+            <button onclick="document.getElementById('import-input').click()">Import Data Disk</button>
+            <input type="file" id="import-input" style="display:none" onchange="importData(event)">
         </div>
     </div>
 
+    <header id="strategic-header">
+        </header>
+
+    <div id="research-wrapper">
+        <svg id="arrow-canvas"></svg>
+        <div id="research-theater">
+            </div>
+    </div>
+
     <script>
-        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
-        const JSON_URL = "https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json";
+        let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
+        let totalAircraft = 0;
 
         async function initiateSystem() {
-            const theater = document.getElementById('research-theater');
-            try {
-                const treeRes = await fetch(JSON_URL);
-                const treeData = await treeRes.json();
+            // ... (Your existing Fetch and Grid Injection logic) ...
+            
+            // Modified Card Injection:
+            treeData.cells.forEach(cell => {
+                totalAircraft++;
+                const card = document.createElement('div');
+                card.className = `v-card ${ownedAircraft.includes(cell.cell_key) ? 'obtained' : ''}`;
+                card.id = `cell-${cell.cell_key}`;
+                
+                // Click to toggle "Obtained" status
+                card.onclick = () => toggleObtained(cell.cell_key);
+                
+                // ... (Name and Image logic) ...
+                theater.appendChild(card);
+            });
 
-                const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
-                ranks.forEach((label, i) => {
-                    // Start rows lower to account for the Ribbons at Row 1
-                    const rowStart = (i + 1) * 8 + 1; 
-                    const marker = document.createElement('div');
-                    marker.className = 'rank-marker';
-                    marker.style.gridRow = `${rowStart} / span 5`;
-                    
-                    const parts = label.split(" ");
-                    const verticalLabel = parts[0].split("").join("<br>") + "<br><br>" + parts[1];
-                    marker.innerHTML = verticalLabel;
-                    theater.appendChild(marker);
-                });
-
-                treeData.cells.forEach(cell => {
-                    const card = document.createElement('div');
-                    card.className = 'v-card';
-                    
-                    const col = parseInt(cell.column);
-                    // PREMIUM LOGIC: Columns 5 and 6
-                    if (col >= 5) card.classList.add('premium');
-                    
-                    // SQUADRON CHECK
-                    if (cell.kind === 'squadron' || (cell.display_name && cell.display_name.toLowerCase().includes('squadron'))) {
-                        card.classList.remove('premium');
-                        card.classList.add('squadron');
-                    }
-
-                    card.style.gridColumn = col + 2;
-                    // Vertical Offset to accommodate Header Ribbons
-                    card.style.gridRow = (parseInt(cell.rank) * 8) + parseInt(cell.row_in_rank || 1) + 1;
-
-                    const imgName = `${cell.cell_key}.png`;
-                    card.innerHTML = `
-                        <img src="${PIC_BASE}${imgName}" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=MISSING';">
-                        <div class="v-name">${cell.display_name.toUpperCase().replace(/_/g, ' ')}</div>
-                    `;
-
-                    if (cell.kind === 'group' && cell.units) {
-                        const sub = document.createElement('div');
-                        sub.className = 'sub-unit-container hidden';
-                        cell.units.forEach(id => {
-                            const sc = document.createElement('div'); sc.className='sub-card';
-                            sc.innerHTML = `<img src="${PIC_BASE}${id}.png" class="v-img"><div class="v-name">${id.toUpperCase()}</div>`;
-                            sub.appendChild(sc);
-                        });
-                        card.appendChild(sub);
-                        card.onclick = (e) => { 
-                            e.stopPropagation();
-                            const isOpen = sub.classList.toggle('hidden');
-                            if (!isOpen) card.classList.add('active-group');
-                            else card.classList.remove('active-group');
-                        };
-                    }
-                    theater.appendChild(card);
-                });
-            } catch (err) { console.error(err); }
+            updateHUD();
         }
+
+        function toggleObtained(id) {
+            if (ownedAircraft.includes(id)) {
+                ownedAircraft = ownedAircraft.filter(item => item !== id);
+            } else {
+                ownedAircraft.push(id);
+            }
+            saveAndRefresh();
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
+            location.reload(); // Refresh to update arrows and HUD
+        }
+
+        function updateHUD() {
+            const count = ownedAircraft.length;
+            const percent = Math.round((count / totalAircraft) * 100) || 0;
+            document.getElementById('count-num').innerText = count;
+            document.getElementById('total-num').innerText = totalAircraft;
+            document.getElementById('percent-num').innerText = percent;
+            document.getElementById('progress-fill').style.width = percent + "%";
+        }
+
+        // DATA DISK EXPORT (Download JSON)
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ownedAircraft));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "SKY_PILOT_USA_PROGRESS.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        // DATA DISK IMPORT (Upload JSON)
+        function importData(event) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                ownedAircraft = JSON.parse(e.target.result);
+                saveAndRefresh();
+            };
+            reader.readAsText(event.target.files[0]);
+        }
+
         window.onload = initiateSystem;
     </script>
 </body>
