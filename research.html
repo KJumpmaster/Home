@@ -51,8 +51,9 @@
 
     <script>
         const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
-        // UPDATED LINK TO NORDEN REPO
-        const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
+        
+        // TARGETING YOUR SPECIFIC REPO: WTAircraft_Profile_Pics
+        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/";
 
         async function initiateSystem() {
             const statusBox = document.getElementById('status-update');
@@ -94,27 +95,17 @@
                         card.className = `v-card ${special}`;
                         card.style.gridColumn = cell.column;
                         card.style.gridRow = cell.row;
-                        card.innerHTML = `<img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000?text=MISSING';"><div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>`;
+                        card.innerHTML = `<img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000?text=SCANNING';"><div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>`;
                         container.appendChild(card);
                     });
                     wrapper.appendChild(container);
                     theater.appendChild(wrapper);
                 });
 
-                // Clear the overlay after the load
                 setTimeout(() => {
                     overlay.style.opacity = '0';
                     setTimeout(() => { overlay.style.display = 'none'; }, 1000);
                 }, 2000);
 
             } catch (err) { 
-                console.error(err);
-                statusBox.innerHTML = `<span style="color:red">ERROR: ${err.message}</span>`;
-                // Emergency reveal so it doesn't hang
-                setTimeout(() => { overlay.style.display = 'none'; }, 3000);
-            }
-        }
-        initiateSystem();
-    </script>
-</body>
-</html>
+                console.error(
