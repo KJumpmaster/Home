@@ -1,102 +1,209 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>SKY PILOT - GROUND ZERO</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE CAOC | USA AIR WING</title>
     <style>
-        body { background: #111; color: #0f0; font-family: monospace; margin: 0; padding: 20px; }
-        
-        /* The Grid: 10 columns for the USA Tree */
-        #research-theater {
-            display: grid;
-            grid-template-columns: repeat(10, 180px);
-            grid-gap: 20px;
-            margin-top: 50px;
+        body { 
+            background: #050505 url('metal%20background.png') no-repeat center center fixed; 
+            background-size: cover; color: #00ff00; font-family: 'Courier New', monospace; 
+            margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden;
         }
 
-        /* The Card: Simple and Bold */
-        .v-card {
-            width: 180px;
-            height: 100px;
-            background: #222;
-            border: 2px solid #444;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
+        /* TERMINAL DECODING OVERLAY (NEW) */
+        #loading-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s ease;
+        }
+        
+        /* The Comms Pic Integration */
+        #comms-vis {
+            width: 400px; height: auto; opacity: 0; transition: opacity 1.5s ease;
+            margin-bottom: 30px; border: 1px solid #004400; box-shadow: 0 0 20px rgba(0,255,0,0.2);
         }
 
-        .v-img { width: 100%; height: 70%; object-fit: contain; }
-        .v-name { font-size: 10px; color: white; padding: 5px; text-transform: uppercase; }
+        .decode-header { font-size: 1.4em; letter-spacing: 8px; margin-bottom: 20px; color: #00ff00; font-weight: bold; text-shadow: 0 0 10px #00ff00; }
+        .progress-bar { width: 450px; height: 3px; background: #111; border: 1px solid #004400; position: relative; overflow: hidden;}
+        .progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 15px #00ff00; transition: width 3s linear; }
         
-        #status { font-size: 20px; margin-bottom: 20px; }
+        #status-update { margin-top: 15px; font-size: 0.9em; color: #00ff00; letter-spacing: 2px; height: 1.2em; text-transform: uppercase;}
+
+        /* WIDESCREEN BANNER */
+        .usa-hero {
+            width: 100%; height: 160px; overflow: hidden; border-bottom: 2px solid #00ff00;
+            position: relative; background: #000;
+        }
+        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; opacity: 0.6; }
+
+        /* HEADER SECTION */
+        .header-block { text-align: center; padding: 30px 0; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
+        .main-title { font-size: 3.8em; letter-spacing: 18px; margin: 0; color: #fff; font-weight: 900; }
+        .tdl-status { font-size: 1.1em; color: #00ff00; letter-spacing: 5px; margin-top: 15px; font-weight: bold; }
+        .arog-line { font-size: 0.9em; color: #888; letter-spacing: 2px; margin-top: 8px; font-weight: bold; text-transform: uppercase; }
+
+        .satcom-blink { color: #00ff00; animation: satcomFade 5s infinite; }
+        @keyframes satcomFade { 0%, 100% { opacity: 1; text-shadow: 0 0 10px #00ff00; } 50% { opacity: 0.1; } }
+
+        /* THE RESEARCH THEATER */
+        .tree-viewport { padding: 20px 60px 120px 60px; display: flex; flex-direction: column; gap: 90px; max-width: 1800px; margin: 0 auto; }
+        .rank-wrapper { display: flex; align-items: stretch; position: relative; }
+        .rank-sidebar { font-size: 4em; font-weight: bold; color: rgba(0, 255, 0, 0.05); writing-mode: vertical-rl; text-orientation: upright; padding: 15px; letter-spacing: -8px; user-select: none; }
+
+        .rank-container {
+            flex-grow: 1; display: grid; grid-template-columns: repeat(7, 1fr); 
+            grid-auto-rows: 150px; gap: 20px; position: relative; padding: 40px;
+            background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(0, 255, 0, 0.1);
+        }
+
+        .arrow-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+
+        .v-card { background: rgba(10, 10, 10, 0.98); border: 1px solid #222; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; transition: 0.2s; z-index: 10; }
+        .v-card:hover { border-color: #00ff00; transform: scale(1.03); z-index: 100; box-shadow: 0 0 20px #00ff00;}
+        
+        .premium { border: 1px solid #d4af37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);}
+        .squadron { border: 1px solid #55efc4; box-shadow: 0 0 10px rgba(85, 239, 196, 0.15);}
+
+        .v-img { width: 100%; height: 80px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(0,255,0,0.1)); }
+        .v-name { margin-top: 5px; font-size: 0.7em; font-weight: bold; color: #bbb; text-transform: uppercase; }
+
+        .back-btn { position: fixed; bottom: 25px; left: 25px; background: rgba(0,0,0,0.95); border: 1px solid #00ff00; color: #00ff00; padding: 7px 14px; text-decoration: none; font-weight: bold; font-size: 0.85em; z-index: 2000; transition: 0.3s;}
+        .back-btn:hover { background: #00ff00; color: #000; box-shadow: 0 0 15px #00ff00;}
     </style>
 </head>
 <body>
 
-    <div id="status">SYSTEM RESET: INITIALIZING V4...</div>
-    <div id="research-theater"></div>
+    <div id="loading-overlay">
+        <img src="Comms_Pic.jpg" id="comms-vis" alt="SATCOM Viz">
+        <div class="decode-header">USA TERMINAL: VETERAN ACCESS</div>
+        <div class="progress-bar"><div class="progress-fill" id="bar-fill"></div></div>
+        <div id="status-update">INITIALIZING HANDSHAKE...</div>
+    </div>
+
+    <div class="usa-hero">
+        <video class="usa-banner-video" autoplay muted loop playsinline><source src="USA Banner.mp4" type="video/mp4"></video>
+    </div>
+
+    <div class="header-block">
+        <h1 class="main-title">USA AIR WING</h1>
+        <div class="tdl-status">[ TACTICAL DATA LINK : ACTIVE ]</div>
+        <div class="arog-line">
+            COMMAND & CONTROL | AIR RESEARCH OPERATIONAL GRID (AROG) : 
+            <span class="satcom-blink">COMMS ESTABLISHED</span>
+        </div>
+    </div>
+
+    <div id="research-theater" class="tree-viewport"></div>
+    <a href="index.html" class="back-btn">RETURN TO CAOC</a>
 
     <script>
-        // MASTER LINK TO YOUR GITHUB ICONS
-        const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
+        const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/";
 
-        async function startOver() {
-            const theater = document.getElementById('research-theater');
-            const status = document.getElementById('status');
+        async function initiateSystem() {
+            // Handshake Visualization Sequence
+            const statusBox = document.getElementById('status-update');
+            setTimeout(() => { document.getElementById('comms-vis').style.opacity = '1'; }, 300);
+            setTimeout(() => { document.getElementById('bar-fill').style.width = '100%'; }, 1800);
+
+            setTimeout(() => { statusBox.innerText = "PINGING SATCOM ASSET..."; }, 2200);
+            setTimeout(() => { statusBox.innerText = "LINK ESTABLISHED. DOWNLOADING MANIFEST..."; }, 3500);
+            setTimeout(() => { statusBox.innerText = "AUTHENTICATING VETERAN CREDENTIALS..."; }, 5200);
 
             try {
-                // 1. GET THE DATA
-                const [treeRes, regRes] = await Promise.all([
+                const [regRes, treeRes, edgeRes] = await Promise.all([
+                    fetch('./SP_Registry_CANON_3_31.csv'),
                     fetch('./usa_tree_v4.json'),
-                    fetch('./SP_Registry_CANON_3_31.csv')
+                    fetch('./usa_tree_pass2_edges.csv')
                 ]);
 
-                if (!treeRes.ok || !regRes.ok) throw new Error("FILES MISSING IN FOLDER");
-
-                const treeData = await treeRes.json();
                 const regText = await regRes.text();
-
-                // 2. BUILD THE IMAGE MAP (Column 3)
+                const treeData = await treeRes.json();
+                const edgeText = await edgeRes.text();
                 const registry = {};
-                const lines = regText.split('\n');
-                lines.forEach(line => {
-                    const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (cols.length > 2) {
-                        const id = cols[0].replace(/"/g, '').trim().toLowerCase();
-                        const img = cols[2].replace(/"/g, '').trim(); 
-                        registry[id] = img;
+
+                regText.split('\n').slice(1).forEach(row => {
+                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    if (cols.length > 3) {
+                        const nation = cols[1]?.replace(/"/g, '').trim().toLowerCase();
+                        if (nation === "usa") {
+                            const imageName = cols[2]?.replace(/"/g, '').trim(); 
+                            const masterKey = cols[0]?.replace(/"/g, '').trim();
+                            if (masterKey) registry[masterKey] = imageName;
+                        }
                     }
                 });
 
-                // 3. DRAW THE CARDS
-                theater.innerHTML = '';
-                treeData.cells.forEach(cell => {
-                    const id = String(cell.cell_id).toLowerCase();
-                    const card = document.createElement('div');
-                    card.className = 'v-card';
-                    
-                    // Placement from V4 JSON
-                    card.style.gridColumn = cell.column;
-                    card.style.gridRow = cell.row;
+                const theater = document.getElementById('research-theater');
+                [1,2,3,4,5,6,7,8,9].forEach(r => {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'rank-wrapper';
+                    wrapper.innerHTML = `<div class="rank-sidebar">Rank ${ROMAN[r]}</div>`;
+                    const container = document.createElement('div');
+                    container.className = 'rank-container';
+                    container.id = `rank-box-${r}`;
+                    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                    svg.setAttribute("class", "arrow-svg");
+                    svg.id = `svg-rank-${r}`;
+                    container.appendChild(svg);
 
-                    card.innerHTML = `
-                        <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" class="v-img" 
-                             onerror="this.src='https://placehold.co/200x100/000?text=MISSING';">
-                        <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
-                    `;
-                    theater.appendChild(card);
+                    const cells = treeData.cells.filter(c => c.rank === r && !c.cell_id.includes("xf5f"));
+                    cells.forEach(cell => {
+                        const imageName = registry[cell.cell_id] || registry[cell.display_name] || 'placeholder.png';
+                        const card = document.createElement('div');
+                        let special = (cell.flags.is_premium || cell.flags.is_pack) ? "premium" : (cell.flags.is_squadron || cell.flags.is_event ? "squadron" : "");
+                        card.className = `v-card ${special}`;
+                        card.style.gridColumn = cell.column;
+                        card.style.gridRow = cell.row;
+                        card.id = `unit-${cell.cell_id}`;
+                        card.innerHTML = `<img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';"><div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>`;
+                        container.appendChild(card);
+                    });
+                    wrapper.appendChild(container);
+                    wrapper.appendChild(document.createElement('div')).className = 'rank-sidebar';
+                    theater.appendChild(wrapper);
                 });
 
-                status.innerText = "SYSTEM ONLINE - V4 GRID ACTIVE";
+                setTimeout(() => drawArrows(edgeText), 1000);
 
-            } catch (err) {
-                status.style.color = "red";
-                status.innerText = "CRITICAL ERROR: " + err.message;
-            }
+                // FINAL DECODING PHASE (Slowed down to match handshake)
+                setTimeout(() => {
+                    statusBox.innerText = "ACCESS GRANTED. DEPLOYING INTERFACE...";
+                    document.getElementById('loading-overlay').style.opacity = '0';
+                    setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 1000);
+                }, 6500);
+
+            } catch (err) { console.error("LINK FAILURE:", err); }
         }
 
-        window.onload = startOver;
+        function drawArrows(csv) {
+            csv.split('\n').slice(1).forEach(line => {
+                const cols = line.split(',');
+                if (cols.length >= 6) {
+                    const fromId = cols[0].trim();
+                    const toId = cols[1].trim();
+                    const rank = cols[4].trim();
+                    const start = document.getElementById(`unit-${fromId}`);
+                    const end = document.getElementById(`unit-${toId}`);
+                    const svg = document.getElementById(`svg-rank-${rank}`);
+                    if (start && end && svg) {
+                        const rect = svg.getBoundingClientRect();
+                        const sR = start.getBoundingClientRect();
+                        const eR = end.getBoundingClientRect();
+                        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                        line.setAttribute("x1", (sR.left + sR.width / 2) - rect.left);
+                        line.setAttribute("y1", (sR.bottom) - rect.top);
+                        line.setAttribute("x2", (eR.left + eR.width / 2) - rect.left);
+                        line.setAttribute("y2", (eR.top) - rect.top);
+                        line.setAttribute("stroke", "rgba(0, 255, 0, 0.4)");
+                        line.setAttribute("stroke-width", "3");
+                        svg.appendChild(line);
+                    }
+                }
+            });
+        }
+        initiateSystem();
     </script>
 </body>
 </html>
