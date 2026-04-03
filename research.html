@@ -2,159 +2,120 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE CAOC | USA AIR WING</title>
+    <title>THE CAOC | USA AIR WING (BLK INTEGRATED)</title>
     <style>
-        body { 
-            background: #050505 url('metal%20background.png') no-repeat center center fixed; 
-            background-size: cover; color: #00ff00; font-family: 'Courier New', monospace; 
-            margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden;
-        }
-
-        /* TERMINAL DECODING OVERLAY */
-        #loading-overlay {
-            position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.8s ease;
-        }
-        #comms-vis { width: 350px; height: auto; margin-bottom: 25px; border: 1px solid #004400; opacity: 0; transition: opacity 1s ease; }
-        .decode-header { font-size: 1.2em; letter-spacing: 6px; margin-bottom: 20px; color: #00ff00; font-weight: bold; }
-        .progress-bar { width: 350px; height: 3px; background: #111; border: 1px solid #004400; position: relative; }
-        .progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 2s linear; }
-        #status-update { margin-top: 15px; font-size: 0.8em; color: #00ff00; letter-spacing: 2px; text-transform: uppercase; height: 1.2em; }
-
-        /* HEADER & HERO */
-        .usa-hero { width: 100%; height: 160px; overflow: hidden; border-bottom: 2px solid #00ff00; position: relative; background: #000; }
-        .usa-banner-video { width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
-        .header-block { text-align: center; padding: 30px 0; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
-        .main-title { font-size: 3.5em; letter-spacing: 15px; margin: 0; color: #fff; font-weight: 900; }
-
-        /* THE RESEARCH THEATER */
-        .tree-viewport { padding: 20px 60px 100px 60px; display: flex; flex-direction: column; gap: 80px; max-width: 1800px; margin: 0 auto; }
-        .rank-wrapper { display: flex; align-items: stretch; position: relative; }
-        .rank-sidebar { 
-            font-size: 3em; font-weight: bold; writing-mode: vertical-rl; text-orientation: upright; 
-            padding: 15px; letter-spacing: -5px; user-select: none;
-            color: rgba(0, 255, 0, 0.45); text-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
-        }
-
-        .rank-container {
-            flex-grow: 1; display: grid; grid-template-columns: repeat(7, 1fr); 
-            grid-auto-rows: 150px; gap: 20px; position: relative; padding: 40px;
-            background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(0, 255, 0, 0.1);
-        }
-
-        /* CARD STYLING */
-        .v-card { background: rgba(10, 10, 10, 0.98); border: 1px solid #222; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; transition: 0.2s; z-index: 10; position: relative; }
-        .v-card:hover { border-color: #00ff00; transform: scale(1.03); z-index: 100; box-shadow: 0 0 15px #00ff00; }
+        body { background: #050505 url('metal%20background.png') no-repeat center center fixed; background-size: cover; color: #00ff00; font-family: 'Courier New', monospace; margin: 0; }
+        #loading-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .tree-viewport { padding: 40px; display: flex; flex-direction: column; gap: 60px; }
+        .rank-container { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 160px; gap: 20px; background: rgba(0,0,0,0.7); padding: 30px; border: 1px solid #004400; }
+        .v-card { background: rgba(10, 10, 10, 0.95); border: 1px solid #333; padding: 10px; text-align: center; position: relative; display: flex; flex-direction: column; justify-content: center; transition: 0.2s; }
+        .v-card:hover { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; z-index: 100; }
         
-        /* THE GROUP STACK EFFECT */
-        .group-stack::before {
-            content: ''; position: absolute; top: -5px; right: -5px; width: 100%; height: 100%;
-            border: 1px solid #004400; background: #050505; z-index: -1;
-        }
-        .group-stack::after {
-            content: ''; position: absolute; top: -10px; right: -10px; width: 100%; height: 100%;
-            border: 1px solid #002200; background: #000; z-index: -2;
-        }
-
+        /* THE STACK EFFECT */
+        .group-stack::before { content: ''; position: absolute; top: -5px; right: -5px; width: 100%; height: 100%; border: 1px solid #004400; background: #050505; z-index: -1; }
+        
         .v-img { width: 100%; height: 80px; object-fit: contain; }
-        .v-name { margin-top: 5px; font-size: 0.7em; font-weight: bold; color: #bbb; text-transform: uppercase; }
-        .back-btn { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.9); border: 1px solid #00ff00; color: #00ff00; padding: 6px 12px; text-decoration: none; font-weight: bold; font-size: 0.8em; z-index: 2000; }
+        .v-name { font-size: 0.75em; font-weight: bold; color: #bbb; text-transform: uppercase; margin-top: 5px; }
+        .manifest-list { font-size: 9px; color: #00ff00; border-top: 1px solid #222; margin-top: 5px; padding-top: 3px; line-height: 1.1; opacity: 0.8; }
+        .rank-header { font-size: 2em; color: rgba(0,255,0,0.5); letter-spacing: 10px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
-        <img src="Comms_Pic.png" id="comms-vis" onerror="this.src='Comms_Pic.jpg'; this.onerror=null;">
-        <div class="decode-header">USA TERMINAL: VETERAN ACCESS</div>
-        <div class="progress-bar"><div class="progress-fill" id="bar-fill"></div></div>
-        <div id="status-update">INITIALIZING HANDSHAKE...</div>
-    </div>
-
-    <div class="usa-hero">
-        <video class="usa-banner-video" autoplay muted loop playsinline><source src="USA Banner.mp4" type="video/mp4"></video>
-    </div>
-
-    <div class="header-block">
-        <h1 class="main-title">USA AIR WING</h1>
-        <div style="color:#00ff00; letter-spacing:5px; margin-top:15px; font-weight:bold;">[ TACTICAL DATA LINK : ACTIVE ]</div>
+        <div style="color:#00ff00; letter-spacing:5px;">SYNCHRONIZING WITH SHOP.BLKX...</div>
     </div>
 
     <div id="research-theater" class="tree-viewport"></div>
-    <a href="index.html" class="back-btn">RETURN TO CAOC</a>
 
     <script>
-        const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
         const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
         const clean = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
 
         async function initiateSystem() {
-            document.getElementById('bar-fill').style.width = '100%';
-            const statusBox = document.getElementById('status-update');
-            setTimeout(() => { document.getElementById('comms-vis').style.opacity = '1'; }, 300);
-            setTimeout(() => { statusBox.innerText = "ESTABLISHING SECURE SATCOM LINK..."; }, 200);
-            setTimeout(() => { statusBox.innerText = "DECRYPTING AIR-WING MANIFEST..."; }, 800);
-            setTimeout(() => { statusBox.innerText = "AUTHENTICATING VETERAN CREDENTIALS..."; }, 1500);
-
             try {
-                const [regRes, treeRes] = await Promise.all([
-                    fetch('./SP_Registry_CANON_3_31.csv'),
-                    fetch('./usa_tree_v4.json')
+                const [treeRes, shopRes, regRes] = await Promise.all([
+                    fetch('./usa_tree_v4.json'),
+                    fetch('./shop.blkx'),
+                    fetch('./SP_Registry_CANON_3_31.csv')
                 ]);
 
-                const regText = await regRes.text();
                 const treeData = await treeRes.json();
-                const registry = {};
+                const shopData = await shopRes.json();
+                const regText = await regRes.text();
 
+                // 1. MAP SHOP.BLKX GROUPS
+                // This finds which planes are grouped together in the game files
+                const blkGroups = {};
+                const airSections = shopData.country_usa?.aviation?.range || [];
+                
+                airSections.forEach(section => {
+                    const planeIds = Object.keys(section);
+                    if (planeIds.length > 1) {
+                        // The first plane in the block is the "Leader" ID used in your tree
+                        const leader = clean(planeIds[0]);
+                        blkGroups[leader] = planeIds.map(id => id.replace(/_/g, ' ').toUpperCase());
+                    }
+                });
+
+                // 2. REGISTRY MAPPING
+                const registry = {};
                 regText.split('\n').slice(1).forEach(row => {
                     const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (cols.length > 3) {
                         const img = cols[2]?.replace(/"/g, '').trim();
-                        [cols[0], cols[3], cols[6], cols[14]].forEach(val => {
-                            if (val) registry[clean(val)] = img;
-                        });
+                        [cols[0], cols[3], cols[6]].forEach(val => { if(val) registry[clean(val)] = img; });
                     }
                 });
 
                 const theater = document.getElementById('research-theater');
+                const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
+
                 [1,2,3,4,5,6,7,8,9].forEach(r => {
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'rank-wrapper';
-                    wrapper.innerHTML = `<div class="rank-sidebar">Rank ${ROMAN[r]}</div>`;
+                    const cells = treeData.cells.filter(c => c.rank === r);
+                    if (cells.length === 0) return;
+
+                    theater.innerHTML += `<div class="rank-header">RANK ${ROMAN[r]}</div>`;
                     const container = document.createElement('div');
                     container.className = 'rank-container';
-                    
-                    const cells = treeData.cells.filter(c => c.rank === r && !c.cell_id.includes("xf5f"));
+
                     cells.forEach(cell => {
-                        // Check if it's a Group (Folded Card)
-                        const isGroup = cell.cell_id.toLowerCase().includes('group') || (cell.display_name && cell.display_name.toLowerCase().includes('group'));
+                        const id = clean(cell.cell_id);
+                        const groupMembers = blkGroups[id] || null;
+                        const isGroup = groupMembers !== null || id.includes('group');
                         
-                        let imageName = registry[clean(cell.cell_id)] || registry[clean(cell.display_name)] || 'placeholder.png';
-                        
-                        // Force Group Suffix if logic detects a folder
+                        let imageName = registry[id] || registry[clean(cell.display_name)] || 'placeholder.png';
                         if (isGroup && !imageName.includes('Group')) {
-                            imageName = imageName.replace('.png', ' Group.png');
+                            imageName = imageName.split('.')[0] + ' Group.png';
                         }
 
                         const card = document.createElement('div');
                         card.className = `v-card ${isGroup ? 'group-stack' : ''}`;
                         card.style.gridColumn = cell.column;
                         card.style.gridRow = cell.row;
-                        card.innerHTML = `<img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';"><div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>`;
+
+                        // Create the manifest text if it's a group
+                        let manifestHtml = "";
+                        if (groupMembers) {
+                            manifestHtml = `<div class="manifest-list">${groupMembers.join('<br>')}</div>`;
+                        }
+
+                        card.innerHTML = `
+                            <img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
+                            <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
+                            ${manifestHtml}
+                        `;
                         container.appendChild(card);
                     });
-                    wrapper.appendChild(container);
-                    theater.appendChild(wrapper);
+                    theater.appendChild(container);
                 });
 
-                setTimeout(() => {
-                    statusBox.innerText = "ACCESS GRANTED. DEPLOYING...";
-                    document.getElementById('loading-overlay').style.opacity = '0';
-                    setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 800);
-                }, 2200);
+                document.getElementById('loading-overlay').style.display = 'none';
 
-            } catch (err) { console.error("LINK FAILURE:", err); }
+            } catch (err) {
+                console.error("CRITICAL LINK FAILURE:", err);
+                document.getElementById('loading-overlay').innerHTML = "DATA LINK TIMEOUT - CHECK CONSOLE";
+            }
         }
         initiateSystem();
     </script>
