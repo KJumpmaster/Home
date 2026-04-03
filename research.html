@@ -23,11 +23,6 @@
         #hud-progress-bg { width: 250px; height: 14px; background: #111; border: 1px solid #00ff00; margin: 0 20px; overflow: hidden; }
         #hud-progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 0.5s; }
 
-        .hud-btns button {
-            background: #000; border: 1px solid #00ff00; color: #00ff00; padding: 6px 15px; 
-            cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
-        }
-
         #strategic-header {
             width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0;
             background: rgba(0, 0, 0, 0.8); border-bottom: 2px solid #00ff00;
@@ -41,19 +36,24 @@
 
         /* 3. GRID & ARROWS */
         #research-wrapper { display: flex; justify-content: flex-start; padding: 20px 0 150px 15px; position: relative; }
-        #arrow-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        
+        /* THE ARROW CANVAS MUST BE BEHIND THE CARDS BUT OVER THE BACKGROUND */
+        #arrow-canvas { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            pointer-events: none; z-index: 2; 
+        }
         
         #research-theater {
             display: grid;
             grid-template-columns: 120px repeat(5, 210px) repeat(2, 210px); 
-            grid-auto-rows: min-content; grid-gap: 30px 15px;
+            grid-auto-rows: min-content; grid-gap: 35px 15px;
             position: relative; z-index: 10;
         }
 
         .col-header {
             height: 35px; display: flex; align-items: center; justify-content: center;
             font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 13px;
-            border: 1px solid rgba(255,255,255,0.2); grid-row: 1; margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.2); grid-row: 1; margin-bottom: 15px;
         }
         .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.25); color: #8cff8c; border-color: #00ff00; }
         .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
@@ -79,7 +79,7 @@
             box-sizing: border-box; background: rgba(0,255,0,0.2); text-transform: uppercase;
         }
 
-        /* ARROW STYLES */
+        /* ARROW STYLES: YELLOW TACTICAL */
         .research-line { stroke: yellow; stroke-width: 3.5; fill: none; transition: 0.3s; }
         .line-solid { stroke: #00ff00; stroke-width: 5; filter: drop-shadow(0 0 8px #00ff00); }
         .line-dashed { stroke: yellow; stroke-width: 2.5; stroke-dasharray: 8,5; opacity: 0.7; }
@@ -91,8 +91,8 @@
         <div class="hud-stats">OBTAINED: <span id="count-num">0</span> / <span id="total-num">0</span> (<span id="percent-num">0</span>%)</div>
         <div id="hud-progress-bg"><div id="hud-progress-fill"></div></div>
         <div class="hud-btns">
-            <button onclick="exportData()">Export Data Disk</button>
-            <button onclick="document.getElementById('import-input').click()">Import Data Disk</button>
+            <button onclick="exportData()" style="background:#000; color:#00ff00; border:1px solid #00ff00; padding:5px 15px; cursor:pointer;">Export Data Disk</button>
+            <button onclick="document.getElementById('import-input').click()" style="background:#000; color:#00ff00; border:1px solid #00ff00; padding:5px 15px; cursor:pointer;">Import Data Disk</button>
             <input type="file" id="import-input" style="display:none" onchange="importData(event)">
         </div>
     </div>
@@ -106,6 +106,7 @@
 
     <div id="research-wrapper">
         <svg id="arrow-canvas"><defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="yellow" /></marker></defs></svg>
+        
         <div id="research-theater">
             <div class="col-header header-research">Researchable Airframes</div>
             <div class="col-header header-premium">Premium Vehicles</div>
@@ -119,7 +120,8 @@
         let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
         let totalCount = 0;
 
-        function normalize(id) { return id ? id.toLowerCase().replace(/[\s-]/g, '_') : ""; }
+        // ID NORMALIZER: Strips spaces, dashes, and underscores for exact matching
+        function normalize(id) { return id ? id.toLowerCase().replace(/[^a-z0-9]/g, '') : ""; }
 
         async function initiateSystem() {
             const theater = document.getElementById('research-theater');
@@ -144,7 +146,7 @@
                 treeData.cells.forEach(cell => {
                     totalCount++;
                     const card = document.createElement('div');
-                    const normID = normalize(cell.cell_key);
+                    const normID = normalize(cell.cell_key); // Cards use normalized IDs
                     card.className = 'v-card';
                     card.id = `cell-${normID}`;
                     
@@ -164,37 +166,31 @@
 
                 updateHUD();
 
-                // 3. FAIL-SAFE ARROW SCRIPT
+                // 3. ARROWS (WITH NORMALIZED MATCHING)
                 if (treeData.arrows) {
                     setTimeout(() => {
                         treeData.arrows.forEach(link => {
-                            try {
-                                const parentNorm = normalize(link.from);
-                                const childNorm = normalize(link.to);
-                                
-                                // Check if BOTH elements actually exist on the page before drawing
-                                const pElem = document.getElementById(`cell-${parentNorm}`);
-                                const cElem = document.getElementById(`cell-${childNorm}`);
-                                
-                                if (pElem && cElem) {
-                                    const achieved = ownedAircraft.includes(parentNorm) && ownedAircraft.includes(childNorm);
-                                    const potential = ownedAircraft.includes(parentNorm) && !ownedAircraft.includes(childNorm);
-                                    drawArrow(parentNorm, childNorm, canvas, achieved, potential);
-                                }
-                            } catch (e) {
-                                console.warn("Skipping broken arrow link:", link);
-                            }
+                            const pID = normalize(link.from);
+                            const cID = normalize(link.to);
+                            
+                            const achieved = ownedAircraft.includes(pID) && ownedAircraft.includes(cID);
+                            const potential = ownedAircraft.includes(pID) && !ownedAircraft.includes(cID);
+                            
+                            drawArrow(pID, cID, canvas, achieved, potential);
                         });
-                    }, 1500); // 1.5s delay to ensure grid is stable
+                    }, 1500); 
                 }
 
-            } catch (err) { console.error("FATAL HUD ERROR:", err); }
+            } catch (err) { console.error("HUD Error:", err); }
         }
 
         function drawArrow(pID, cID, svg, achieved, potential) {
             const p = document.getElementById(`cell-${pID}`);
             const c = document.getElementById(`cell-${cID}`);
-            const pRect = p.getBoundingClientRect(); const cRect = c.getBoundingClientRect();
+            if (!p || !c) return; // Skip if parent or child card isn't found
+            
+            const pRect = p.getBoundingClientRect(); 
+            const cRect = c.getBoundingClientRect();
             const canvasRect = svg.getBoundingClientRect();
             
             const x1 = pRect.left + pRect.width / 2 - canvasRect.left;
@@ -205,9 +201,11 @@
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
             line.setAttribute("x1", x1); line.setAttribute("y1", y1); line.setAttribute("x2", x2); line.setAttribute("y2", y2 - 10);
             line.classList.add("research-line");
+            
             if (achieved) line.classList.add("line-solid");
             else if (potential) line.classList.add("line-dashed");
-            else line.style.opacity = "0.05";
+            else line.style.opacity = "0.05"; // Path not yet unlocked
+            
             line.setAttribute("marker-end", "url(#arrowhead)");
             svg.appendChild(line);
         }
