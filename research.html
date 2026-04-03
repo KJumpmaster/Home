@@ -2,35 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SKY PILOT - USA Research Tree</title>
+    <title>SKY PILOT - USA TREE V4</title>
     <style>
-        body {
-            background-color: #1a1a1a;
-            color: #ffffff;
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            overflow-x: auto;
-        }
-
+        body { background: #1a1a1a; color: white; margin: 0; font-family: sans-serif; overflow-x: auto; }
+        
+        /* THE CRITICAL STRUCTURE CSS */
         #loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            font-family: monospace;
-            font-size: 24px;
-            color: #00ff00;
+            position: fixed; inset: 0; background: black; z-index: 9999;
+            display: flex; align-items: center; justify-content: center; font-size: 24px; color: #00ff00;
         }
 
         #research-wrapper {
             position: relative;
             width: max-content;
-            margin: 40px auto;
-            padding: 50px;
+            margin: 50px auto;
+            padding: 20px;
         }
 
         #edge-layer {
@@ -40,48 +26,28 @@
             height: 100%;
             pointer-events: none;
             overflow: visible;
-            z-index: 1;
+            z-index: 1; /* Behind cards */
         }
 
         #research-theater {
             position: relative;
             display: grid;
-            grid-gap: 40px 30px; 
-            z-index: 2;
+            grid-gap: 40px 20px; /* Space for the lines to turn */
+            z-index: 2; /* In front of lines */
         }
 
+        /* CARD STYLING */
         .v-card {
-            position: relative;
-            z-index: 3;
-            width: 180px;
-            height: 100px;
-            background: rgba(30, 30, 30, 0.9);
-            border: 2px solid #444;
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            width: 180px; height: 100px;
+            background: #2a2a2a; border: 2px solid #444;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
+        .v-img { width: 100%; height: 70%; object-fit: contain; }
+        .v-name { font-size: 11px; padding: 5px; text-transform: uppercase; text-align: center; }
 
-        .v-img {
-            width: 100%;
-            height: 70%;
-            object-fit: contain;
-        }
-
-        .v-name {
-            font-size: 11px;
-            text-align: center;
-            padding: 4px;
-            text-transform: uppercase;
-            font-weight: bold;
-            background: rgba(0, 0, 0, 0.6);
-            width: 100%;
-        }
-
+        /* THE LINE STYLING */
         .tree-edge {
-            stroke: rgba(120, 255, 120, 0.65);
+            stroke: rgba(0, 255, 0, 0.5);
             stroke-width: 3;
             fill: none;
             stroke-linecap: round;
@@ -91,7 +57,7 @@
 </head>
 <body>
 
-    <div id="loading-overlay">INITIALIZING...</div>
+    <div id="loading-overlay">LOADING SYSTEM...</div>
 
     <div id="research-wrapper">
         <svg id="edge-layer"></svg>
@@ -103,21 +69,26 @@
 
         async function initiateSystem() {
             const overlay = document.getElementById('loading-overlay');
+            const wrapper = document.getElementById('research-wrapper');
             const theater = document.getElementById('research-theater');
             const edgeLayer = document.getElementById('edge-layer');
 
             try {
+                console.log("GEM: Initiating Ironclad Stable Build...");
+
+                // 1. FETCH DATA
                 const [treeRes, regRes] = await Promise.all([
                     fetch('./usa_tree_v4.json'),
                     fetch('./SP_Registry_CANON_3_31.csv')
                 ]);
 
-                if (!treeRes.ok || !regRes.ok) throw new Error("CORE FILES MISSING");
+                if (!treeRes.ok) throw new Error("usa_tree_v4.json missing");
+                if (!regRes.ok) throw new Error("Registry CSV missing");
 
                 const treeData = await treeRes.json();
                 const regText = await regRes.text();
 
-                // 1. Map Registry
+                // 2. PARSE REGISTRY
                 const registry = {};
                 const lines = regText.split('\n');
                 for (let i = 1; i < lines.length; i++) {
@@ -129,7 +100,7 @@
                     }
                 }
 
-                // 2. Render Grid
+                // 3. RENDER CARDS
                 theater.innerHTML = '';
                 treeData.cells.forEach(cell => {
                     const id = String(cell.cell_id).toLowerCase();
@@ -146,46 +117,66 @@
                     theater.appendChild(card);
                 });
 
-                // 3. Draw Lines
-                requestAnimationFrame(() => drawEdges(treeData.edges || [], theater, edgeLayer));
+                // 4. DRAW EDGES
+                // Need to wait for browser to paint the grid before drawing lines
+                setTimeout(() => {
+                    drawEdges(treeData.edges || [], theater, edgeLayer, wrapper);
+                }, 100);
 
                 overlay.style.display = 'none';
+                console.log("GEM: System 100% Stable.");
+
             } catch (err) {
-                overlay.innerHTML = `<h1 style="color:red;">OFFLINE: ${err.message}</h1>`;
+                console.error("DATA LINK FAILURE:", err);
+                overlay.innerHTML = `<h1 style="color:red">OFFLINE: ${err.message.toUpperCase()}</h1>`;
             }
         }
 
-        function drawEdges(edges, theater, edgeLayer) {
-            const tRect = theater.getBoundingClientRect();
-            edgeLayer.setAttribute('viewBox', `0 0 ${theater.scrollWidth} ${theater.scrollHeight}`);
-            edgeLayer.setAttribute('width', theater.scrollWidth);
-            edgeLayer.setAttribute('height', theater.scrollHeight);
+        function drawEdges(edges, theater, edgeLayer, wrapper) {
+            const theaterRect = theater.getBoundingClientRect();
+            
+            // Set SVG canvas size to match the scrollable area
+            const width = theater.scrollWidth;
+            const height = theater.scrollHeight;
+            edgeLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            edgeLayer.setAttribute('width', width);
+            edgeLayer.setAttribute('height', height);
 
             const cardMap = new Map();
-            theater.querySelectorAll('.v-card').forEach(c => cardMap.set(c.dataset.cellId, c));
+            theater.querySelectorAll('.v-card').forEach(card => {
+                cardMap.set(card.dataset.cellId, card);
+            });
 
-            edges.forEach(e => {
-                const from = cardMap.get(String(e.from || e.source).toLowerCase());
-                const to = cardMap.get(String(e.to || e.target).toLowerCase());
-                if (!from || !to) return;
+            edgeLayer.innerHTML = ''; // Clear old lines
 
-                const fR = from.getBoundingClientRect();
-                const tR = to.getBoundingClientRect();
+            edges.forEach(edge => {
+                const fromCard = cardMap.get(String(edge.from || edge.source).toLowerCase());
+                const toCard = cardMap.get(String(edge.to || edge.target).toLowerCase());
 
-                const x1 = (fR.left - tRect.left) + (fR.width / 2);
-                const y1 = (fR.top - tRect.top) + fR.height;
-                const x2 = (tR.left - tRect.left) + (tR.width / 2);
-                const y2 = (tR.top - tRect.top);
+                if (!fromCard || !toCard) return;
+
+                const fromRect = fromCard.getBoundingClientRect();
+                const toRect = toCard.getBoundingClientRect();
+
+                // Calculate center points relative to the theater container
+                const x1 = (fromRect.left - theaterRect.left) + (fromRect.width / 2);
+                const y1 = (fromRect.top - theaterRect.top) + fromRect.height;
+                const x2 = (toRect.left - theaterRect.left) + (toRect.width / 2);
+                const y2 = (toRect.top - theaterRect.top);
 
                 const midY = y1 + ((y2 - y1) / 2);
-                const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                p.setAttribute("d", `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`);
-                p.setAttribute("class", "tree-edge");
-                edgeLayer.appendChild(p);
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`);
+                path.setAttribute("class", "tree-edge");
+                edgeLayer.appendChild(path);
             });
         }
 
         window.onload = initiateSystem;
+        window.addEventListener('resize', () => {
+            // Re-fetch or use local cache to redraw lines on resize
+            location.reload(); 
+        });
     </script>
 </body>
 </html>
