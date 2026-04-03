@@ -4,99 +4,275 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
-        /* 1. UI BASE: FIXED METAL */
         body, html {
-            margin: 0; padding: 0;
+            margin: 0;
+            padding: 0;
             background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
             background-size: cover !important;
-            color: white; font-family: 'Segoe UI', Arial, sans-serif;
-            overflow-x: hidden;
+            color: white;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow-x: auto;
+            overflow-y: auto;
         }
 
-        /* HUD & HEADER */
         #tactical-hud {
-            position: sticky; top: 0; width: 100%; background: rgba(0, 15, 0, 0.98);
-            border-bottom: 2px solid #00ff00; padding: 12px 30px; z-index: 5000;
-            display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;
+            position: sticky;
+            top: 0;
+            width: 100%;
+            background: rgba(0, 15, 0, 0.98);
+            border-bottom: 2px solid #00ff00;
+            padding: 12px 30px;
+            z-index: 5000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
         }
-        .hud-stats { font-family: monospace; color: #00ff00; font-size: 22px; font-weight: bold; }
-        #hud-progress-bg { width: 300px; height: 16px; background: #111; border: 1px solid #00ff00; overflow: hidden; }
-        #hud-progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 15px #00ff00; transition: width 0.6s; }
+
+        .hud-stats {
+            font-family: monospace;
+            color: #00ff00;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        #hud-progress-bg {
+            width: 300px;
+            height: 16px;
+            background: #111;
+            border: 1px solid #00ff00;
+            overflow: hidden;
+        }
+
+        #hud-progress-fill {
+            width: 0%;
+            height: 100%;
+            background: #00ff00;
+            box-shadow: 0 0 15px #00ff00;
+            transition: width 0.6s;
+        }
 
         .hud-btns button {
-            background: #000; border: 1px solid #00ff00; color: #00ff00; padding: 8px 18px; 
-            cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            padding: 8px 18px;
+            cursor: pointer;
+            font-family: monospace;
+            text-transform: uppercase;
+            margin-left: 10px;
         }
 
         #strategic-header {
-            width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0;
-            background: rgba(0, 0, 0, 0.85); border-bottom: 2px solid #00ff00;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+            background: rgba(0, 0, 0, 0.85);
+            border-bottom: 2px solid #00ff00;
         }
-        #banner-container { width: 75%; height: 180px; overflow: hidden; border: 1px solid #444; position: relative; }
-        #banner-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7); }
-        #main-title { font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px; text-transform: uppercase; margin-top: 15px; }
 
-        /* 3. RESEARCH THEATER */
-        #research-wrapper { display: flex; justify-content: flex-start; padding: 10px 0 150px 15px; position: relative; }
-        
+        #banner-container {
+            width: 75%;
+            height: 180px;
+            overflow: hidden;
+            border: 1px solid #444;
+            position: relative;
+        }
+
+        #banner-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.7);
+        }
+
+        #main-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00ff00;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            margin-top: 15px;
+        }
+
+        #research-wrapper {
+            display: flex;
+            justify-content: flex-start;
+            padding: 10px 0 150px 15px;
+            position: relative;
+        }
+
         #research-theater {
             display: grid;
-            grid-template-columns: 140px repeat(5, 210px) repeat(2, 210px); 
-            grid-auto-rows: min-content; grid-gap: 35px 15px;
-            position: relative; /* REQUIRED FOR ARROW POSITIONING */
+            grid-template-columns: 140px repeat(5, 210px) repeat(2, 210px);
+            grid-auto-rows: min-content;
+            grid-gap: 35px 15px;
+            position: relative;
+            min-width: max-content;
+            padding-right: 40px;
         }
 
-        /* ARROW CANVAS: Anchored to Grid */
         #arrow-canvas {
-            position: absolute; top: 0; left: 0; 
-            width: 100%; height: 100%; 
-            pointer-events: none; z-index: 2; /* Sits behind cards */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            overflow: visible;
         }
 
         .col-header {
-            height: 40px; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
-            border: 1px solid rgba(255,255,255,0.2); grid-row: 1; margin-bottom: 10px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            grid-row: 1;
+            margin-bottom: 10px;
         }
-        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.3); color: #8cff8c; border-color: #00ff00; }
-        .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
 
-        /* RANK MARKERS: CENTERED TEXT BOX */
+        .header-research {
+            grid-column: 2 / span 5;
+            background: rgba(0, 255, 0, 0.3);
+            color: #8cff8c;
+            border-color: #00ff00;
+        }
+
+        .header-premium {
+            grid-column: 7 / span 2;
+            background: rgba(184, 134, 11, 0.4);
+            color: #d4af37;
+            border-color: #b8860b;
+        }
+
         .rank-marker {
-            grid-column: 1; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; /* CENTER TEXT IN GRID SECTOR */
+            grid-column: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            font-weight: 900; color: #00ff00; font-size: 50px; opacity: 0.12; 
-            text-transform: uppercase; pointer-events: none; line-height: 1;
+            font-weight: 900;
+            color: #00ff00;
+            font-size: 50px;
+            opacity: 0.12;
+            text-transform: uppercase;
+            pointer-events: none;
+            line-height: 1;
+            z-index: 1;
         }
-        .rank-small { font-size: 37px !important; }
 
-        /* CARDS */
+        .rank-small {
+            font-size: 37px !important;
+        }
+
         .v-card {
-            width: 200px; height: 130px; background: rgba(5, 5, 5, 0.98); border: 2px solid #444;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; transition: 0.2s; filter: grayscale(1); opacity: 0.6; z-index: 10;
+            width: 200px;
+            height: 130px;
+            background: rgba(5, 5, 5, 0.98);
+            border: 2px solid #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: 0.2s;
+            filter: grayscale(1);
+            opacity: 0.6;
+            z-index: 10;
+            box-sizing: border-box;
         }
-        .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00 !important; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
-        .v-card.premium { border-color: #b8860b !important; }
-        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; }
 
-        .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
-        .v-name { 
-            font-size: 11px; padding: 5px; text-align: center; font-weight: bold; width: 100%; 
-            box-sizing: border-box; background: rgba(0,255,0,0.2); text-transform: uppercase;
+        .v-card.obtained {
+            filter: grayscale(0);
+            opacity: 1;
+            border-color: #00ff00 !important;
+            box-shadow: 0 0 15px rgba(0,255,0,0.5);
         }
 
-        /* ARROWS: YELLOW TACTICAL */
-        .research-line { stroke: yellow; stroke-width: 5; fill: none; stroke-linecap: round; }
-        .line-solid { stroke: #00ff00; stroke-width: 7; filter: drop-shadow(0 0 12px #00ff00); }
-        .line-dashed { stroke: yellow; stroke-width: 4; stroke-dasharray: 12,8; opacity: 0.9; }
+        .v-card.premium {
+            border-color: #b8860b !important;
+        }
+
+        .v-card.premium .v-name {
+            background: rgba(184, 134, 11, 0.6) !important;
+        }
+
+        .v-card.event {
+            border-color: #aa3333 !important;
+        }
+
+        .v-card.event .v-name {
+            background: rgba(170, 51, 51, 0.55) !important;
+        }
+
+        .v-card.squadron {
+            border-color: #4b6cb7 !important;
+        }
+
+        .v-card.squadron .v-name {
+            background: rgba(75, 108, 183, 0.55) !important;
+        }
+
+        .v-img {
+            width: 92%;
+            height: 68%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .v-name {
+            font-size: 11px;
+            padding: 5px;
+            text-align: center;
+            font-weight: bold;
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(0,255,0,0.2);
+            text-transform: uppercase;
+        }
+
+        .research-line {
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .line-solid {
+            stroke: #00ff00;
+            stroke-width: 6;
+            filter: drop-shadow(0 0 10px #00ff00);
+            opacity: 0.95;
+        }
+
+        .line-dashed {
+            stroke: yellow;
+            stroke-width: 4;
+            stroke-dasharray: 10,8;
+            opacity: 0.95;
+        }
+
+        .line-faint {
+            stroke: rgba(255,255,255,0.14);
+            stroke-width: 3;
+        }
     </style>
 </head>
 <body>
 
     <div id="tactical-hud">
-        <div class="hud-stats">OBTAINED: <span id="count-num">0</span> / <span id="total-num">0</span> (<span id="percent-num">0</span>%)</div>
+        <div class="hud-stats">
+            OBTAINED: <span id="count-num">0</span> / <span id="total-num">0</span> (<span id="percent-num">0</span>%)
+        </div>
         <div id="hud-progress-bg"><div id="hud-progress-fill"></div></div>
         <div class="hud-btns">
             <button onclick="exportData()">Export Data Disk</button>
@@ -107,7 +283,9 @@
 
     <header id="strategic-header">
         <div id="banner-container">
-            <video id="banner-video" autoplay loop muted playsinline><source src="https://raw.githubusercontent.com/KJumpmaster/Home/main/USA Banner.mp4" type="video/mp4"></video>
+            <video id="banner-video" autoplay loop muted playsinline>
+                <source src="https://raw.githubusercontent.com/KJumpmaster/Home/main/USA Banner.mp4" type="video/mp4">
+            </video>
         </div>
         <div id="main-title">USA AIR GROUP STRATEGIC COMMAND</div>
     </header>
@@ -116,11 +294,18 @@
         <div id="research-theater">
             <svg id="arrow-canvas">
                 <defs>
-                    <marker id="arrowhead" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
-                        <polygon points="0 0, 12 4.5, 0 9" fill="yellow" />
+                    <marker id="arrowhead-green" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
+                        <polygon points="0 0, 12 4.5, 0 9" fill="#00ff00"></polygon>
+                    </marker>
+                    <marker id="arrowhead-yellow" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
+                        <polygon points="0 0, 12 4.5, 0 9" fill="yellow"></polygon>
+                    </marker>
+                    <marker id="arrowhead-faint" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
+                        <polygon points="0 0, 12 4.5, 0 9" fill="rgba(255,255,255,0.18)"></polygon>
                     </marker>
                 </defs>
             </svg>
+
             <div class="col-header header-research">Researchable Airframes</div>
             <div class="col-header header-premium">Premium Vehicles</div>
         </div>
@@ -129,13 +314,47 @@
     <script>
         const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
         const JSON_URL = "https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json";
-        
+
         const NAUGHTY_LIST = ['o3u_1', 'ucav_mq_1_predator', 'uav_quadcopter'];
 
         let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
         let totalCount = 0;
 
-        function normalize(id) { return id ? id.toLowerCase().replace(/[^a-z0-9]/g, '') : ""; }
+        function normalize(id) {
+            return id ? String(id).toLowerCase().replace(/[^a-z0-9]/g, '') : "";
+        }
+
+        function getCellId(cell) {
+            return cell.cell_id || cell.id || cell.cell_key || cell.vehicle_id || "";
+        }
+
+        function getDisplayName(cell, cellId) {
+            return (
+                cell.display_name ||
+                cell.name ||
+                cell.label ||
+                cell.vehicle ||
+                cell.vehicle_id ||
+                cell.id ||
+                cellId
+            );
+        }
+
+        function getCellRow(cell) {
+            return parseInt(cell.row ?? cell.row_in_rank ?? 1, 10);
+        }
+
+        function getCellColumn(cell) {
+            return parseInt(cell.column ?? 1, 10);
+        }
+
+        function getLinkFrom(link) {
+            return link.from_cell || link.from || "";
+        }
+
+        function getLinkTo(link) {
+            return link.to_cell || link.to || "";
+        }
 
         async function initiateSystem() {
             const theater = document.getElementById('research-theater');
@@ -143,93 +362,172 @@
 
             try {
                 const treeRes = await fetch(JSON_URL);
+                if (!treeRes.ok) {
+                    throw new Error(`Failed to fetch JSON: ${treeRes.status} ${treeRes.statusText}`);
+                }
+
                 const treeData = await treeRes.json();
-                
-                // 1. RANKS
+
+                console.log("treeData keys:", Object.keys(treeData));
+                console.log("first cell:", treeData.cells?.[0]);
+                console.log("first edge:", treeData.edges?.[0]);
+                console.log("first arrow:", treeData.arrows?.[0]);
+
+                const cells = Array.isArray(treeData.cells) ? treeData.cells : [];
+                const links = Array.isArray(treeData.edges) ? treeData.edges : (Array.isArray(treeData.arrows) ? treeData.arrows : []);
+
+                if (!cells.length) {
+                    throw new Error("No cells found in JSON.");
+                }
+
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
-                    const rowStart = (i * 8) + 2; 
+                    const rowStart = (i * 8) + 2;
                     const marker = document.createElement('div');
                     marker.className = 'rank-marker';
-                    if (i >= 6) marker.classList.add('rank-small'); 
+                    if (i >= 6) marker.classList.add('rank-small');
                     marker.style.gridRow = `${rowStart} / span 7`;
                     marker.innerHTML = label.split(" ")[0].split("").join("<br>") + "<br><br>" + (label.split(" ")[1] || "");
                     theater.appendChild(marker);
                 });
 
-                // 2. CARDS
-                treeData.cells.forEach(cell => {
-                    if (NAUGHTY_LIST.includes(cell.cell_key)) return;
+                cells.forEach(cell => {
+                    const cellId = getCellId(cell);
+                    if (!cellId) return;
+                    if (NAUGHTY_LIST.includes(cellId)) return;
 
                     totalCount++;
-                    const card = document.createElement('div');
-                    const normID = normalize(cell.cell_key);
-                    card.className = 'v-card';
-                    card.id = `unit-${normID}`; 
-                    
-                    if (ownedAircraft.includes(normID)) card.classList.add('obtained');
-                    if (parseInt(cell.column) >= 6) card.classList.add('premium');
 
-                    card.style.gridColumn = cell.column + 1; 
-                    card.style.gridRow = ((parseInt(cell.rank) - 1) * 8) + (parseInt(cell.row_in_rank || 1)) + 1;
+                    const normID = normalize(cellId);
+                    const displayName = getDisplayName(cell, cellId);
+                    const column = getCellColumn(cell);
+                    const rank = parseInt(cell.rank ?? 1, 10);
+                    const row = getCellRow(cell);
+
+                    const card = document.createElement('div');
+                    card.className = 'v-card';
+                    card.id = `unit-${normID}`;
+
+                    if (ownedAircraft.includes(normID)) card.classList.add('obtained');
+                    if (cell.flags?.is_premium || column >= 7) card.classList.add('premium');
+                    if (cell.flags?.is_event) card.classList.add('event');
+                    if (cell.flags?.is_squadron) card.classList.add('squadron');
+
+                    card.style.gridColumn = String(column + 1); // +1 because col 1 is rank marker column
+                    card.style.gridRow = String(((rank - 1) * 8) + row + 1);
 
                     card.innerHTML = `
-                        <img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';">
-                        <div class="v-name">${cell.display_name.toUpperCase().replace(/_/g, ' ')}</div>
+                        <img
+                            src="${PIC_BASE}${cellId}.png"
+                            class="v-img"
+                            onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';"
+                        >
+                        <div class="v-name">${String(displayName).toUpperCase().replace(/_/g, ' ')}</div>
                     `;
+
                     card.onclick = () => toggleObtained(normID);
                     theater.appendChild(card);
                 });
 
                 updateHUD();
 
-                if (treeData.arrows) {
-                    setTimeout(() => {
-                        canvas.setAttribute('width', theater.scrollWidth);
-                        canvas.setAttribute('height', theater.scrollHeight);
-                        
-                        treeData.arrows.forEach(link => {
-                            const p = document.getElementById(`unit-${normalize(link.from)}`);
-                            const c = document.getElementById(`unit-${normalize(link.to)}`);
-                            if (p && c) {
-                                const achieved = ownedAircraft.includes(normalize(link.from)) && ownedAircraft.includes(normalize(link.to));
-                                const potential = ownedAircraft.includes(normalize(link.from)) && !ownedAircraft.includes(normalize(link.to));
-                                drawArrow(p, c, canvas, achieved, potential);
-                            }
-                        });
-                    }, 1200);
-                }
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        drawAllArrows(links, theater, canvas);
+                    });
+                });
 
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load research tree. Check console for details.");
+            }
         }
 
-        function drawArrow(p, c, svg, achieved, potential) {
-            const theater = document.getElementById('research-theater');
-            const pRect = p.getBoundingClientRect(); 
-            const cRect = c.getBoundingClientRect();
+        function drawAllArrows(links, theater, canvas) {
+            while (canvas.lastChild && canvas.lastChild.tagName !== 'defs') {
+                canvas.removeChild(canvas.lastChild);
+            }
+
+            canvas.setAttribute('width', theater.scrollWidth);
+            canvas.setAttribute('height', theater.scrollHeight);
+            canvas.setAttribute('viewBox', `0 0 ${theater.scrollWidth} ${theater.scrollHeight}`);
+
+            console.log("Drawing links:", links.length);
+
+            links.forEach(link => {
+                const fromId = getLinkFrom(link);
+                const toId = getLinkTo(link);
+
+                if (!fromId || !toId) {
+                    console.log("Bad link object:", link);
+                    return;
+                }
+
+                const parentCard = document.getElementById(`unit-${normalize(fromId)}`);
+                const childCard = document.getElementById(`unit-${normalize(toId)}`);
+
+                if (!parentCard || !childCard) {
+                    console.log("Missing arrow endpoint:", {
+                        fromId,
+                        toId,
+                        foundFrom: !!parentCard,
+                        foundTo: !!childCard
+                    });
+                    return;
+                }
+
+                const achieved = ownedAircraft.includes(normalize(fromId)) && ownedAircraft.includes(normalize(toId));
+                const potential = ownedAircraft.includes(normalize(fromId)) && !ownedAircraft.includes(normalize(toId));
+
+                drawArrow(parentCard, childCard, theater, canvas, achieved, potential);
+            });
+        }
+
+        function drawArrow(parentCard, childCard, theater, svg, achieved, potential) {
+            const pRect = parentCard.getBoundingClientRect();
+            const cRect = childCard.getBoundingClientRect();
             const tRect = theater.getBoundingClientRect();
-            
-            const x1 = pRect.left + pRect.width / 2 - tRect.left;
+
+            const x1 = pRect.left + (pRect.width / 2) - tRect.left;
             const y1 = pRect.bottom - tRect.top;
-            const x2 = cRect.left + cRect.width / 2 - tRect.left;
+
+            const x2 = cRect.left + (cRect.width / 2) - tRect.left;
             const y2 = cRect.top - tRect.top;
-            
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", x1); line.setAttribute("y1", y1); 
-            line.setAttribute("x2", x2); line.setAttribute("y2", y2 - 12);
-            line.classList.add("research-line");
-            
-            if (achieved) line.classList.add("line-solid");
-            else if (potential) line.classList.add("line-dashed");
-            else line.style.opacity = "0.08";
-            
-            line.setAttribute("marker-end", "url(#arrowhead)");
-            svg.appendChild(line);
+
+            const midY = y1 + ((y2 - y1) / 2);
+
+            const pathData = [
+                `M ${x1} ${y1}`,
+                `L ${x1} ${midY}`,
+                `L ${x2} ${midY}`,
+                `L ${x2} ${y2 - 10}`
+            ].join(" ");
+
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData);
+            path.classList.add("research-line");
+
+            if (achieved) {
+                path.classList.add("line-solid");
+                path.setAttribute("marker-end", "url(#arrowhead-green)");
+            } else if (potential) {
+                path.classList.add("line-dashed");
+                path.setAttribute("marker-end", "url(#arrowhead-yellow)");
+            } else {
+                path.classList.add("line-faint");
+                path.setAttribute("marker-end", "url(#arrowhead-faint)");
+            }
+
+            svg.appendChild(path);
         }
 
         function toggleObtained(id) {
-            if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(i => i !== id);
-            else ownedAircraft.push(id);
+            if (ownedAircraft.includes(id)) {
+                ownedAircraft = ownedAircraft.filter(i => i !== id);
+            } else {
+                ownedAircraft.push(id);
+            }
+
             localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
             location.reload();
         }
@@ -237,27 +535,42 @@
         function updateHUD() {
             document.getElementById('count-num').innerText = ownedAircraft.length;
             document.getElementById('total-num').innerText = totalCount;
+
             const percent = Math.round((ownedAircraft.length / totalCount) * 100) || 0;
             document.getElementById('percent-num').innerText = percent;
             document.getElementById('hud-progress-fill').style.width = percent + "%";
         }
 
         function exportData() {
-            const blob = new Blob([JSON.stringify(ownedAircraft)], {type: "application/json"});
+            const blob = new Blob([JSON.stringify(ownedAircraft)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_PROGRESS.json";
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "SKY_PILOT_PROGRESS.json";
             a.click();
+
+            URL.revokeObjectURL(url);
         }
 
         function importData(e) {
+            const file = e.target.files?.[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = (event) => {
-                ownedAircraft = JSON.parse(event.target.result);
-                localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
-                location.reload();
+                try {
+                    ownedAircraft = JSON.parse(event.target.result);
+                    localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
+                    location.reload();
+                } catch (err) {
+                    console.error(err);
+                    alert("Import failed. File was not valid JSON.");
+                }
             };
-            reader.readAsText(e.target.files[0]);
+            reader.readAsText(file);
         }
+
         window.onload = initiateSystem;
     </script>
 </body>
