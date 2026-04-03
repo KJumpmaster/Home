@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SKY PILOT - USA V4 STABLE</title>
+    <title>SKY PILOT - 2PM STABLE BUILD</title>
     <style>
-        /* THE 2PM VISUALS: DARK, CLEAN, AND GRID-LOCKED */
+        /* AUTHENTIC DARK THEME */
         body { 
             background: #1a1a1a; 
             color: white; 
@@ -29,7 +29,7 @@
         #research-theater {
             position: relative;
             display: grid;
-            /* The exact spacing that looked like the tree */
+            /* Standard WT Grid Spacing confirmed at 2PM */
             grid-gap: 35px 20px; 
             z-index: 2;
         }
@@ -64,14 +64,14 @@
 </head>
 <body>
 
-    <div id="loading-overlay">EXECUTING COMMIT #100...</div>
+    <div id="loading-overlay">RESTORING 2PM STABLE SYSTEM...</div>
 
     <div id="research-wrapper">
         <div id="research-theater"></div>
     </div>
 
     <script>
-        // MASTER IMAGE PATH - Pulling from your GitHub
+        // TARGETING GITHUB REPO FOR ICONS
         const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
 
         async function initiateSystem() {
@@ -85,7 +85,7 @@
                     fetch('./SP_Registry_CANON_3_31.csv')
                 ]);
 
-                if (!treeRes.ok || !regRes.ok) throw new Error("CORE DATA FILES MISSING");
+                if (!treeRes.ok || !regRes.ok) throw new Error("V4 DATA FILES MISSING");
 
                 const treeData = await treeRes.json();
                 const regText = await regRes.text();
@@ -97,12 +97,12 @@
                     const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (cols.length > 2) {
                         const id = cols[0].replace(/"/g, '').trim().toLowerCase();
-                        const img = cols[2].replace(/"/g, '').trim(); // Column 3
+                        const img = cols[2].replace(/"/g, '').trim(); // Grabs Column 3
                         if (id) registry[id] = img;
                     }
                 }
 
-                // 3. RENDER THE GRID
+                // 3. RENDER THEATER GRID
                 theater.innerHTML = '';
                 treeData.cells.forEach(cell => {
                     const id = String(cell.cell_id).toLowerCase();
@@ -111,9 +111,10 @@
                     card.style.gridColumn = cell.column;
                     card.style.gridRow = cell.row;
 
+                    // Building the card with Image + Auto-Formatted Name
                     card.innerHTML = `
                         <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" class="v-img" 
-                             onerror="this.src='https://placehold.co/200x100/000?text=SCANNING';">
+                             onerror="this.src='https://placehold.co/200x100/000?text=MISSING';">
                         <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
                     `;
                     theater.appendChild(card);
@@ -123,6 +124,7 @@
                 overlay.style.display = 'none';
 
             } catch (err) {
+                console.error("CRITICAL FAILURE:", err);
                 overlay.innerHTML = `<h1 style="color:red">OFFLINE: ${err.message.toUpperCase()}</h1>`;
             }
         }
