@@ -4,134 +4,121 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
-        /* UI BASE */
-        body { 
-            margin: 0; background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') fixed;
-            background-size: cover; color: white; font-family: 'Segoe UI', Arial, sans-serif;
+        /* 1. UI BASE: METAL BACKGROUND & FONTS */
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
+            background-size: cover !important;
+            color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
         }
 
-        /* TACTICAL HUD: Progress & Controls */
+        /* 2. COMMS LINK LOADING OVERLAY */
+        #loading-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        #comms-pic { width: 350px; height: auto; margin-bottom: 20px; border: 1px solid #00ff00; }
+        #comms-bar-container { width: 300px; height: 10px; background: #111; border: 1px solid #444; }
+        #comms-bar-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 0.3s; }
+        #comms-status { margin-top: 15px; font-family: monospace; color: #00ff00; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* 3. TACTICAL HUD (Progress & Save/Load) */
         #tactical-hud {
-            position: sticky; top: 0; width: 100%; background: rgba(0, 20, 0, 0.9);
-            border-bottom: 2px solid #00ff00; padding: 10px 20px; z-index: 2000;
+            position: sticky; top: 0; width: 100%; background: rgba(0, 20, 0, 0.95);
+            border-bottom: 2px solid #00ff00; padding: 10px 30px; z-index: 5000;
             display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;
+            box-shadow: 0 4px 20px #000;
         }
-        .hud-stats { font-family: monospace; color: #00ff00; font-size: 18px; font-weight: bold; }
-        
-        #progress-container { width: 300px; height: 12px; background: #111; border: 1px solid #00ff00; margin: 0 15px; }
-        #progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 0.5s; }
-
+        .hud-stats { font-family: monospace; color: #00ff00; font-size: 18px; font-weight: bold; text-shadow: 0 0 5px #000; }
+        #hud-progress-bg { width: 250px; height: 12px; background: #111; border: 1px solid #00ff00; margin: 0 20px; overflow: hidden; }
+        #hud-progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 0.5s; }
         .hud-btns button {
-            background: #000; border: 1px solid #00ff00; color: #00ff00; 
-            padding: 5px 15px; cursor: pointer; font-family: monospace; text-transform: uppercase;
+            background: #000; border: 1px solid #00ff00; color: #00ff00; padding: 6px 15px; 
+            cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
         }
         .hud-btns button:hover { background: #00ff00; color: #000; }
 
-        /* CARD STATES */
-        .v-card { transition: transform 0.2s; filter: grayscale(1); opacity: 0.6; }
-        .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00; box-shadow: 0 0 15px rgba(0,255,0,0.3); }
-        .v-card:hover { transform: scale(1.05); }
+        /* 4. STRATEGIC HEADER (Banner & Title) */
+        #strategic-header {
+            width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0;
+            background: rgba(0, 0, 0, 0.8); border-bottom: 2px solid #00ff00;
+        }
+        #banner-container { 
+            width: 75%; height: 180px; overflow: hidden; border: 1px solid #444; 
+            position: relative; background: #000; box-shadow: 0 0 30px #000;
+        }
+        #banner-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7); }
+        #main-title {
+            font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px;
+            text-shadow: 0 0 15px #00ff00; text-transform: uppercase; margin-top: 15px;
+        }
 
-        /* SVG LINES */
-        .line-solid { stroke: #00ff00; stroke-width: 4; filter: drop-shadow(0 0 5px #00ff00); }
-        .line-dashed { stroke: yellow; stroke-width: 2; stroke-dasharray: 5,5; opacity: 0.4; }
+        /* 5. RESEARCH THEATER GRID */
+        #research-wrapper { 
+            display: flex; justify-content: flex-start; 
+            padding: 40px 0 150px 15px; position: relative; 
+        }
+        #arrow-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         
-        /* Rest of your previous CSS for grid and cards goes here... */
+        /* Grid Shifted Left: 60px Left Gutter / 200px Right */
+        #research-theater {
+            display: grid;
+            grid-template-columns: 60px repeat(5, 210px) repeat(2, 210px) 200px; 
+            grid-auto-rows: min-content; grid-gap: 25px 15px;
+            position: relative; z-index: 10;
+        }
+
+        /* HEADER RIBBONS */
+        .col-header {
+            height: 30px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 12px;
+            margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.2); grid-row: 1;
+        }
+        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.2); color: #8cff8c; border-color: #00ff00; }
+        .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.3); color: #d4af37; border-color: #b8860b; }
+
+        /* RANK MARKERS: R-A-N-K I */
+        .rank-marker {
+            grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-weight: 900; color: #00ff00; font-size: 22px; opacity: 0.3; 
+            text-transform: uppercase; pointer-events: none; line-height: 1.1;
+        }
+
+        /* AIRCRAFT CARDS */
+        .v-card {
+            width: 200px; height: 130px; background: rgba(5, 5, 5, 0.95); border: 2px solid #444;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; transition: all 0.2s; filter: grayscale(1); opacity: 0.5;
+        }
+        .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00; box-shadow: 0 0 15px rgba(0,255,0,0.4); }
+        .v-card:hover { transform: scale(1.05); z-index: 100; }
+        
+        .v-card.premium { border-color: #b8860b; }
+        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.5) !important; }
+        .v-card.squadron { border-color: #00ff00; }
+        .v-card.squadron .v-name { background: rgba(0, 255, 0, 0.3) !important; }
+
+        .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
+        .v-name { 
+            font-size: 11px; padding: 5px; text-align: center; font-weight: bold; width: 100%; 
+            box-sizing: border-box; background: rgba(0,255,0,0.15); text-transform: uppercase;
+        }
+
+        /* ARROW LINES */
+        .research-line { stroke: yellow; stroke-width: 3; fill: none; transition: 0.3s; }
+        .line-solid { stroke: #00ff00; stroke-width: 4; filter: drop-shadow(0 0 5px #00ff00); }
+        .line-dashed { stroke: yellow; stroke-width: 2; stroke-dasharray: 6,4; opacity: 0.5; }
     </style>
 </head>
 <body>
 
+    <div id="loading-overlay">
+        <img src="https://raw.githubusercontent.com/KJumpmaster/Home/main/Comms_Pic.png" id="comms-pic">
+        <div id="comms-bar-container"><div id="comms-bar-fill"></div></div>
+        <div id="comms-status">Establishing Command Link...</div>
+    </div>
+
     <div id="tactical-hud">
         <div class="hud-stats">
-            OBTAINED: <span id="count-num">0</span> / <span id="total-num">0</span> 
-            (<span id="percent-num">0</span>%)
-        </div>
-        <div id="progress-container"><div id="progress-fill"></div></div>
-        <div class="hud-btns">
-            <button onclick="exportData()">Export Data Disk</button>
-            <button onclick="document.getElementById('import-input').click()">Import Data Disk</button>
-            <input type="file" id="import-input" style="display:none" onchange="importData(event)">
-        </div>
-    </div>
-
-    <header id="strategic-header">
-        </header>
-
-    <div id="research-wrapper">
-        <svg id="arrow-canvas"></svg>
-        <div id="research-theater">
-            </div>
-    </div>
-
-    <script>
-        let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
-        let totalAircraft = 0;
-
-        async function initiateSystem() {
-            // ... (Your existing Fetch and Grid Injection logic) ...
-            
-            // Modified Card Injection:
-            treeData.cells.forEach(cell => {
-                totalAircraft++;
-                const card = document.createElement('div');
-                card.className = `v-card ${ownedAircraft.includes(cell.cell_key) ? 'obtained' : ''}`;
-                card.id = `cell-${cell.cell_key}`;
-                
-                // Click to toggle "Obtained" status
-                card.onclick = () => toggleObtained(cell.cell_key);
-                
-                // ... (Name and Image logic) ...
-                theater.appendChild(card);
-            });
-
-            updateHUD();
-        }
-
-        function toggleObtained(id) {
-            if (ownedAircraft.includes(id)) {
-                ownedAircraft = ownedAircraft.filter(item => item !== id);
-            } else {
-                ownedAircraft.push(id);
-            }
-            saveAndRefresh();
-        }
-
-        function saveAndRefresh() {
-            localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
-            location.reload(); // Refresh to update arrows and HUD
-        }
-
-        function updateHUD() {
-            const count = ownedAircraft.length;
-            const percent = Math.round((count / totalAircraft) * 100) || 0;
-            document.getElementById('count-num').innerText = count;
-            document.getElementById('total-num').innerText = totalAircraft;
-            document.getElementById('percent-num').innerText = percent;
-            document.getElementById('progress-fill').style.width = percent + "%";
-        }
-
-        // DATA DISK EXPORT (Download JSON)
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(ownedAircraft));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "SKY_PILOT_USA_PROGRESS.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        }
-
-        // DATA DISK IMPORT (Upload JSON)
-        function importData(event) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                ownedAircraft = JSON.parse(e.target.result);
-                saveAndRefresh();
-            };
-            reader.readAsText(event.target.files[0]);
-        }
-
-        window.onload = initiateSystem;
-    </script>
-</body>
-</html>
+            OBTAINED: <span
