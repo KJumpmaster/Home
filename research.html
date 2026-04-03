@@ -4,55 +4,56 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STABLE V4</title>
     <style>
-        /* UI BASE: Fixed 7-Column Grid */
+        /* UI BASE: Force absolute paths to bypass repo-link errors */
         body { 
-            background: #1a1a1a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png'); 
-            background-size: cover; background-position: center; background-attachment: fixed;
+            background: #1a1a1a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed; 
+            background-size: cover;
             color: white; margin: 0; font-family: Arial, Helvetica, sans-serif;
-            overflow-x: hidden; /* Lock horizontal scroll */
+            overflow-x: hidden;
         }
         
         #loading-overlay {
-            position: fixed; inset: 0; background: #000 url('https://raw.githubusercontent.com/KJumpmaster/Home/main/Comms_Pic.png') no-repeat center;
+            position: fixed; inset: 0; 
+            background: #000 url('https://raw.githubusercontent.com/KJumpmaster/Home/main/Comms_Pic.png') no-repeat center;
             background-size: contain; z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
 
         #research-wrapper { width: 100vw; display: flex; justify-content: center; padding: 60px 0; }
 
-        /* FIXED 7-COLUMN THEATER */
+        /* GRID: 7-Column Master Layout */
         #research-theater {
             display: grid;
-            grid-template-columns: repeat(7, 190px); 
-            grid-template-rows: repeat(9, 140px); /* Rank I through IX */
-            grid-gap: 30px 15px;
+            grid-template-columns: repeat(7, 200px); 
+            /* We use auto-rows so the 'row_in_rank' doesn't break the vertical flow */
+            grid-auto-rows: min-content; 
+            grid-gap: 20px 15px;
             position: relative;
         }
 
         .v-card {
-            width: 180px; height: 120px;
-            background: rgba(10, 10, 10, 0.95); border: 2px solid #666;
+            width: 190px; height: 120px;
+            background: rgba(15, 15, 15, 0.95); border: 2px solid #555;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer; z-index: 10; position: relative;
         }
 
-        .v-img { width: 95%; height: 70%; object-fit: contain; }
+        .v-img { width: 90%; height: 65%; object-fit: contain; background: #000; }
 
-        /* READABILITY FOCUS */
+        /* FONT UPGRADE: Bold Arial Green */
         .v-name { 
-            font-size: 14px; padding: 6px; text-transform: uppercase; text-align: center; 
+            font-size: 13px; padding: 4px; text-transform: uppercase; text-align: center; 
             color: #00ff00; font-weight: bold; width: 100%; box-sizing: border-box;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
         }
 
-        /* Sub-stack Expansion (No Arrows) */
         .sub-unit-container {
-            position: absolute; top: 105%; left: -2px; width: 180px;
+            position: absolute; top: 100%; left: -2px; width: 190px;
             display: flex; flex-direction: column; gap: 5px; z-index: 100;
         }
 
         .sub-card {
-            width: 180px; height: 120px;
-            background: rgba(20, 20, 20, 0.98); border: 2px solid #00ff00;
+            width: 190px; height: 120px;
+            background: rgba(25, 25, 25, 0.98); border: 2px solid #00ff00;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
@@ -73,8 +74,9 @@
             const theater = document.getElementById('research-theater');
 
             try {
-                const treeRes = await fetch('./usa_tree_pass2_with_arrows.json');
-                if (!treeRes.ok) throw new Error("JSON OFFLINE - UPLOAD TO HOME REPO");
+                // Fetching the JSON from your Home repo
+                const treeRes = await fetch('https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json');
+                if (!treeRes.ok) throw new Error("JSON DATA OFFLINE");
                 
                 const treeData = await treeRes.json();
                 theater.innerHTML = '';
@@ -83,11 +85,14 @@
                     const card = document.createElement('div');
                     card.className = 'v-card';
                     
-                    // Fixed Grid Mapping
+                    // STRUCTURAL FIX: 
+                    // To prevent overlap, we multiply the rank to create "Zones"
+                    // Then add the row_in_rank to place them specifically within that Zone.
+                    const gridRowCalculation = (parseInt(cell.rank) * 5) + parseInt(cell.row_in_rank || 1);
+                    
                     card.style.gridColumn = parseInt(cell.column) + 1;
-                    card.style.gridRow = parseInt(cell.rank); // Rank I is top (Row 1)
+                    card.style.gridRow = gridRowCalculation;
 
-                    // Direct Match Logic
                     const imgName = `${cell.cell_key}.png`;
                     
                     card.innerHTML = `
@@ -95,7 +100,7 @@
                         <div class="v-name">${(cell.display_name).replace(/_/g, ' ')}</div>
                     `;
 
-                    // Sub-stack Logic (Click to expand)
+                    // Expand Logic
                     if (cell.kind === 'group' && cell.units) {
                         const subContainer = document.createElement('div');
                         subContainer.className = 'sub-unit-container hidden';
@@ -119,9 +124,10 @@
                     theater.appendChild(card);
                 });
 
+                // Clear overlay after data loads
                 overlay.style.display = 'none';
             } catch (err) {
-                overlay.innerHTML = `<h1 style="color:red">ERROR: ${err.message}</h1>`;
+                overlay.innerHTML = `<h1 style="color:red; background:black; padding:20px;">COMMS ERROR: ${err.message}</h1>`;
             }
         }
         window.onload = initiateSystem;
