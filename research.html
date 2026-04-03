@@ -3,7 +3,7 @@ async function initiateSystem() {
     try {
         console.log("GEM: Initiating Handshake...");
 
-        // 1. DATA ACQUISITION (No shop.blkx allowed!)
+        // 1. DATA ACQUISITION
         const [treeData, groupData, regText] = await Promise.all([
             fetch('./usa_tree_v4.json').then(r => {
                 if (!r.ok) throw new Error('usa_tree_v4.json missing');
@@ -33,14 +33,14 @@ async function initiateSystem() {
 
         // 3. RENDER GRID
         const theater = document.getElementById('research-theater');
-        theater.innerHTML = ''; // Clear previous attempts
+        theater.innerHTML = ''; 
 
-        // Assuming treeData.cells is where your V4 aircraft live
         treeData.cells.forEach(cell => {
             const id = cell.cell_id.toLowerCase();
-            const isGroup = groupData[id] ? true : false;
-            
-            // Get Image - If it's a group, we force the "Group.png"
+            const groupList = groupData[id] || null;
+            const isGroup = groupList !== null;
+
+            // Image Logic
             let imageName = registry[id] || 'placeholder.png';
             if (isGroup && !imageName.includes('Group')) {
                 imageName = imageName.split('.')[0] + ' Group.png';
@@ -51,16 +51,18 @@ async function initiateSystem() {
             card.style.gridColumn = cell.column;
             card.style.gridRow = cell.row;
 
-            // Generate Manifest List if it's a group
-            let manifest = "";
+            // Generate Manifest HTML for folders
+            let manifestHtml = "";
             if (isGroup) {
-                manifest = `<div class="manifest-list">${groupData[id].join('<br>')}</div>`;
+                manifestHtml = `<div class="manifest-list">${groupList.join('<br>')}</div>`;
             }
 
+            // Build the inside of the card
             card.innerHTML = `
-                <img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
+                <img src="${PIC_BASE}${imageName}" class="v-img" 
+                     onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
                 <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
-                ${manifest}
+                ${manifestHtml}
             `;
             theater.appendChild(card);
         });
