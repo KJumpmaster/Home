@@ -4,71 +4,84 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
-        /* UI BASE: FORCED METAL BACKGROUND */
         body { 
             margin: 0;
             background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
             background-size: cover !important;
-            color: white; font-family: Arial, sans-serif;
+            color: white; font-family: 'Segoe UI', Arial, sans-serif;
             overflow-x: hidden;
         }
         
         #strategic-header {
-            width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0;
-            background: rgba(0, 0, 0, 0.8); border-bottom: 2px solid #00ff00;
+            width: 100%; display: flex; flex-direction: column; align-items: center; padding: 15px 0;
+            background: rgba(0, 0, 0, 0.85); border-bottom: 2px solid #00ff00;
         }
 
         #main-title {
-            font-size: 40px; font-weight: bold; color: #00ff00; letter-spacing: 8px;
+            font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px;
             text-shadow: 0 0 15px #00ff00; text-transform: uppercase; margin-bottom: 10px;
         }
 
-        #banner-video { max-width: 700px; width: 90%; height: auto; border: 1px solid #444; }
+        /* BANNER: 50% Height, 75% Width, Cinematic Lens */
+        #banner-container { width: 75%; height: 180px; overflow: hidden; border: 1px solid #444; position: relative; }
+        #banner-video { 
+            width: 100%; height: 100%; object-fit: cover; /* Stretches to fill the 75% width */
+            filter: brightness(0.8);
+        }
 
-        #research-wrapper { display: flex; justify-content: flex-start; padding: 40px 0 100px 20px; }
+        #research-wrapper { display: flex; justify-content: flex-start; padding: 40px 0 100px 10px; }
 
-        /* THEATER GRID: Shifted Left (60px Left Gutter vs 200px Right Gutter) */
+        /* THEATER GRID */
         #research-theater {
             display: grid;
-            grid-template-columns: 60px repeat(7, 210px) 200px; 
+            grid-template-columns: 80px repeat(5, 210px) repeat(2, 210px); 
             grid-auto-rows: min-content; 
-            grid-gap: 20px 15px;
+            grid-gap: 25px 15px;
         }
 
-        /* RANK MARKERS: Ghostly Green Vertical Text */
+        /* HEADER BARS */
+        .col-header {
+            height: 40px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 2px; font-size: 14px;
+            margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.2); color: #8cff8c; border-color: #00ff00; }
+        .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.3); color: #d4af37; border-color: #b8860b; }
+
+        /* RANK MARKERS: Stacked R-A-N-K */
         .rank-marker {
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; color: #00ff00; font-size: 44px; 
-            writing-mode: vertical-rl; text-orientation: mixed;
-            transform: rotate(180deg); opacity: 0.2; 
-            letter-spacing: 12px; text-transform: uppercase; white-space: nowrap;
+            grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-weight: 900; color: #00ff00; font-size: 28px; opacity: 0.3; line-height: 1.2;
+            text-transform: uppercase; pointer-events: none;
         }
 
+        /* DYNAMIC CARD COLORS */
         .v-card {
-            width: 200px; height: 130px;
-            background: rgba(10, 10, 10, 0.95); border: 2px solid #444;
+            width: 200px; height: 130px; background: rgba(10, 10, 10, 0.95); border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; z-index: 10;
+            cursor: pointer; position: relative; transition: 0.2s;
         }
         
-        .active-group { z-index: 999 !important; border-color: #00ff00 !important; box-shadow: 0 0 20px #00ff00; }
+        /* Premium Vehicles: Dark Gold Theme */
+        .v-card.premium { border-color: #b8860b; }
+        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; color: #fff; }
 
-        .v-img { width: 92%; height: 68%; object-fit: contain; }
-        
+        /* Squadron Vehicles: Light Green Theme */
+        .v-card.squadron { border-color: #00ff00; }
+        .v-card.squadron .v-name { background: rgba(140, 255, 140, 0.4) !important; color: #fff; }
+
+        .active-group { z-index: 999 !important; box-shadow: 0 0 20px #00ff00; }
+        .v-img { width: 90%; height: 65%; object-fit: contain; }
         .v-name { 
-            font-size: 13px; padding: 5px; text-align: center; 
-            color: #fff; font-weight: bold; width: 100%; box-sizing: border-box;
-            background: rgba(0,255,0,0.2); text-transform: uppercase;
+            font-size: 12px; padding: 5px; text-align: center; font-weight: bold; width: 100%; 
+            box-sizing: border-box; background: rgba(0,255,0,0.15); text-transform: uppercase;
         }
 
         .sub-unit-container {
             position: absolute; top: 100%; left: -2px; width: 200px;
             display: flex; flex-direction: column; gap: 8px; padding-top: 10px;
         }
-        .sub-card {
-            width: 200px; height: 130px; background: #000; border: 2px solid #00ff00;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
+        .sub-card { width: 200px; height: 130px; background: #000; border: 2px solid #00ff00; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .hidden { display: none; }
     </style>
 </head>
@@ -76,48 +89,55 @@
 
     <header id="strategic-header">
         <div id="main-title">USA AIR GROUP STRATEGIC COMMAND</div>
-        <video id="banner-video" autoplay loop muted playsinline>
-            <source src="https://raw.githubusercontent.com/KJumpmaster/Home/main/USA Banner.mp4" type="video/mp4">
-        </video>
+        <div id="banner-container">
+            <video id="banner-video" autoplay loop muted playsinline>
+                <source src="https://raw.githubusercontent.com/KJumpmaster/Home/main/USA Banner.mp4" type="video/mp4">
+            </video>
+        </div>
     </header>
 
     <div id="research-wrapper">
-        <div id="research-theater"></div>
+        <div id="research-theater">
+            <div class="col-header header-research">Researchable Airframes</div>
+            <div class="col-header header-premium">Premium Vehicles</div>
+        </div>
     </div>
 
     <script>
         const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
         const JSON_URL = "https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json";
 
-        const NAUGHTY_LIST = ['o3u_1', 'ucav_mq_1_predator', 'uav_quadcopter'];
-
         async function initiateSystem() {
             const theater = document.getElementById('research-theater');
             try {
                 const treeRes = await fetch(JSON_URL);
                 const treeData = await treeRes.json();
-                theater.innerHTML = '';
 
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
-                    const rowStart = (i + 1) * 7; // Compressed vertical spacing
-                    const l = document.createElement('div'); l.className = 'rank-marker'; 
-                    l.style.gridColumn = 1; l.style.gridRow = `${rowStart} / span 5`; 
-                    l.innerText = label;
-                    theater.appendChild(l);
+                    const rowStart = (i + 1) * 8;
+                    const marker = document.createElement('div');
+                    marker.className = 'rank-marker';
+                    marker.style.gridRow = `${rowStart} / span 5`;
+                    // Split "Rank I" into R A N K I vertically
+                    marker.innerHTML = label.replace(" ", "<br>").split("").join("<br>");
+                    theater.appendChild(marker);
                 });
 
                 treeData.cells.forEach(cell => {
-                    if (NAUGHTY_LIST.includes(cell.cell_key)) return;
-
                     const card = document.createElement('div');
                     card.className = 'v-card';
+                    
+                    // Classification Logic
+                    if (parseInt(cell.column) >= 5) card.classList.add('premium');
+                    if (cell.kind === 'squadron') card.classList.add('squadron');
+
                     card.style.gridColumn = parseInt(cell.column) + 2;
-                    card.style.gridRow = (parseInt(cell.rank) * 7) + parseInt(cell.row_in_rank || 1);
+                    card.style.gridRow = (parseInt(cell.rank) * 8) + parseInt(cell.row_in_rank || 1);
 
                     const imgName = `${cell.cell_key}.png`;
                     card.innerHTML = `
-                        <img src="${PIC_BASE}${imgName}" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';">
+                        <img src="${PIC_BASE}${imgName}" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=MISSING';">
                         <div class="v-name">${cell.display_name.toUpperCase().replace(/_/g, ' ')}</div>
                     `;
 
