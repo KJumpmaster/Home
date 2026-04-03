@@ -23,6 +23,11 @@
         #hud-progress-bg { width: 250px; height: 14px; background: #111; border: 1px solid #00ff00; margin: 0 20px; overflow: hidden; }
         #hud-progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 0.5s; }
 
+        .hud-btns button {
+            background: #000; border: 1px solid #00ff00; color: #00ff00; padding: 6px 15px; 
+            cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
+        }
+
         #strategic-header {
             width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0;
             background: rgba(0, 0, 0, 0.8); border-bottom: 2px solid #00ff00;
@@ -40,7 +45,7 @@
         
         #research-theater {
             display: grid;
-            grid-template-columns: 100px repeat(5, 210px) repeat(2, 210px); 
+            grid-template-columns: 120px repeat(5, 210px) repeat(2, 210px); 
             grid-auto-rows: min-content; grid-gap: 30px 15px;
             position: relative; z-index: 10;
         }
@@ -53,10 +58,9 @@
         .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.25); color: #8cff8c; border-color: #00ff00; }
         .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
 
-        /* RANK MARKERS: BIGGER FONT (48px) */
         .rank-marker {
             grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-weight: 900; color: #00ff00; font-size: 48px; opacity: 0.2; 
+            font-weight: 900; color: #00ff00; font-size: 48px; opacity: 0.15; 
             text-transform: uppercase; pointer-events: none; line-height: 1.1;
         }
 
@@ -66,10 +70,8 @@
             cursor: pointer; position: relative; transition: 0.2s; filter: grayscale(1); opacity: 0.6;
         }
         .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00; box-shadow: 0 0 15px rgba(0,255,0,0.4); }
-        
-        /* PREMIUM HIGHLIGHT (Columns 5 and 6) */
         .v-card.premium { border-color: #b8860b; }
-        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; color: #fff; }
+        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; }
 
         .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
         .v-name { 
@@ -77,7 +79,7 @@
             box-sizing: border-box; background: rgba(0,255,0,0.2); text-transform: uppercase;
         }
 
-        /* ARROW STYLES: YELLOW TACTICAL */
+        /* ARROW STYLES */
         .research-line { stroke: yellow; stroke-width: 3.5; fill: none; transition: 0.3s; }
         .line-solid { stroke: #00ff00; stroke-width: 5; filter: drop-shadow(0 0 8px #00ff00); }
         .line-dashed { stroke: yellow; stroke-width: 2.5; stroke-dasharray: 8,5; opacity: 0.7; }
@@ -89,8 +91,8 @@
         <div class="hud-stats">OBTAINED: <span id="count-num">0</span> / <span id="total-num">0</span> (<span id="percent-num">0</span>%)</div>
         <div id="hud-progress-bg"><div id="hud-progress-fill"></div></div>
         <div class="hud-btns">
-            <button onclick="exportData()" style="background:#000; color:#00ff00; border:1px solid #00ff00; padding:5px 15px; cursor:pointer;">Export Data Disk</button>
-            <button onclick="document.getElementById('import-input').click()" style="background:#000; color:#00ff00; border:1px solid #00ff00; padding:5px 15px; cursor:pointer;">Import Data Disk</button>
+            <button onclick="exportData()">Export Data Disk</button>
+            <button onclick="document.getElementById('import-input').click()">Import Data Disk</button>
             <input type="file" id="import-input" style="display:none" onchange="importData(event)">
         </div>
     </div>
@@ -117,8 +119,7 @@
         let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
         let totalCount = 0;
 
-        // ID NORMALIZER: Fixes underscores vs hyphens
-        function normalize(id) { return id.toLowerCase().replace(/[\s-]/g, '_'); }
+        function normalize(id) { return id ? id.toLowerCase().replace(/[\s-]/g, '_') : ""; }
 
         async function initiateSystem() {
             const theater = document.getElementById('research-theater');
@@ -128,15 +129,14 @@
                 const treeRes = await fetch(JSON_URL);
                 const treeData = await treeRes.json();
                 
-                // 1. RANK MARKERS (BIGGER FONT)
+                // 1. RANK MARKERS
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
                     const rowStart = (i * 8) + 2; 
                     const marker = document.createElement('div');
                     marker.className = 'rank-marker';
                     marker.style.gridRow = `${rowStart} / span 7`;
-                    const parts = label.split(" ");
-                    marker.innerHTML = parts[0].split("").join("<br>") + "<br><br>" + (parts[1] || "");
+                    marker.innerHTML = label.split(" ")[0].split("").join("<br>") + "<br><br>" + (label.split(" ")[1] || "");
                     theater.appendChild(marker);
                 });
 
@@ -149,7 +149,101 @@
                     card.id = `cell-${normID}`;
                     
                     if (ownedAircraft.includes(normID)) card.classList.add('obtained');
-                    
-                    const col = parseInt(cell.column);
-                    // Premium starts at Column 5
-                    if (
+                    if (parseInt(cell.column) >= 5) card.classList.add('premium');
+
+                    card.style.gridColumn = parseInt(cell.column) + 2;
+                    card.style.gridRow = ((parseInt(cell.rank) - 1) * 8) + (parseInt(cell.row_in_rank || 1)) + 1;
+
+                    card.innerHTML = `
+                        <img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';">
+                        <div class="v-name">${cell.display_name.toUpperCase().replace(/_/g, ' ')}</div>
+                    `;
+                    card.onclick = () => toggleObtained(normID);
+                    theater.appendChild(card);
+                });
+
+                updateHUD();
+
+                // 3. FAIL-SAFE ARROW SCRIPT
+                if (treeData.arrows) {
+                    setTimeout(() => {
+                        treeData.arrows.forEach(link => {
+                            try {
+                                const parentNorm = normalize(link.from);
+                                const childNorm = normalize(link.to);
+                                
+                                // Check if BOTH elements actually exist on the page before drawing
+                                const pElem = document.getElementById(`cell-${parentNorm}`);
+                                const cElem = document.getElementById(`cell-${childNorm}`);
+                                
+                                if (pElem && cElem) {
+                                    const achieved = ownedAircraft.includes(parentNorm) && ownedAircraft.includes(childNorm);
+                                    const potential = ownedAircraft.includes(parentNorm) && !ownedAircraft.includes(childNorm);
+                                    drawArrow(parentNorm, childNorm, canvas, achieved, potential);
+                                }
+                            } catch (e) {
+                                console.warn("Skipping broken arrow link:", link);
+                            }
+                        });
+                    }, 1500); // 1.5s delay to ensure grid is stable
+                }
+
+            } catch (err) { console.error("FATAL HUD ERROR:", err); }
+        }
+
+        function drawArrow(pID, cID, svg, achieved, potential) {
+            const p = document.getElementById(`cell-${pID}`);
+            const c = document.getElementById(`cell-${cID}`);
+            const pRect = p.getBoundingClientRect(); const cRect = c.getBoundingClientRect();
+            const canvasRect = svg.getBoundingClientRect();
+            
+            const x1 = pRect.left + pRect.width / 2 - canvasRect.left;
+            const y1 = pRect.bottom - canvasRect.top;
+            const x2 = cRect.left + cRect.width / 2 - canvasRect.left;
+            const y2 = cRect.top - canvasRect.top;
+            
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1); line.setAttribute("y1", y1); line.setAttribute("x2", x2); line.setAttribute("y2", y2 - 10);
+            line.classList.add("research-line");
+            if (achieved) line.classList.add("line-solid");
+            else if (potential) line.classList.add("line-dashed");
+            else line.style.opacity = "0.05";
+            line.setAttribute("marker-end", "url(#arrowhead)");
+            svg.appendChild(line);
+        }
+
+        function toggleObtained(id) {
+            if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(i => i !== id);
+            else ownedAircraft.push(id);
+            localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
+            location.reload();
+        }
+
+        function updateHUD() {
+            document.getElementById('count-num').innerText = ownedAircraft.length;
+            document.getElementById('total-num').innerText = totalCount;
+            const percent = Math.round((ownedAircraft.length / totalCount) * 100) || 0;
+            document.getElementById('percent-num').innerText = percent;
+            document.getElementById('hud-progress-fill').style.width = percent + "%";
+        }
+
+        function exportData() {
+            const blob = new Blob([JSON.stringify(ownedAircraft)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_PROGRESS.json";
+            a.click();
+        }
+
+        function importData(e) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                ownedAircraft = JSON.parse(event.target.result);
+                localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
+                location.reload();
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+        window.onload = initiateSystem;
+    </script>
+</body>
+</html>
