@@ -2,13 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SKY PILOT - USA STABLE V4</title>
+    <title>SKY PILOT - USA V4 STABLE</title>
     <style>
-        body { background: #1a1a1a; color: white; margin: 0; font-family: sans-serif; overflow-x: auto; }
+        /* THE 2PM VISUALS: DARK, CLEAN, AND GRID-LOCKED */
+        body { 
+            background: #1a1a1a; 
+            color: white; 
+            margin: 0; 
+            font-family: sans-serif; 
+            overflow-x: auto; 
+        }
         
         #loading-overlay {
             position: fixed; inset: 0; background: black; z-index: 9999;
-            display: flex; align-items: center; justify-content: center; font-size: 24px; color: #00ff00;
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 24px; color: #00ff00; font-family: monospace;
         }
 
         #research-wrapper {
@@ -21,29 +29,49 @@
         #research-theater {
             position: relative;
             display: grid;
-            grid-gap: 40px 20px;
+            /* The exact spacing that looked like the tree */
+            grid-gap: 35px 20px; 
             z-index: 2;
         }
 
         .v-card {
-            width: 180px; height: 100px;
-            background: #2a2a2a; border: 2px solid #444;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 170px; 
+            height: 90px;
+            background: #2a2a2a; 
+            border: 1px solid #444;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
         }
 
-        .v-img { width: 100%; height: 70%; object-fit: contain; }
-        .v-name { font-size: 11px; padding: 5px; text-transform: uppercase; text-align: center; }
+        .v-img { 
+            width: 100%; 
+            height: 70%; 
+            object-fit: contain; 
+        }
+
+        .v-name { 
+            font-size: 11px; 
+            padding: 4px; 
+            text-transform: uppercase; 
+            text-align: center; 
+            background: rgba(0,0,0,0.6);
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay">LOADING STABLE TREE...</div>
+    <div id="loading-overlay">EXECUTING COMMIT #100...</div>
 
     <div id="research-wrapper">
         <div id="research-theater"></div>
     </div>
 
     <script>
+        // MASTER IMAGE PATH - Pulling from your GitHub
         const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
 
         async function initiateSystem() {
@@ -51,30 +79,30 @@
             const theater = document.getElementById('research-theater');
 
             try {
-                // 1. FETCH DATA
+                // 1. DATA ACQUISITION
                 const [treeRes, regRes] = await Promise.all([
                     fetch('./usa_tree_v4.json'),
                     fetch('./SP_Registry_CANON_3_31.csv')
                 ]);
 
-                if (!treeRes.ok || !regRes.ok) throw new Error("CORE FILES MISSING");
+                if (!treeRes.ok || !regRes.ok) throw new Error("CORE DATA FILES MISSING");
 
                 const treeData = await treeRes.json();
                 const regText = await regRes.text();
 
-                // 2. PARSE REGISTRY
+                // 2. PARSE REGISTRY (Targeting Column 3 for Images)
                 const registry = {};
                 const lines = regText.split('\n');
                 for (let i = 1; i < lines.length; i++) {
                     const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (cols.length > 2) {
                         const id = cols[0].replace(/"/g, '').trim().toLowerCase();
-                        const img = cols[2].replace(/"/g, '').trim();
+                        const img = cols[2].replace(/"/g, '').trim(); // Column 3
                         if (id) registry[id] = img;
                     }
                 }
 
-                // 3. RENDER CARDS
+                // 3. RENDER THE GRID
                 theater.innerHTML = '';
                 treeData.cells.forEach(cell => {
                     const id = String(cell.cell_id).toLowerCase();
@@ -84,12 +112,14 @@
                     card.style.gridRow = cell.row;
 
                     card.innerHTML = `
-                        <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" class="v-img" onerror="this.src='https://placehold.co/200x100/000?text=SCANNING';">
+                        <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" class="v-img" 
+                             onerror="this.src='https://placehold.co/200x100/000?text=SCANNING';">
                         <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
                     `;
                     theater.appendChild(card);
                 });
 
+                // 4. MISSION SUCCESS
                 overlay.style.display = 'none';
 
             } catch (err) {
