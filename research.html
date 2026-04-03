@@ -1,13 +1,11 @@
-// THE MASTER DATA LINK
 const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
 
 async function initiateSystem() {
     const overlay = document.getElementById('loading-overlay');
+
     try {
         console.log("GEM: Initiating Ironclad Stable Build...");
 
-        // 1. ACQUIRE ASSETS (Tree and Registry Only)
-        // Strictly using only these two files to guarantee no crashes.
         const [treeRes, regRes] = await Promise.all([
             fetch('./usa_tree_v4.json'),
             fetch('./SP_Registry_CANON_3_31.csv')
@@ -19,7 +17,10 @@ async function initiateSystem() {
         const treeData = await treeRes.json();
         const regText = await regRes.text();
 
-        // 2. MAP REGISTRY (ID to Image Filename)
+        if (!treeData.cells || !Array.isArray(treeData.cells)) {
+            throw new Error("treeData.cells missing or invalid");
+        }
+
         const registry = {};
         const lines = regText.split('\n');
         for (let i = 1; i < lines.length; i++) {
@@ -31,35 +32,40 @@ async function initiateSystem() {
             }
         }
 
-        // 3. RENDER THEATER
+        const wrapper = document.getElementById('research-wrapper');
         const theater = document.getElementById('research-theater');
-        theater.innerHTML = ''; 
+        const edgeLayer = document.getElementById('edge-layer');
+
+        theater.innerHTML = '';
+        edgeLayer.innerHTML = '';
 
         treeData.cells.forEach(cell => {
             if (!cell.cell_id) return;
-            
-            const id = cell.cell_id.toLowerCase();
+
+            const id = String(cell.cell_id).toLowerCase();
             const imageName = registry[id] || 'placeholder.png';
 
             const card = document.createElement('div');
-            card.className = 'v-card'; // Single-card mode only
+            card.className = 'v-card';
+            card.dataset.cellId = id;
             card.style.gridColumn = cell.column;
             card.style.gridRow = cell.row;
 
-            // This HTML structure is the one that gave us the 100% success
             card.innerHTML = `
-                <img src="${PIC_BASE}${imageName}" class="v-img" 
+                <img src="${PIC_BASE}${imageName}" class="v-img"
                      onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
                 <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
             `;
-            
+
             theater.appendChild(card);
         });
 
-        // 4. SYSTEM ONLINE
-        overlay.style.display = 'none';
-        console.log("GEM: System 100% Stable. Grid Rendered.");
+        requestAnimationFrame(() => {
+            drawEdges(treeData.edges || [], theater, edgeLayer, wrapper);
+        });
 
+        overlay.style.display = 'none';
+        console.log("GEM: System 100% Stable. Grid + Edges Rendered.");
     } catch (err) {
         console.error("DATA LINK FAILURE:", err);
         overlay.innerHTML = `
@@ -71,5 +77,71 @@ async function initiateSystem() {
     }
 }
 
-// Start the sequence immediately
+function drawEdges(edges, theater, edgeLayer, wrapper) {
+    edgeLayer.innerHTML = '';
+
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const theaterRect = theater.getBoundingClientRect();
+
+    const width = Math.ceil(theater.scrollWidth || theaterRect.width);
+    const height = Math.ceil(theater.scrollHeight || theaterRect.height);
+
+    edgeLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    edgeLayer.setAttribute('width', width);
+    edgeLayer.setAttribute('height', height);
+
+    const cardMap = new Map();
+    theater.querySelectorAll('.v-card').forEach(card => {
+        const id = card.dataset.cellId;
+        if (id) cardMap.set(id, card);
+    });
+
+    edges.forEach(edge => {
+        const fromId = String(edge.from || edge.source || edge.parent || '').toLowerCase();
+        const toId = String(edge.to || edge.target || edge.child || '').toLowerCase();
+
+        if (!fromId || !toId) return;
+
+        const fromCard = cardMap.get(fromId);
+        const toCard = cardMap.get(toId);
+
+        if (!fromCard || !toCard) return;
+
+        const fromRect = fromCard.getBoundingClientRect();
+        const toRect = toCard.getBoundingClientRect();
+
+        const x1 = (fromRect.left - theaterRect.left) + (fromRect.width / 2);
+        const y1 = (fromRect.top - theaterRect.top) + fromRect.height;
+
+        const x2 = (toRect.left - theaterRect.left) + (toRect.width / 2);
+        const y2 = (toRect.top - theaterRect.top);
+
+        const midY = y1 + ((y2 - y1) / 2);
+
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute(
+            "d",
+            `M ${x1} ${y1}
+             L ${x1} ${midY}
+             L ${x2} ${midY}
+             L ${x2} ${y2}`
+        );
+        path.setAttribute("class", "tree-edge");
+
+        edgeLayer.appendChild(path);
+    });
+}
+
 window.onload = initiateSystem;
+window.addEventListener('resize', () => {
+    const theater = document.getElementById('research-theater');
+    const edgeLayer = document.getElementById('edge-layer');
+    const wrapper = document.getElementById('research-wrapper');
+
+    if (!theater || !edgeLayer || !wrapper) return;
+
+    fetch('./usa_tree_v4.json')
+        .then(r => r.json())
+        .then(treeData => drawEdges(treeData.edges || [], theater, edgeLayer, wrapper))
+        .catch(err => console.warn("Resize edge redraw skipped:", err));
+});
