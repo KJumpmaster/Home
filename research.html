@@ -7,12 +7,14 @@ async function initiateSystem() {
         console.log("GEM: Initiating Stable Recovery...");
 
         // 1. ACQUIRE ASSETS (Tree and Registry Only)
+        // We are NOT fetching usa_groups.json or shop.blkx here to ensure it works.
         const [treeRes, regRes] = await Promise.all([
             fetch('./usa_tree_v4.json'),
             fetch('./SP_Registry_CANON_3_31.csv')
         ]);
 
-        if (!treeRes.ok || !regRes.ok) throw new Error("Missing Core Files");
+        if (!treeRes.ok) throw new Error("usa_tree_v4.json is missing from the folder");
+        if (!regRes.ok) throw new Error("SP_Registry_CANON_3_31.csv is missing from the folder");
 
         const treeData = await treeRes.json();
         const regText = await regRes.text();
@@ -46,7 +48,7 @@ async function initiateSystem() {
 
             card.innerHTML = `
                 <img src="${PIC_BASE}${imageName}" class="v-img" 
-                     onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
+                     onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=MISSING+ICON';">
                 <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
             `;
             
@@ -59,12 +61,14 @@ async function initiateSystem() {
 
     } catch (err) {
         console.error("DATA LINK FAILURE:", err);
-        overlay.innerHTML = `<div style="color:red; padding:20px;">
-            <h2>SYSTEM OFFLINE</h2>
-            <p>${err.message.toUpperCase()}</p>
-        </div>`;
+        overlay.innerHTML = `
+            <div style="color:red; padding:40px; text-align:center; background:black; border:2px solid red;">
+                <h1 style="letter-spacing:10px;">OFFLINE</h1>
+                <p style="font-family:monospace; font-size:20px;">${err.message.toUpperCase()}</p>
+            </div>
+        `;
     }
 }
 
-// Start the sequence
+// Start the sequence immediately
 window.onload = initiateSystem;
