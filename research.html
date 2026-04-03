@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STABLE V4</title>
     <style>
-        /* Re-implementing the Metal Background */
+        /* UI BASE: Sourcing metal background from local Home directory */
         body { 
-            background: #1a1a1a url('https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/metal_background.png'); 
+            background: #1a1a1a url('metal_background.png'); 
             background-size: cover;
             background-attachment: fixed;
             color: white; 
@@ -15,15 +15,16 @@
             overflow-x: auto; 
         }
         
-        /* Updated Loading Page with Comms_Pic */
+        /* LOADING GRID: Sourcing Comms_Pic from local Home directory */
         #loading-overlay {
             position: fixed; inset: 0; 
-            background: black url('https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/Comms_Pic.png') no-repeat center;
+            background: black url('Comms_Pic.png') no-repeat center;
             background-size: contain;
             z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
             font-size: 24px; color: #00ff00;
             padding-bottom: 50px;
+            text-shadow: 2px 2px 4px black;
         }
 
         #research-wrapper {
@@ -45,10 +46,11 @@
             background: rgba(42, 42, 42, 0.9); border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         .v-img { width: 100%; height: 70%; object-fit: contain; }
-        .v-name { font-size: 11px; padding: 5px; text-transform: uppercase; text-align: center; }
+        .v-name { font-size: 11px; padding: 5px; text-transform: uppercase; text-align: center; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -62,17 +64,18 @@
     </div>
 
     <script>
-        /* FIXED: Using raw.githubusercontent.com for direct image rendering */
+        /* ASSET TETHER: Aircraft icons sourced from external Aircraft-Pics repo */
         const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
 
         async function initiateSystem() {
             const overlay = document.getElementById('loading-overlay');
             const theater = document.getElementById('research-theater');
-
-            // 2-second Veteran Handshake fast-load
+            
+            // Locked 2-second Veteran Handshake delay
             const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
 
             try {
+                // Fetching local registry and tree data from Home repo
                 const [treeRes, regRes] = await Promise.all([
                     fetch('./usa_tree_v4.json'),
                     fetch('./SP_Registry_CANON_3_31.csv'),
@@ -87,10 +90,11 @@
                 const registry = {};
                 const lines = regText.split('\n');
                 for (let i = 1; i < lines.length; i++) {
-                    const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^**]*$)/);
+                    // Optimized CSV parsing for Column C (Index 2)
+                    const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (cols.length > 2) {
                         const id = cols[0].replace(/"/g, '').trim().toLowerCase();
-                        const img = cols[2].replace(/"/g, '').trim();
+                        const img = cols[2].replace(/"/g, '').trim(); 
                         if (id) registry[id] = img;
                     }
                 }
@@ -103,6 +107,7 @@
                     card.style.gridColumn = cell.column;
                     card.style.gridRow = cell.row;
 
+                    // Image source matches filenames in Column C of SP_Registry_CANON_3_31.csv
                     card.innerHTML = `
                         <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" 
                              class="v-img" 
