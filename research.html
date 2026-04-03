@@ -4,11 +4,26 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STABLE V4</title>
     <style>
-        body { background: #1a1a1a; color: white; margin: 0; font-family: sans-serif; overflow-x: auto; }
+        /* Re-implementing the Metal Background */
+        body { 
+            background: #1a1a1a url('https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/metal_background.png'); 
+            background-size: cover;
+            background-attachment: fixed;
+            color: white; 
+            margin: 0; 
+            font-family: sans-serif; 
+            overflow-x: auto; 
+        }
         
+        /* Updated Loading Page with Comms_Pic */
         #loading-overlay {
-            position: fixed; inset: 0; background: black; z-index: 9999;
-            display: flex; align-items: center; justify-content: center; font-size: 24px; color: #00ff00;
+            position: fixed; inset: 0; 
+            background: black url('https://raw.githubusercontent.com/KJumpmaster/WTAircraft_Profile_Pics/main/Comms_Pic.png') no-repeat center;
+            background-size: contain;
+            z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
+            font-size: 24px; color: #00ff00;
+            padding-bottom: 50px;
         }
 
         #research-wrapper {
@@ -27,8 +42,9 @@
 
         .v-card {
             width: 180px; height: 100px;
-            background: #2a2a2a; border: 2px solid #444;
+            background: rgba(42, 42, 42, 0.9); border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
         }
 
         .v-img { width: 100%; height: 70%; object-fit: contain; }
@@ -37,24 +53,30 @@
 </head>
 <body>
 
-    <div id="loading-overlay">LOADING STABLE TREE...</div>
+    <div id="loading-overlay">
+        <div id="status-text">INITIALIZING VETERAN HANDSHAKE...</div>
+    </div>
 
     <div id="research-wrapper">
         <div id="research-theater"></div>
     </div>
 
     <script>
-        const PIC_BASE = "https://github.com/KJumpmaster/Aircraft-Pics/";
+        /* FIXED: Using raw.githubusercontent.com for direct image rendering */
+        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
 
         async function initiateSystem() {
             const overlay = document.getElementById('loading-overlay');
             const theater = document.getElementById('research-theater');
 
+            // 2-second Veteran Handshake fast-load
+            const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
+
             try {
-                // 1. FETCH DATA
                 const [treeRes, regRes] = await Promise.all([
                     fetch('./usa_tree_v4.json'),
-                    fetch('./SP_Registry_CANON_3_31.csv')
+                    fetch('./SP_Registry_CANON_3_31.csv'),
+                    minLoadTime
                 ]);
 
                 if (!treeRes.ok || !regRes.ok) throw new Error("CORE FILES MISSING");
@@ -62,11 +84,10 @@
                 const treeData = await treeRes.json();
                 const regText = await regRes.text();
 
-                // 2. PARSE REGISTRY
                 const registry = {};
                 const lines = regText.split('\n');
                 for (let i = 1; i < lines.length; i++) {
-                    const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^**]*$)/);
                     if (cols.length > 2) {
                         const id = cols[0].replace(/"/g, '').trim().toLowerCase();
                         const img = cols[2].replace(/"/g, '').trim();
@@ -74,7 +95,6 @@
                     }
                 }
 
-                // 3. RENDER CARDS
                 theater.innerHTML = '';
                 treeData.cells.forEach(cell => {
                     const id = String(cell.cell_id).toLowerCase();
@@ -84,7 +104,9 @@
                     card.style.gridRow = cell.row;
 
                     card.innerHTML = `
-                        <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" class="v-img" onerror="this.src='https://placehold.co/200x100/000?text=SCANNING';">
+                        <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" 
+                             class="v-img" 
+                             onerror="this.src='https://placehold.co/200x100/1a1a1a/00ff00?text=SCANNING...';">
                         <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
                     `;
                     theater.appendChild(card);
@@ -93,7 +115,7 @@
                 overlay.style.display = 'none';
 
             } catch (err) {
-                overlay.innerHTML = `<h1 style="color:red">OFFLINE: ${err.message.toUpperCase()}</h1>`;
+                overlay.innerHTML = `<h1 style="color:red; background: black; padding: 20px;">OFFLINE: ${err.message.toUpperCase()}</h1>`;
             }
         }
 
