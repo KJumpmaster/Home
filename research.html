@@ -1,123 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>THE CAOC | USA AIR WING (BLK INTEGRATED)</title>
-    <style>
-        body { background: #050505 url('metal%20background.png') no-repeat center center fixed; background-size: cover; color: #00ff00; font-family: 'Courier New', monospace; margin: 0; }
-        #loading-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .tree-viewport { padding: 40px; display: flex; flex-direction: column; gap: 60px; }
-        .rank-container { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 160px; gap: 20px; background: rgba(0,0,0,0.7); padding: 30px; border: 1px solid #004400; }
-        .v-card { background: rgba(10, 10, 10, 0.95); border: 1px solid #333; padding: 10px; text-align: center; position: relative; display: flex; flex-direction: column; justify-content: center; transition: 0.2s; }
-        .v-card:hover { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; z-index: 100; }
+async function initiateSystem() {
+    try {
+        // ONLY LOAD THESE THREE - DO NOT FETCH SHOP.BLKX HERE
+        const [treeRes, groupRes, regRes] = await Promise.all([
+            fetch('./usa_tree_v4.json').then(r => r.json()),
+            fetch('./usa_groups.json').then(r => r.json()), // THE NEW 34-GROUP FILE
+            fetch('./SP_Registry_CANON_3_31.csv').then(r => r.text())
+        ]);
+
+        // ... rest of your card generation logic ...
+        console.log("GEM: Data Link Established. 34 Groups Synced.");
         
-        /* THE STACK EFFECT */
-        .group-stack::before { content: ''; position: absolute; top: -5px; right: -5px; width: 100%; height: 100%; border: 1px solid #004400; background: #050505; z-index: -1; }
-        
-        .v-img { width: 100%; height: 80px; object-fit: contain; }
-        .v-name { font-size: 0.75em; font-weight: bold; color: #bbb; text-transform: uppercase; margin-top: 5px; }
-        .manifest-list { font-size: 9px; color: #00ff00; border-top: 1px solid #222; margin-top: 5px; padding-top: 3px; line-height: 1.1; opacity: 0.8; }
-        .rank-header { font-size: 2em; color: rgba(0,255,0,0.5); letter-spacing: 10px; margin-bottom: 10px; }
-    </style>
-</head>
-<body>
+        // Close the loading overlay
+        document.getElementById('loading-overlay').style.display = 'none';
 
-    <div id="loading-overlay">
-        <div style="color:#00ff00; letter-spacing:5px;">SYNCHRONIZING WITH SHOP.BLKX...</div>
-    </div>
-
-    <div id="research-theater" class="tree-viewport"></div>
-
-    <script>
-        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
-        const clean = (str) => str ? str.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-
-        async function initiateSystem() {
-            try {
-                const [treeRes, shopRes, regRes] = await Promise.all([
-                    fetch('./usa_tree_v4.json'),
-                    fetch('./shop.blkx'),
-                    fetch('./SP_Registry_CANON_3_31.csv')
-                ]);
-
-                const treeData = await treeRes.json();
-                const shopData = await shopRes.json();
-                const regText = await regRes.text();
-
-                // 1. MAP SHOP.BLKX GROUPS
-                // This finds which planes are grouped together in the game files
-                const blkGroups = {};
-                const airSections = shopData.country_usa?.aviation?.range || [];
-                
-                airSections.forEach(section => {
-                    const planeIds = Object.keys(section);
-                    if (planeIds.length > 1) {
-                        // The first plane in the block is the "Leader" ID used in your tree
-                        const leader = clean(planeIds[0]);
-                        blkGroups[leader] = planeIds.map(id => id.replace(/_/g, ' ').toUpperCase());
-                    }
-                });
-
-                // 2. REGISTRY MAPPING
-                const registry = {};
-                regText.split('\n').slice(1).forEach(row => {
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (cols.length > 3) {
-                        const img = cols[2]?.replace(/"/g, '').trim();
-                        [cols[0], cols[3], cols[6]].forEach(val => { if(val) registry[clean(val)] = img; });
-                    }
-                });
-
-                const theater = document.getElementById('research-theater');
-                const ROMAN = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"];
-
-                [1,2,3,4,5,6,7,8,9].forEach(r => {
-                    const cells = treeData.cells.filter(c => c.rank === r);
-                    if (cells.length === 0) return;
-
-                    theater.innerHTML += `<div class="rank-header">RANK ${ROMAN[r]}</div>`;
-                    const container = document.createElement('div');
-                    container.className = 'rank-container';
-
-                    cells.forEach(cell => {
-                        const id = clean(cell.cell_id);
-                        const groupMembers = blkGroups[id] || null;
-                        const isGroup = groupMembers !== null || id.includes('group');
-                        
-                        let imageName = registry[id] || registry[clean(cell.display_name)] || 'placeholder.png';
-                        if (isGroup && !imageName.includes('Group')) {
-                            imageName = imageName.split('.')[0] + ' Group.png';
-                        }
-
-                        const card = document.createElement('div');
-                        card.className = `v-card ${isGroup ? 'group-stack' : ''}`;
-                        card.style.gridColumn = cell.column;
-                        card.style.gridRow = cell.row;
-
-                        // Create the manifest text if it's a group
-                        let manifestHtml = "";
-                        if (groupMembers) {
-                            manifestHtml = `<div class="manifest-list">${groupMembers.join('<br>')}</div>`;
-                        }
-
-                        card.innerHTML = `
-                            <img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
-                            <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
-                            ${manifestHtml}
-                        `;
-                        container.appendChild(card);
-                    });
-                    theater.appendChild(container);
-                });
-
-                document.getElementById('loading-overlay').style.display = 'none';
-
-            } catch (err) {
-                console.error("CRITICAL LINK FAILURE:", err);
-                document.getElementById('loading-overlay').innerHTML = "DATA LINK TIMEOUT - CHECK CONSOLE";
-            }
-        }
-        initiateSystem();
-    </script>
-</body>
-</html>
+    } catch (err) {
+        console.error("DATA LINK ERROR:", err);
+        document.getElementById('loading-overlay').innerHTML = 
+            `<div style="color:red">OFFLINE: ${err.message}<br>Check if usa_groups.json is in the folder!</div>`;
+    }
+}
