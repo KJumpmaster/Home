@@ -2,245 +2,576 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SKY PILOT - USA STRATEGIC COMMAND</title>
+    <title>SKY PILOT - USA TREE V2</title>
     <style>
-        /* 1. BACKGROUND HARD-LOCK */
-        html, body {
-            margin: 0; padding: 0; min-height: 100vh;
-            background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
-            background-size: cover !important;
-            color: white; font-family: 'Segoe UI', Arial, sans-serif;
+        :root {
+            --bg: #111315;
+            --panel: #1b1f23;
+            --panel-2: #232931;
+            --line: rgba(120, 255, 120, 0.45);
+            --line-soft: rgba(120, 255, 120, 0.18);
+            --text: #f2f2f2;
+            --muted: #aeb7bf;
+            --border: #3c4652;
+            --tech: #2a3138;
+            --premium: #4a3720;
+            --squadron: #243b2f;
+            --folder: #2f2a44;
+            --rank: #161a1e;
+            --accent: #8dff8d;
+
+            --card-w: 160px;
+            --card-h: 96px;
+
+            --col-gap: 18px;
+            --row-gap: 34px;
+
+            --left-gutter: 90px; /* room for rank labels */
+            --top-gutter: 24px;
         }
 
-        /* 2. COMMAND HUD */
-        #strategic-header {
-            width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0 10px 0;
-            background: rgba(0, 0, 0, 0.85); border-bottom: 2px solid #00ff00;
-        }
-        #banner-container { width: 75%; height: 180px; overflow: hidden; border: 1px solid #444; position: relative; }
-        #banner-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8); }
-        #main-title { font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px; text-transform: uppercase; margin: 10px 0; }
+        * { box-sizing: border-box; }
 
-        .tactical-hud {
-            width: 100%; background: rgba(0, 20, 0, 0.95);
-            border-bottom: 2px solid #00ff00; padding: 15px 40px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        #hud-progress-bg { width: 300px; height: 18px; background: #111; border: 1px solid #00ff00; overflow: hidden; }
-        #hud-progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 15px #00ff00; transition: width 0.6s; }
-        
-        .hud-btns button {
-            background: #000; border: 1px solid #00ff00; color: #00ff00; padding: 8px 15px; 
-            cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
+        body {
+            margin: 0;
+            background:
+                linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(0,0,0,0.08)),
+                var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            overflow-x: auto;
         }
 
-        /* 3. RESEARCH THEATER */
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0,0,0,0.96);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ff66;
+            font-size: 22px;
+            letter-spacing: 2px;
+        }
+
+        #page-shell {
+            min-height: 100vh;
+            padding: 24px 24px 60px;
+        }
+
+        #tree-title {
+            max-width: 1600px;
+            margin: 0 auto 18px;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #d7dde4;
+        }
+
+        #research-wrapper {
+            position: relative;
+            width: max-content;
+            margin: 0 auto;
+            padding: var(--top-gutter) 24px 24px var(--left-gutter);
+            background:
+                linear-gradient(to bottom, rgba(255,255,255,0.015), rgba(255,255,255,0)),
+                rgba(255,255,255,0.01);
+            border: 1px solid #232a30;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+        }
+
+        #rank-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #edge-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: visible;
+            z-index: 1;
+        }
+
         #research-theater {
+            position: relative;
             display: grid;
-            /* ZERO LOGIC: Col 0 (Rank) | Col 1-4 (Research) | Col 5-6 (Premium) */
-            grid-template-columns: 140px repeat(4, 210px) repeat(2, 210px); 
-            grid-auto-rows: min-content; grid-gap: 45px 15px;
-            position: relative; padding: 40px; min-width: max-content;
+            grid-auto-flow: row;
+            grid-auto-rows: var(--card-h);
+            grid-auto-columns: var(--card-w);
+            column-gap: var(--col-gap);
+            row-gap: var(--row-gap);
+            z-index: 2;
         }
 
-        /* ARROW CANVAS: Anchored to Grid */
-        #arrow-canvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 5; overflow: visible;
+        .rank-band {
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            background: linear-gradient(to right, rgba(255,255,255,0.025), rgba(255,255,255,0.008));
+            border-top: 1px solid rgba(255,255,255,0.035);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            border-radius: 8px;
         }
 
-        .col-header {
-            height: 40px; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
-            border: 1px solid rgba(255,255,255,0.2); grid-row: 1; margin-bottom: 20px;
+        .rank-label {
+            position: absolute;
+            left: 18px;
+            width: 54px;
+            text-align: center;
+            padding: 8px 6px;
+            background: var(--rank);
+            border: 1px solid #2b333c;
+            border-radius: 8px;
+            color: #dfe7ef;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 1px;
         }
-        .header-research { grid-column: 2 / span 4; background: rgba(0, 255, 0, 0.3); color: #8cff8c; border-color: #00ff00; }
-        .header-premium { grid-column: 6 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
 
-        /* RANK MARKERS */
-        .rank-marker {
-            grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; font-weight: 900; color: #00ff00; font-size: 50px; opacity: 0.15; 
-            text-transform: uppercase; line-height: 1;
-        }
-        .rank-small { font-size: 37px !important; }
-
-        /* CARDS */
         .v-card {
-            width: 200px; height: 130px; background: rgba(5, 5, 5, 0.98); border: 2px solid #444;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; z-index: 10;
+            position: relative;
+            width: var(--card-w);
+            height: var(--card-h);
+            border: 1px solid var(--border);
+            background: linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), var(--tech);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            z-index: 3;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.22);
         }
-        .v-card.obtained { border-color: #00ff00 !important; box-shadow: 0 0 15px rgba(0,255,0,0.5); }
-        
-        /* ZERO LOGIC COLORING: Columns 5 and 6 are Premium */
-        .v-card.premium { border-color: #b8860b !important; }
-        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.6) !important; }
 
-        .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
-        .v-name { font-size: 11px; padding: 5px; text-align: center; font-weight: bold; width: 100%; background: rgba(0,255,0,0.2); text-transform: uppercase; }
+        .v-card.tech { background-color: var(--tech); }
+        .v-card.premium { background-color: var(--premium); }
+        .v-card.squadron { background-color: var(--squadron); }
+        .v-card.folder { background-color: var(--folder); }
 
-        /* ARROW STYLES */
-        .research-line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-        .line-solid { stroke: #ffd84d; stroke-width: 4; filter: drop-shadow(0 0 5px #ffd84d); }
-        .line-dashed { stroke: #ffd84d; stroke-width: 3; stroke-dasharray: 8,6; }
-        .line-faint { stroke: rgba(100, 170, 255, 0.6); stroke-width: 4; } /* Thicker High-Viz Blue */
+        .card-top {
+            position: relative;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 8px 0;
+            background: rgba(0,0,0,0.18);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .v-img {
+            max-width: 100%;
+            max-height: 54px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .card-bottom {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 8px 6px;
+        }
+
+        .v-name {
+            font-size: 10px;
+            line-height: 1.2;
+            text-transform: uppercase;
+            text-align: center;
+            color: #f1f4f7;
+            white-space: normal;
+        }
+
+        .slot-badge {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            font-size: 9px;
+            line-height: 1;
+            padding: 4px 5px;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(0,0,0,0.45);
+            color: #dce6ef;
+            letter-spacing: 0.5px;
+        }
+
+        .folder-stack {
+            position: absolute;
+            right: 7px;
+            top: 6px;
+            display: flex;
+            gap: 2px;
+        }
+
+        .folder-stack span {
+            width: 12px;
+            height: 12px;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+        }
+
+        .side-column-glow {
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 0 0 1px rgba(255,255,255,0.02);
+        }
+
+        .tree-edge {
+            stroke: var(--line);
+            stroke-width: 2.5;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .tree-edge.back {
+            stroke: var(--line-soft);
+            stroke-width: 5;
+        }
+
+        .legend {
+            max-width: 1600px;
+            margin: 10px auto 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: #171b20;
+            border: 1px solid #29313a;
+            border-radius: 999px;
+        }
+
+        .legend-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.14);
+        }
+
+        .dot-tech { background: var(--tech); }
+        .dot-premium { background: var(--premium); }
+        .dot-squadron { background: var(--squadron); }
+        .dot-folder { background: var(--folder); }
+
+        .error-box {
+            color: red;
+            padding: 40px;
+            text-align: center;
+            background: black;
+            border: 2px solid red;
+            margin: 50px;
+        }
     </style>
 </head>
 <body>
+    <div id="loading-overlay">LOADING TREE V2...</div>
 
-    <header id="strategic-header">
-        <div id="banner-container">
-            <video id="banner-video" autoplay loop muted playsinline><source src="https://raw.githubusercontent.com/KJumpmaster/Home/main/USA Banner.mp4" type="video/mp4"></video>
+    <div id="page-shell">
+        <div id="tree-title">SKY PILOT — USA AVIATION TREE</div>
+
+        <div id="research-wrapper">
+            <div id="rank-layer"></div>
+            <svg id="edge-layer"></svg>
+            <div id="research-theater"></div>
         </div>
-        <div id="main-title">USA AIR GROUP STRATEGIC COMMAND</div>
-    </header>
 
-    <div class="tactical-hud">
-        <div class="hud-stats">UNITS: <span id="count-num">0</span> / <span id="total-num">0</span></div>
-        <div id="hud-progress-bg"><div id="hud-progress-fill"></div></div>
-        <div class="hud-btns">
-            <button onclick="exportData()">Export</button>
-            <button onclick="document.getElementById('import-input').click()">Import</button>
+        <div class="legend">
+            <div class="legend-item"><span class="legend-dot dot-tech"></span> Tech Tree</div>
+            <div class="legend-item"><span class="legend-dot dot-premium"></span> Premium / Event</div>
+            <div class="legend-item"><span class="legend-dot dot-squadron"></span> Squadron / Special</div>
+            <div class="legend-item"><span class="legend-dot dot-folder"></span> Folder / Group Slot</div>
         </div>
     </div>
-
-    <div id="research-theater">
-        <svg id="arrow-canvas">
-            <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-                    <polygon points="0 0, 10 4, 0 8" fill="#ffd84d" />
-                </marker>
-            </defs>
-        </svg>
-    </div>
-
-    <input type="file" id="import-input" style="display:none" onchange="importData(event)">
 
     <script>
-        const JSON_URL = "https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json";
-        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
-        const NAUGHTY_LIST = ['o3u_1', 'ucav_mq_1_predator', 'uav_quadcopter'];
+        const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
 
-        let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
-        let totalCount = 0;
-        let globalArrows = [];
+        let GLOBAL_TREE_DATA = null;
 
-        function normalize(id) { return id ? String(id).toLowerCase().replace(/[^a-z0-9]/g, '') : ""; }
-
-        async function initiate() {
-            const theater = document.getElementById('research-theater');
-            const canvas = document.getElementById('arrow-canvas');
+        async function initiateSystem() {
+            const overlay = document.getElementById('loading-overlay');
 
             try {
-                const response = await fetch(JSON_URL);
-                const data = await response.json();
-                globalArrows = data.arrows || [];
+                const [treeRes, regRes] = await Promise.all([
+                    fetch('./usa_tree_v4.json'),
+                    fetch('./SP_Registry_CANON_3_31.csv')
+                ]);
 
-                // 1. RANKS
-                const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
-                ranks.forEach((label, i) => {
-                    const r = document.createElement('div');
-                    r.className = 'rank-marker' + (i >= 6 ? ' rank-small' : '');
-                    r.style.gridRow = `${(i * 8) + 2} / span 7`;
-                    r.innerHTML = label.split(" ")[0].split("").join("<br>") + "<br><br>" + (label.split(" ")[1] || "");
-                    theater.appendChild(r);
-                });
+                if (!treeRes.ok) throw new Error("usa_tree_v4.json is missing or renamed");
+                if (!regRes.ok) throw new Error("SP_Registry_CANON_3_31.csv is missing or renamed");
 
-                // 2. CARDS
-                data.cells.forEach(cell => {
-                    if (NAUGHTY_LIST.includes(cell.cell_key)) return;
-                    totalCount++;
-                    const id = normalize(cell.cell_key);
-                    const card = document.createElement('div');
-                    card.className = 'v-card';
-                    card.id = `unit-${id}`;
-                    if (ownedAircraft.includes(id)) card.classList.add('obtained');
-                    
-                    const col = parseInt(cell.column ?? 0);
-                    // ZERO LOGIC: Only Column 5 and 6 are Gold
-                    if (col === 5 || col === 6) card.classList.add('premium');
+                const treeData = await treeRes.json();
+                const regText = await regRes.text();
+                GLOBAL_TREE_DATA = treeData;
 
-                    card.style.gridColumn = col + 1;
-                    card.style.gridRow = ((parseInt(cell.rank ?? 1) - 1) * 8) + parseInt(cell.row_in_rank ?? 1) + 1;
+                if (!treeData.cells || !Array.isArray(treeData.cells)) {
+                    throw new Error("treeData.cells missing or invalid");
+                }
 
-                    card.innerHTML = `<img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130?text=SCANNING';">
-                                      <div class="v-name">${cell.display_name.toUpperCase()}</div>`;
-                    
-                    card.onclick = () => {
-                        if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(x => x !== id);
-                        else ownedAircraft.push(id);
-                        localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
-                        location.reload();
-                    };
-                    theater.appendChild(card);
-                });
+                const registry = parseRegistry(regText);
 
-                document.getElementById('count-num').innerText = ownedAircraft.length;
-                document.getElementById('total-num').innerText = totalCount;
-                document.getElementById('hud-progress-fill').style.width = ((ownedAircraft.length / totalCount) * 100) + "%";
+                renderTree(treeData, registry);
 
-                // 3. ARROW DEPLOYMENT (FORCED MULTI-DRAW)
-                const forceDraw = () => {
-                    canvas.setAttribute('width', theater.scrollWidth);
-                    canvas.setAttribute('height', theater.scrollHeight);
-                    drawArrows();
-                };
-
-                setTimeout(forceDraw, 100);
-                setTimeout(forceDraw, 800);
-                setTimeout(forceDraw, 2000);
-
-            } catch (e) { console.error(e); }
+                overlay.style.display = 'none';
+                console.log("TREE V2 ONLINE");
+            } catch (err) {
+                console.error("TREE V2 FAILURE:", err);
+                overlay.innerHTML = `
+                    <div class="error-box">
+                        <h1>OFFLINE</h1>
+                        <p>${String(err.message).toUpperCase()}</p>
+                    </div>
+                `;
+            }
         }
 
-        function drawArrows() {
-            const canvas = document.getElementById('arrow-canvas');
-            const theater = document.getElementById('research-theater');
-            const defs = canvas.querySelector('defs').outerHTML;
-            canvas.innerHTML = defs;
+        function parseRegistry(regText) {
+            const registry = {};
+            const lines = regText.split('\n');
 
-            globalArrows.forEach(l => {
-                const p = document.getElementById(`unit-${normalize(l.from)}`);
-                const c = document.getElementById(`unit-${normalize(l.to)}`);
-                if (p && c) {
-                    const x1 = p.offsetLeft + (p.offsetWidth / 2);
-                    const y1 = p.offsetTop + p.offsetHeight;
-                    const x2 = c.offsetLeft + (c.offsetWidth / 2);
-                    const y2 = c.offsetTop;
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
 
-                    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                    path.setAttribute("d", `M ${x1} ${y1} L ${x1} ${y1+20} L ${x2} ${y1+20} L ${x2} ${y2-10}`);
-                    path.classList.add("research-line");
+                // Adjust these indexes if needed
+                // cols[0] = master_key / id
+                // cols[3] = image filename (based on what you said)
+                if (cols.length > 3) {
+                    const id = (cols[0] || '').replace(/"/g, '').trim().toLowerCase();
+                    const img = (cols[3] || '').replace(/"/g, '').trim();
 
-                    const pOwn = ownedAircraft.includes(normalize(l.from));
-                    const cOwn = ownedAircraft.includes(normalize(l.to));
-
-                    if (pOwn && cOwn) { path.classList.add("line-solid"); path.setAttribute("marker-end", "url(#arrowhead)"); }
-                    else if (pOwn) path.classList.add("line-dashed");
-                    else path.classList.add("line-faint");
-                    
-                    canvas.appendChild(path);
+                    if (id) {
+                        registry[id] = img;
+                    }
                 }
+            }
+
+            return registry;
+        }
+
+        function renderTree(treeData, registry) {
+            const wrapper = document.getElementById('research-wrapper');
+            const theater = document.getElementById('research-theater');
+            const edgeLayer = document.getElementById('edge-layer');
+            const rankLayer = document.getElementById('rank-layer');
+
+            theater.innerHTML = '';
+            edgeLayer.innerHTML = '';
+            rankLayer.innerHTML = '';
+
+            const cells = treeData.cells || [];
+
+            let maxCol = 1;
+            let maxRow = 1;
+
+            cells.forEach(cell => {
+                if (Number(cell.column) > maxCol) maxCol = Number(cell.column);
+                if (Number(cell.row) > maxRow) maxRow = Number(cell.row);
+            });
+
+            theater.style.gridTemplateColumns = `repeat(${maxCol}, var(--card-w))`;
+            theater.style.gridTemplateRows = `repeat(${maxRow}, var(--card-h))`;
+
+            renderRankBands(cells, wrapper, theater, rankLayer);
+
+            cells.forEach(cell => {
+                const card = buildCard(cell, registry);
+                theater.appendChild(card);
+            });
+
+            requestAnimationFrame(() => {
+                drawEdges(treeData.edges || [], theater, edgeLayer);
             });
         }
 
-        function exportData() {
-            const blob = new Blob([JSON.stringify(ownedAircraft)], {type:"application/json"});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download="sky_pilot_usa.json"; a.click();
+        function buildCard(cell, registry) {
+            const id = String(cell.cell_id || '').toLowerCase();
+            const displayName = (cell.display_name || cell.cell_id || '').replace(/_/g, ' ');
+            const members = Array.isArray(cell.members) && cell.members.length ? cell.members : [id];
+
+            let type = (cell.type || '').toLowerCase().trim();
+
+            if (!type) {
+                if (members.length > 1) type = 'folder';
+                else if (Number(cell.column) >= 7) type = 'squadron';
+                else if (Number(cell.column) === 6) type = 'premium';
+                else type = 'tech';
+            }
+
+            let imageKey = id;
+            if (!registry[imageKey] && members.length) {
+                imageKey = String(members[0] || id).toLowerCase();
+            }
+
+            let imageName = registry[imageKey] || 'placeholder.png';
+            if (imageName && !imageName.toLowerCase().endsWith('.png')) {
+                imageName += '.png';
+            }
+
+            const card = document.createElement('div');
+            card.className = `v-card ${type}`;
+            card.dataset.cellId = id;
+            card.dataset.type = type;
+            card.style.gridColumn = cell.column;
+            card.style.gridRow = cell.row;
+
+            if (Number(cell.column) >= 6) {
+                card.classList.add('side-column-glow');
+            }
+
+            let badgeText = '';
+            if (type === 'premium') badgeText = 'PREM';
+            else if (type === 'squadron') badgeText = 'SQDN';
+            else if (type === 'folder') badgeText = `${members.length}X`;
+
+            card.innerHTML = `
+                ${badgeText ? `<div class="slot-badge">${badgeText}</div>` : ''}
+                ${type === 'folder' ? `
+                    <div class="folder-stack">
+                        <span></span><span></span><span></span>
+                    </div>
+                ` : ''}
+                <div class="card-top">
+                    <img
+                        src="${PIC_BASE}${imageName}"
+                        class="v-img"
+                        onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';"
+                    >
+                </div>
+                <div class="card-bottom">
+                    <div class="v-name">${displayName}</div>
+                </div>
+            `;
+
+            return card;
         }
 
-        function importData(e) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                ownedAircraft = JSON.parse(ev.target.result);
-                localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
-                location.reload();
-            };
-            reader.readAsText(e.target.files[0]);
+        function renderRankBands(cells, wrapper, theater, rankLayer) {
+            const rankMap = new Map();
+
+            cells.forEach(cell => {
+                const rank = String(cell.rank || '').trim();
+                const row = Number(cell.row || 0);
+                if (!rank || !row) return;
+
+                if (!rankMap.has(rank)) {
+                    rankMap.set(rank, { minRow: row, maxRow: row });
+                } else {
+                    const entry = rankMap.get(rank);
+                    entry.minRow = Math.min(entry.minRow, row);
+                    entry.maxRow = Math.max(entry.maxRow, row);
+                }
+            });
+
+            const ranks = Array.from(rankMap.entries())
+                .sort((a, b) => a[1].minRow - b[1].minRow);
+
+            const rootStyles = getComputedStyle(document.documentElement);
+            const cardH = parseFloat(rootStyles.getPropertyValue('--card-h'));
+            const rowGap = parseFloat(rootStyles.getPropertyValue('--row-gap'));
+            const topGutter = parseFloat(rootStyles.getPropertyValue('--top-gutter'));
+
+            ranks.forEach(([rank, info]) => {
+                const top = topGutter + ((info.minRow - 1) * (cardH + rowGap)) - 10;
+                const bottom = topGutter + ((info.maxRow - 1) * (cardH + rowGap)) + cardH + 10;
+                const height = bottom - top;
+
+                const band = document.createElement('div');
+                band.className = 'rank-band';
+                band.style.top = `${top}px`;
+                band.style.height = `${height}px`;
+
+                const label = document.createElement('div');
+                label.className = 'rank-label';
+                label.style.top = `${top + 10}px`;
+                label.textContent = `RANK ${rank}`;
+
+                rankLayer.appendChild(band);
+                rankLayer.appendChild(label);
+            });
         }
 
-        window.onload = initiate;
+        function drawEdges(edges, theater, edgeLayer) {
+            edgeLayer.innerHTML = '';
+
+            const theaterRect = theater.getBoundingClientRect();
+            const width = Math.ceil(theater.scrollWidth);
+            const height = Math.ceil(theater.scrollHeight);
+
+            edgeLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            edgeLayer.setAttribute('width', width);
+            edgeLayer.setAttribute('height', height);
+            edgeLayer.style.left = getComputedStyle(document.documentElement).getPropertyValue('--left-gutter');
+            edgeLayer.style.top = getComputedStyle(document.documentElement).getPropertyValue('--top-gutter');
+            edgeLayer.style.width = `${width}px`;
+            edgeLayer.style.height = `${height}px`;
+
+            const cardMap = new Map();
+            theater.querySelectorAll('.v-card').forEach(card => {
+                const id = card.dataset.cellId;
+                if (id) cardMap.set(id, card);
+            });
+
+            edges.forEach(edge => {
+                const fromId = String(edge.from || edge.source || edge.parent || '').toLowerCase();
+                const toId = String(edge.to || edge.target || edge.child || '').toLowerCase();
+
+                if (!fromId || !toId) return;
+
+                const fromCard = cardMap.get(fromId);
+                const toCard = cardMap.get(toId);
+
+                if (!fromCard || !toCard) return;
+
+                const fromRect = fromCard.getBoundingClientRect();
+                const toRect = toCard.getBoundingClientRect();
+
+                const x1 = (fromRect.left - theaterRect.left) + (fromRect.width / 2);
+                const y1 = (fromRect.top - theaterRect.top) + fromRect.height;
+
+                const x2 = (toRect.left - theaterRect.left) + (toRect.width / 2);
+                const y2 = (toRect.top - theaterRect.top);
+
+                const midY = y1 + ((y2 - y1) / 2);
+
+                const back = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                back.setAttribute("d", `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`);
+                back.setAttribute("class", "tree-edge back");
+
+                const front = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                front.setAttribute("d", `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`);
+                front.setAttribute("class", "tree-edge");
+
+                edgeLayer.appendChild(back);
+                edgeLayer.appendChild(front);
+            });
+        }
+
+        window.onload = initiateSystem;
+
+        window.addEventListener('resize', () => {
+            if (!GLOBAL_TREE_DATA) return;
+
+            const theater = document.getElementById('research-theater');
+            const edgeLayer = document.getElementById('edge-layer');
+
+            if (!theater || !edgeLayer) return;
+
+            drawEdges(GLOBAL_TREE_DATA.edges || [], theater, edgeLayer);
+        });
     </script>
 </body>
 </html>
