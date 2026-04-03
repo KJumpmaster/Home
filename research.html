@@ -1,577 +1,1046 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>SKY PILOT - USA TREE V2</title>
-    <style>
-        :root {
-            --bg: #111315;
-            --panel: #1b1f23;
-            --panel-2: #232931;
-            --line: rgba(120, 255, 120, 0.45);
-            --line-soft: rgba(120, 255, 120, 0.18);
-            --text: #f2f2f2;
-            --muted: #aeb7bf;
-            --border: #3c4652;
-            --tech: #2a3138;
-            --premium: #4a3720;
-            --squadron: #243b2f;
-            --folder: #2f2a44;
-            --rank: #161a1e;
-            --accent: #8dff8d;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sky Pilot Research Tree</title>
 
-            --card-w: 160px;
-            --card-h: 96px;
+  <style>
+    :root{
+      --bg: #0b1220;
+      --panel: #111a2b;
+      --panel-2: #152033;
+      --panel-3: #1b2940;
+      --line: rgba(120, 170, 255, 0.22);
+      --line-strong: rgba(255, 219, 92, 0.85);
+      --line-glow: rgba(255, 219, 92, 0.28);
+      --text: #e6eefc;
+      --muted: #8da0bf;
+      --accent: #6ea8ff;
+      --group: #2f4f78;
+      --owned: #21452d;
+      --researchable: #4e4321;
+      --locked: #1a2233;
+      --premium: #3a2a55;
+      --squadron: #234357;
 
-            --col-gap: 18px;
-            --row-gap: 34px;
+      --tree-left-pad: 110px;
+      --tree-top-pad: 24px;
+      --tree-right-pad: 32px;
+      --tree-bottom-pad: 40px;
 
-            --left-gutter: 90px; /* room for rank labels */
-            --top-gutter: 24px;
-        }
+      --col-width: 220px;
+      --cell-width: 168px;
+      --cell-height: 102px;
 
-        * { box-sizing: border-box; }
+      --rank-height: 300px;
+      --row-gap: 18px;
 
-        body {
-            margin: 0;
-            background:
-                linear-gradient(to bottom, rgba(255,255,255,0.02), rgba(0,0,0,0.08)),
-                var(--bg);
-            color: var(--text);
-            font-family: Arial, Helvetica, sans-serif;
-            overflow-x: auto;
-        }
+      --rank-label-width: 78px;
+      --grid-line: rgba(255,255,255,0.035);
+    }
 
-        #loading-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: rgba(0,0,0,0.96);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #00ff66;
-            font-size: 22px;
-            letter-spacing: 2px;
-        }
+    * { box-sizing: border-box; }
 
-        #page-shell {
-            min-height: 100vh;
-            padding: 24px 24px 60px;
-        }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #08101d 0%, #0d1524 100%);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      overflow: hidden;
+    }
 
-        #tree-title {
-            max-width: 1600px;
-            margin: 0 auto 18px;
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            color: #d7dde4;
-        }
+    #app {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-        #research-wrapper {
-            position: relative;
-            width: max-content;
-            margin: 0 auto;
-            padding: var(--top-gutter) 24px 24px var(--left-gutter);
-            background:
-                linear-gradient(to bottom, rgba(255,255,255,0.015), rgba(255,255,255,0)),
-                rgba(255,255,255,0.01);
-            border: 1px solid #232a30;
-            border-radius: 12px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-        }
+    .topbar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(10, 16, 28, 0.96);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+      z-index: 20;
+    }
 
-        #rank-layer {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #f3f7ff;
+      margin-right: 14px;
+    }
 
-        #edge-layer {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            overflow: visible;
-            z-index: 1;
-        }
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
 
-        #research-theater {
-            position: relative;
-            display: grid;
-            grid-auto-flow: row;
-            grid-auto-rows: var(--card-h);
-            grid-auto-columns: var(--card-w);
-            column-gap: var(--col-gap);
-            row-gap: var(--row-gap);
-            z-index: 2;
-        }
+    .toolbar-spacer {
+      flex: 1 1 auto;
+    }
 
-        .rank-band {
-            position: absolute;
-            left: 16px;
-            right: 16px;
-            background: linear-gradient(to right, rgba(255,255,255,0.025), rgba(255,255,255,0.008));
-            border-top: 1px solid rgba(255,255,255,0.035);
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            border-radius: 8px;
-        }
+    button {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, #182338 0%, #111a2c 100%);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
 
-        .rank-label {
-            position: absolute;
-            left: 18px;
-            width: 54px;
-            text-align: center;
-            padding: 8px 6px;
-            background: var(--rank);
-            border: 1px solid #2b333c;
-            border-radius: 8px;
-            color: #dfe7ef;
-            font-weight: 700;
-            font-size: 13px;
-            letter-spacing: 1px;
-        }
+    button:hover {
+      border-color: rgba(255,255,255,0.18);
+      background: linear-gradient(180deg, #1b2942 0%, #162136 100%);
+    }
 
-        .v-card {
-            position: relative;
-            width: var(--card-w);
-            height: var(--card-h);
-            border: 1px solid var(--border);
-            background: linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), var(--tech);
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            z-index: 3;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.22);
-        }
+    #viewport {
+      position: relative;
+      flex: 1 1 auto;
+      overflow: auto;
+      background:
+        radial-gradient(circle at top left, rgba(65, 110, 180, 0.10), transparent 30%),
+        radial-gradient(circle at top right, rgba(90, 140, 210, 0.08), transparent 22%),
+        linear-gradient(180deg, #091120 0%, #0b1322 100%);
+    }
 
-        .v-card.tech { background-color: var(--tech); }
-        .v-card.premium { background-color: var(--premium); }
-        .v-card.squadron { background-color: var(--squadron); }
-        .v-card.folder { background-color: var(--folder); }
+    #treeRoot {
+      position: relative;
+      min-width: 1200px;
+      min-height: 900px;
+      margin: 0;
+    }
 
-        .card-top {
-            position: relative;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 6px 8px 0;
-            background: rgba(0,0,0,0.18);
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
+    .rank-band {
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-top: 1px solid rgba(255,255,255,0.055);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.008));
+      pointer-events: none;
+    }
 
-        .v-img {
-            max-width: 100%;
-            max-height: 54px;
-            object-fit: contain;
-            display: block;
-        }
+    .rank-band.alt {
+      background:
+        linear-gradient(180deg, rgba(140,180,255,0.05), rgba(255,255,255,0.01));
+    }
 
-        .card-bottom {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px 8px 6px;
-        }
+    .rank-label {
+      position: absolute;
+      left: 14px;
+      width: var(--rank-label-width);
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: linear-gradient(180deg, rgba(26,39,61,0.92), rgba(17,26,43,0.96));
+      border: 1px solid rgba(255,255,255,0.07);
+      color: #dfe9ff;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 1px;
+      pointer-events: none;
+      z-index: 2;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+    }
 
-        .v-name {
-            font-size: 10px;
-            line-height: 1.2;
-            text-transform: uppercase;
-            text-align: center;
-            color: #f1f4f7;
-            white-space: normal;
-        }
+    .column-guide {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: var(--col-width);
+      pointer-events: none;
+      z-index: 0;
+    }
 
-        .slot-badge {
-            position: absolute;
-            top: 6px;
-            left: 6px;
-            font-size: 9px;
-            line-height: 1;
-            padding: 4px 5px;
-            border-radius: 5px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(0,0,0,0.45);
-            color: #dce6ef;
-            letter-spacing: 0.5px;
-        }
+    .column-guide::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      transform: translateX(-50%);
+      background: var(--grid-line);
+    }
 
-        .folder-stack {
-            position: absolute;
-            right: 7px;
-            top: 6px;
-            display: flex;
-            gap: 2px;
-        }
+    .column-guide.side {
+      background: linear-gradient(180deg, rgba(150,170,255,0.03), rgba(100,120,180,0.02));
+    }
 
-        .folder-stack span {
-            width: 12px;
-            height: 12px;
-            border: 1px solid rgba(255,255,255,0.22);
-            background: rgba(255,255,255,0.08);
-            border-radius: 2px;
-        }
+    .column-label {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: rgba(220,230,255,0.48);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
 
-        .side-column-glow {
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 0 0 1px rgba(255,255,255,0.02);
-        }
+    .side-divider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.10), rgba(255,255,255,0.03));
+      pointer-events: none;
+      z-index: 1;
+    }
 
-        .tree-edge {
-            stroke: var(--line);
-            stroke-width: 2.5;
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
+    #edgeLayer {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+      z-index: 1;
+      pointer-events: none;
+    }
 
-        .tree-edge.back {
-            stroke: var(--line-soft);
-            stroke-width: 5;
-        }
+    .edge-base {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 2.2;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
 
-        .legend {
-            max-width: 1600px;
-            margin: 10px auto 0;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            color: var(--muted);
-            font-size: 12px;
-        }
+    .edge-active {
+      fill: none;
+      stroke: var(--line-strong);
+      stroke-width: 3;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 6px var(--line-glow));
+      opacity: 0;
+    }
 
-        .legend-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-            background: #171b20;
-            border: 1px solid #29313a;
-            border-radius: 999px;
-        }
+    .edge-hover {
+      opacity: 1 !important;
+    }
 
-        .legend-dot {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.14);
-        }
+    #nodeLayer {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+    }
 
-        .dot-tech { background: var(--tech); }
-        .dot-premium { background: var(--premium); }
-        .dot-squadron { background: var(--squadron); }
-        .dot-folder { background: var(--folder); }
+    .cell {
+      position: absolute;
+      width: var(--cell-width);
+      height: var(--cell-height);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(28,42,66,0.98), rgba(17,27,44,0.98));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow:
+        0 10px 20px rgba(0,0,0,0.24),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      overflow: hidden;
+      cursor: default;
+      user-select: none;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+    }
 
-        .error-box {
-            color: red;
-            padding: 40px;
-            text-align: center;
-            background: black;
-            border: 2px solid red;
-            margin: 50px;
-        }
-    </style>
+    .cell:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.18);
+      box-shadow:
+        0 14px 26px rgba(0,0,0,0.30),
+        0 0 0 1px rgba(130,180,255,0.14),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .cell.locked    { background: linear-gradient(180deg, #1a2437, #121a2b); }
+    .cell.premium   { background: linear-gradient(180deg, #3a2954, #261b3a); }
+    .cell.squadron  { background: linear-gradient(180deg, #1f3c52, #162b39); }
+    .cell.grouped   { background: linear-gradient(180deg, #243858, #18263c); }
+
+    .cell-back,
+    .cell-back-2 {
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: linear-gradient(180deg, rgba(120,150,210,0.12), rgba(70,100,150,0.08));
+      pointer-events: none;
+    }
+
+    .cell-back {
+      transform: translate(8px, -6px);
+      opacity: 0.45;
+      z-index: -1;
+    }
+
+    .cell-back-2 {
+      transform: translate(14px, -11px);
+      opacity: 0.22;
+      z-index: -2;
+    }
+
+    .cell-header {
+      height: 24px;
+      padding: 0 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.00));
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .cell-body {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 24px;
+      bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 10px;
+    }
+
+    .cell-visual {
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)),
+        radial-gradient(circle at center, rgba(130,170,255,0.18), transparent 58%);
+      border: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(230,238,252,0.82);
+      font-size: 12px;
+      text-align: center;
+      padding: 6px;
+    }
+
+    .cell-footer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0 9px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.05), rgba(0,0,0,0.16));
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .cell-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #edf4ff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cell-meta {
+      flex: 0 0 auto;
+      font-size: 11px;
+      color: #9ab0d0;
+      opacity: 0.95;
+    }
+
+    .group-badge,
+    .type-badge {
+      flex: 0 0 auto;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 6px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      border: 1px solid rgba(255,255,255,0.09);
+      background: rgba(255,255,255,0.06);
+      color: #edf3ff;
+    }
+
+    .group-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 100%;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .group-item {
+      height: 20px;
+      border-radius: 6px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #dce7fb;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .legend {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      z-index: 10;
+      background: rgba(13, 20, 34, 0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 8px 12px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.22);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .legend-chip {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.09);
+      background: linear-gradient(180deg, rgba(28,42,66,0.98), rgba(17,27,44,0.98));
+    }
+
+    .legend-chip.grouped { background: linear-gradient(180deg, #243858, #18263c); }
+    .legend-chip.premium { background: linear-gradient(180deg, #3a2954, #261b3a); }
+    .legend-chip.squadron { background: linear-gradient(180deg, #1f3c52, #162b39); }
+
+    .error-box {
+      margin: 20px;
+      padding: 16px 18px;
+      border-radius: 12px;
+      background: rgba(72, 20, 20, 0.65);
+      border: 1px solid rgba(255, 120, 120, 0.20);
+      color: #ffd6d6;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+  </style>
 </head>
 <body>
-    <div id="loading-overlay">LOADING TREE V2...</div>
-
-    <div id="page-shell">
-        <div id="tree-title">SKY PILOT — USA AVIATION TREE</div>
-
-        <div id="research-wrapper">
-            <div id="rank-layer"></div>
-            <svg id="edge-layer"></svg>
-            <div id="research-theater"></div>
-        </div>
-
-        <div class="legend">
-            <div class="legend-item"><span class="legend-dot dot-tech"></span> Tech Tree</div>
-            <div class="legend-item"><span class="legend-dot dot-premium"></span> Premium / Event</div>
-            <div class="legend-item"><span class="legend-dot dot-squadron"></span> Squadron / Special</div>
-            <div class="legend-item"><span class="legend-dot dot-folder"></span> Folder / Group Slot</div>
-        </div>
+  <div id="app">
+    <div class="topbar">
+      <div class="title">Sky Pilot — Research Tree</div>
+      <div id="status" class="status">Loading…</div>
+      <div class="toolbar-spacer"></div>
+      <button id="fitBtn" type="button">Fit to Top</button>
+      <button id="reloadBtn" type="button">Reload</button>
     </div>
 
-    <script>
-        const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
+    <div id="viewport">
+      <div class="legend">
+        <div class="legend-chip"></div><div>Unit cell</div>
+        <div class="legend-chip grouped"></div><div>Grouped / folder cell</div>
+        <div class="legend-chip premium"></div><div>Side lane / premium style</div>
+        <div class="legend-chip squadron"></div><div>Side lane / special style</div>
+      </div>
 
-        let GLOBAL_TREE_DATA = null;
+      <div id="treeRoot">
+        <svg id="edgeLayer"></svg>
+        <div id="nodeLayer"></div>
+      </div>
+    </div>
+  </div>
 
-        async function initiateSystem() {
-            const overlay = document.getElementById('loading-overlay');
+  <script>
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const DATA_CANDIDATES = [
+      "usa_tree_v4.json",
+      "tree_cells.json",
+      "usa_tree.json",
+      "tree.json"
+    ];
 
-            try {
-                const [treeRes, regRes] = await Promise.all([
-                    fetch('./usa_tree_v4.json'),
-                    fetch('./SP_Registry_CANON_3_31.csv')
-                ]);
+    const LAYOUT = {
+      leftPad: 110,
+      topPad: 24,
+      rightPad: 32,
+      bottomPad: 40,
 
-                if (!treeRes.ok) throw new Error("usa_tree_v4.json is missing or renamed");
-                if (!regRes.ok) throw new Error("SP_Registry_CANON_3_31.csv is missing or renamed");
+      colWidth: 220,
+      cellWidth: 168,
+      cellHeight: 102,
 
-                const treeData = await treeRes.json();
-                const regText = await regRes.text();
-                GLOBAL_TREE_DATA = treeData;
+      rankHeight: 300,
+      rowGap: 18,
 
-                if (!treeData.cells || !Array.isArray(treeData.cells)) {
-                    throw new Error("treeData.cells missing or invalid");
-                }
+      totalColumns: 7,
+      mainColumns: 5
+    };
 
-                const registry = parseRegistry(regText);
+    // ============================================================
+    // DOM
+    // ============================================================
+    const statusEl = document.getElementById("status");
+    const viewportEl = document.getElementById("viewport");
+    const treeRootEl = document.getElementById("treeRoot");
+    const edgeLayerEl = document.getElementById("edgeLayer");
+    const nodeLayerEl = document.getElementById("nodeLayer");
+    const fitBtn = document.getElementById("fitBtn");
+    const reloadBtn = document.getElementById("reloadBtn");
 
-                renderTree(treeData, registry);
+    fitBtn.addEventListener("click", () => {
+      viewportEl.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+    });
 
-                overlay.style.display = 'none';
-                console.log("TREE V2 ONLINE");
-            } catch (err) {
-                console.error("TREE V2 FAILURE:", err);
-                overlay.innerHTML = `
-                    <div class="error-box">
-                        <h1>OFFLINE</h1>
-                        <p>${String(err.message).toUpperCase()}</p>
-                    </div>
-                `;
-            }
+    reloadBtn.addEventListener("click", () => {
+      location.reload();
+    });
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+    init();
+
+    async function init() {
+      try {
+        setStatus("Loading tree data…");
+
+        const payload = await loadFirstAvailableJson(DATA_CANDIDATES);
+        const normalized = normalizePayload(payload.data);
+
+        if (!normalized.cells.length) {
+          throw new Error(
+            "No cells found in JSON.\n\n" +
+            "Expected something like:\n" +
+            "- top-level array of cells\n" +
+            "- { cells: [...] }\n" +
+            "- { tree_cells: [...] }\n" +
+            "- { nodes / units plus edges converted into cells }\n"
+          );
         }
 
-        function parseRegistry(regText) {
-            const registry = {};
-            const lines = regText.split('\n');
+        renderTree(normalized, payload.name);
+      } catch (err) {
+        console.error(err);
+        showError(
+          "Could not load/render research tree.\n\n" +
+          String(err.message || err) + "\n\n" +
+          "If you are opening this as file:// directly, fetch may be blocked by the browser.\n" +
+          "Use a small local server if needed."
+        );
+        setStatus("Load failed");
+      }
+    }
 
-            for (let i = 1; i < lines.length; i++) {
-                const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+    async function loadFirstAvailableJson(names) {
+      const errors = [];
 
-                // Adjust these indexes if needed
-                // cols[0] = master_key / id
-                // cols[3] = image filename (based on what you said)
-                if (cols.length > 3) {
-                    const id = (cols[0] || '').replace(/"/g, '').trim().toLowerCase();
-                    const img = (cols[3] || '').replace(/"/g, '').trim();
-
-                    if (id) {
-                        registry[id] = img;
-                    }
-                }
-            }
-
-            return registry;
+      for (const name of names) {
+        try {
+          const res = await fetch(name, { cache: "no-store" });
+          if (!res.ok) {
+            errors.push(`${name}: HTTP ${res.status}`);
+            continue;
+          }
+          const data = await res.json();
+          return { name, data };
+        } catch (err) {
+          errors.push(`${name}: ${err.message}`);
         }
+      }
 
-        function renderTree(treeData, registry) {
-            const wrapper = document.getElementById('research-wrapper');
-            const theater = document.getElementById('research-theater');
-            const edgeLayer = document.getElementById('edge-layer');
-            const rankLayer = document.getElementById('rank-layer');
+      throw new Error(
+        "None of the candidate JSON files could be loaded.\n\nTried:\n- " +
+        names.join("\n- ") +
+        "\n\nDetails:\n" + errors.join("\n")
+      );
+    }
 
-            theater.innerHTML = '';
-            edgeLayer.innerHTML = '';
-            rankLayer.innerHTML = '';
+    // ============================================================
+    // NORMALIZE
+    // ============================================================
+    function normalizePayload(raw) {
+      const cells = extractCells(raw).map(normalizeCell);
+      const edges = extractEdges(raw).map(normalizeEdge).filter(Boolean);
 
-            const cells = treeData.cells || [];
+      return { cells, edges };
+    }
 
-            let maxCol = 1;
-            let maxRow = 1;
+    function extractCells(raw) {
+      if (Array.isArray(raw)) {
+        return raw;
+      }
 
-            cells.forEach(cell => {
-                if (Number(cell.column) > maxCol) maxCol = Number(cell.column);
-                if (Number(cell.row) > maxRow) maxRow = Number(cell.row);
-            });
+      if (Array.isArray(raw.cells)) return raw.cells;
+      if (Array.isArray(raw.tree_cells)) return raw.tree_cells;
+      if (Array.isArray(raw.cell_data)) return raw.cell_data;
+      if (Array.isArray(raw.nodes)) return raw.nodes;
+      if (Array.isArray(raw.units)) return raw.units;
 
-            theater.style.gridTemplateColumns = `repeat(${maxCol}, var(--card-w))`;
-            theater.style.gridTemplateRows = `repeat(${maxRow}, var(--card-h))`;
+      return [];
+    }
 
-            renderRankBands(cells, wrapper, theater, rankLayer);
+    function extractEdges(raw) {
+      if (!raw || Array.isArray(raw)) return [];
+      if (Array.isArray(raw.edges)) return raw.edges;
+      if (Array.isArray(raw.connections)) return raw.connections;
+      if (Array.isArray(raw.links)) return raw.links;
+      if (Array.isArray(raw.progression_edges)) return raw.progression_edges;
+      return [];
+    }
 
-            cells.forEach(cell => {
-                const card = buildCard(cell, registry);
-                theater.appendChild(card);
-            });
+    function normalizeCell(cell) {
+      const type = String(
+        cell.type ||
+        cell.cell_type ||
+        (Array.isArray(cell.units) && cell.units.length > 1 ? "group" : "unit")
+      ).toLowerCase();
 
-            requestAnimationFrame(() => {
-                drawEdges(treeData.edges || [], theater, edgeLayer);
-            });
-        }
+      const units = Array.isArray(cell.units) ? cell.units : [];
+      const unitIds = Array.isArray(cell.unit_ids)
+        ? cell.unit_ids
+        : units.map(u => u.id).filter(Boolean);
 
-        function buildCard(cell, registry) {
-            const id = String(cell.cell_id || '').toLowerCase();
-            const displayName = (cell.display_name || cell.cell_id || '').replace(/_/g, ' ');
-            const members = Array.isArray(cell.members) && cell.members.length ? cell.members : [id];
+      return {
+        raw: cell,
+        cell_id: String(cell.cell_id || cell.id || cell.key || ""),
+        nation: String(cell.nation || "unknown"),
+        rank: num(cell.rank, 1),
+        column: num(cell.column || cell.col, 1),
+        row: num(cell.row, 1),
+        type,
+        display_name: String(
+          cell.display_name ||
+          cell.name ||
+          cell.unit_name ||
+          cell.cell_id ||
+          "unknown"
+        ),
+        units,
+        unit_ids: unitIds
+      };
+    }
 
-            let type = (cell.type || '').toLowerCase().trim();
+    function normalizeEdge(edge) {
+      const fromId = edge.from_cell || edge.from || edge.source || edge.parent || edge.from_id;
+      const toId = edge.to_cell || edge.to || edge.target || edge.child || edge.to_id;
 
-            if (!type) {
-                if (members.length > 1) type = 'folder';
-                else if (Number(cell.column) >= 7) type = 'squadron';
-                else if (Number(cell.column) === 6) type = 'premium';
-                else type = 'tech';
-            }
+      if (!fromId || !toId) return null;
 
-            let imageKey = id;
-            if (!registry[imageKey] && members.length) {
-                imageKey = String(members[0] || id).toLowerCase();
-            }
+      return {
+        raw: edge,
+        from_cell: String(fromId),
+        to_cell: String(toId),
+        from_rank: num(edge.from_rank, null),
+        to_rank: num(edge.to_rank, null),
+        from_col: num(edge.from_col, null),
+        to_col: num(edge.to_col, null),
+        from_row_in_rank: num(edge.from_row_in_rank, null),
+        to_row_in_rank: num(edge.to_row_in_rank, null),
+        direction: String(edge.direction || "down")
+      };
+    }
 
-            let imageName = registry[imageKey] || 'placeholder.png';
-            if (imageName && !imageName.toLowerCase().endsWith('.png')) {
-                imageName += '.png';
-            }
+    function num(v, fallback) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : fallback;
+    }
 
-            const card = document.createElement('div');
-            card.className = `v-card ${type}`;
-            card.dataset.cellId = id;
-            card.dataset.type = type;
-            card.style.gridColumn = cell.column;
-            card.style.gridRow = cell.row;
+    // ============================================================
+    // RENDER
+    // ============================================================
+    function renderTree(data, sourceName) {
+      const cells = [...data.cells].sort(sortCells);
+      const edges = data.edges;
 
-            if (Number(cell.column) >= 6) {
-                card.classList.add('side-column-glow');
-            }
+      nodeLayerEl.innerHTML = "";
+      edgeLayerEl.innerHTML = "";
 
-            let badgeText = '';
-            if (type === 'premium') badgeText = 'PREM';
-            else if (type === 'squadron') badgeText = 'SQDN';
-            else if (type === 'folder') badgeText = `${members.length}X`;
+      const rankCount = Math.max(1, ...cells.map(c => c.rank));
+      const rowCountsByRank = getRowCountsByRank(cells);
+      const columnCount = Math.max(LAYOUT.totalColumns, ...cells.map(c => c.column));
 
-            card.innerHTML = `
-                ${badgeText ? `<div class="slot-badge">${badgeText}</div>` : ''}
-                ${type === 'folder' ? `
-                    <div class="folder-stack">
-                        <span></span><span></span><span></span>
-                    </div>
-                ` : ''}
-                <div class="card-top">
-                    <img
-                        src="${PIC_BASE}${imageName}"
-                        class="v-img"
-                        onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';"
-                    >
-                </div>
-                <div class="card-bottom">
-                    <div class="v-name">${displayName}</div>
-                </div>
-            `;
+      const treeWidth = LAYOUT.leftPad + (columnCount * LAYOUT.colWidth) + LAYOUT.rightPad;
+      const treeHeight = LAYOUT.topPad + (rankCount * LAYOUT.rankHeight) + LAYOUT.bottomPad;
 
-            return card;
-        }
+      treeRootEl.style.width = treeWidth + "px";
+      treeRootEl.style.height = treeHeight + "px";
+      edgeLayerEl.setAttribute("width", treeWidth);
+      edgeLayerEl.setAttribute("height", treeHeight);
+      edgeLayerEl.setAttribute("viewBox", `0 0 ${treeWidth} ${treeHeight}`);
 
-        function renderRankBands(cells, wrapper, theater, rankLayer) {
-            const rankMap = new Map();
+      renderScaffold(rankCount, columnCount, treeWidth);
+      const rectMap = renderCells(cells, rowCountsByRank);
+      renderEdges(edges, rectMap);
 
-            cells.forEach(cell => {
-                const rank = String(cell.rank || '').trim();
-                const row = Number(cell.row || 0);
-                if (!rank || !row) return;
+      setStatus(
+        `Loaded ${sourceName} · Cells: ${cells.length} · Edges: ${edges.length} · Ranks: ${rankCount}`
+      );
+    }
 
-                if (!rankMap.has(rank)) {
-                    rankMap.set(rank, { minRow: row, maxRow: row });
-                } else {
-                    const entry = rankMap.get(rank);
-                    entry.minRow = Math.min(entry.minRow, row);
-                    entry.maxRow = Math.max(entry.maxRow, row);
-                }
-            });
+    function renderScaffold(rankCount, columnCount, treeWidth) {
+      removeScaffold();
 
-            const ranks = Array.from(rankMap.entries())
-                .sort((a, b) => a[1].minRow - b[1].minRow);
+      for (let rank = 1; rank <= rankCount; rank++) {
+        const band = document.createElement("div");
+        band.className = "rank-band" + (rank % 2 === 0 ? " alt" : "");
+        band.style.top = rankTop(rank) + "px";
+        band.style.height = LAYOUT.rankHeight + "px";
+        treeRootEl.appendChild(band);
 
-            const rootStyles = getComputedStyle(document.documentElement);
-            const cardH = parseFloat(rootStyles.getPropertyValue('--card-h'));
-            const rowGap = parseFloat(rootStyles.getPropertyValue('--row-gap'));
-            const topGutter = parseFloat(rootStyles.getPropertyValue('--top-gutter'));
+        const label = document.createElement("div");
+        label.className = "rank-label";
+        label.style.top = (rankTop(rank) + 12) + "px";
+        label.textContent = `RANK ${roman(rank)}`;
+        treeRootEl.appendChild(label);
+      }
 
-            ranks.forEach(([rank, info]) => {
-                const top = topGutter + ((info.minRow - 1) * (cardH + rowGap)) - 10;
-                const bottom = topGutter + ((info.maxRow - 1) * (cardH + rowGap)) + cardH + 10;
-                const height = bottom - top;
+      for (let col = 1; col <= columnCount; col++) {
+        const guide = document.createElement("div");
+        guide.className = "column-guide" + (col > LAYOUT.mainColumns ? " side" : "");
+        guide.style.left = columnLeft(col) + "px";
 
-                const band = document.createElement('div');
-                band.className = 'rank-band';
-                band.style.top = `${top}px`;
-                band.style.height = `${height}px`;
+        const label = document.createElement("div");
+        label.className = "column-label";
+        label.textContent = col <= LAYOUT.mainColumns ? `Col ${col}` : `Side ${col - LAYOUT.mainColumns}`;
+        guide.appendChild(label);
 
-                const label = document.createElement('div');
-                label.className = 'rank-label';
-                label.style.top = `${top + 10}px`;
-                label.textContent = `RANK ${rank}`;
+        treeRootEl.appendChild(guide);
+      }
 
-                rankLayer.appendChild(band);
-                rankLayer.appendChild(label);
-            });
-        }
+      const divider = document.createElement("div");
+      divider.className = "side-divider";
+      divider.style.left = (columnLeft(LAYOUT.mainColumns + 1) - 16) + "px";
+      treeRootEl.appendChild(divider);
+    }
 
-        function drawEdges(edges, theater, edgeLayer) {
-            edgeLayer.innerHTML = '';
+    function removeScaffold() {
+      [...treeRootEl.querySelectorAll(".rank-band, .rank-label, .column-guide, .side-divider")].forEach(el => el.remove());
+    }
 
-            const theaterRect = theater.getBoundingClientRect();
-            const width = Math.ceil(theater.scrollWidth);
-            const height = Math.ceil(theater.scrollHeight);
+    function renderCells(cells, rowCountsByRank) {
+      const rectMap = new Map();
 
-            edgeLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
-            edgeLayer.setAttribute('width', width);
-            edgeLayer.setAttribute('height', height);
-            edgeLayer.style.left = getComputedStyle(document.documentElement).getPropertyValue('--left-gutter');
-            edgeLayer.style.top = getComputedStyle(document.documentElement).getPropertyValue('--top-gutter');
-            edgeLayer.style.width = `${width}px`;
-            edgeLayer.style.height = `${height}px`;
+      for (const cell of cells) {
+        const rect = getCellRect(cell, rowCountsByRank);
+        rectMap.set(cell.cell_id, rect);
 
-            const cardMap = new Map();
-            theater.querySelectorAll('.v-card').forEach(card => {
-                const id = card.dataset.cellId;
-                if (id) cardMap.set(id, card);
-            });
+        const cellEl = createCellElement(cell);
+        cellEl.style.left = rect.x + "px";
+        cellEl.style.top = rect.y + "px";
 
-            edges.forEach(edge => {
-                const fromId = String(edge.from || edge.source || edge.parent || '').toLowerCase();
-                const toId = String(edge.to || edge.target || edge.child || '').toLowerCase();
+        nodeLayerEl.appendChild(cellEl);
+      }
 
-                if (!fromId || !toId) return;
+      return rectMap;
+    }
 
-                const fromCard = cardMap.get(fromId);
-                const toCard = cardMap.get(toId);
+    function createCellElement(cell) {
+      const el = document.createElement("div");
+      el.className = "cell";
 
-                if (!fromCard || !toCard) return;
+      if (cell.type === "group") el.classList.add("grouped");
+      if (cell.column > LAYOUT.mainColumns) {
+        if (cell.column === 6) el.classList.add("premium");
+        if (cell.column >= 7) el.classList.add("squadron");
+      }
 
-                const fromRect = fromCard.getBoundingClientRect();
-                const toRect = toCard.getBoundingClientRect();
+      const rankMeta = `R${cell.rank} · C${cell.column} · Row ${cell.row}`;
+      const typeText = cell.type === "group" ? "GROUP" : "UNIT";
 
-                const x1 = (fromRect.left - theaterRect.left) + (fromRect.width / 2);
-                const y1 = (fromRect.top - theaterRect.top) + fromRect.height;
+      if (cell.type === "group") {
+        const back1 = document.createElement("div");
+        back1.className = "cell-back";
+        const back2 = document.createElement("div");
+        back2.className = "cell-back-2";
+        el.appendChild(back2);
+        el.appendChild(back1);
+      }
 
-                const x2 = (toRect.left - theaterRect.left) + (toRect.width / 2);
-                const y2 = (toRect.top - theaterRect.top);
+      const header = document.createElement("div");
+      header.className = "cell-header";
+      header.innerHTML = `
+        <span>${rankMeta}</span>
+        <span class="type-badge">${typeText}</span>
+      `;
+      el.appendChild(header);
 
-                const midY = y1 + ((y2 - y1) / 2);
+      const body = document.createElement("div");
+      body.className = "cell-body";
 
-                const back = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                back.setAttribute("d", `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`);
-                back.setAttribute("class", "tree-edge back");
+      if (cell.type === "group") {
+        const list = document.createElement("div");
+        list.className = "group-list";
 
-                const front = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                front.setAttribute("d", `M ${x1} ${y1} L ${x1} ${midY} L ${x2} ${midY} L ${x2} ${y2}`);
-                front.setAttribute("class", "tree-edge");
+        const ids = cell.unit_ids && cell.unit_ids.length
+          ? cell.unit_ids
+          : cell.units.map(u => u.id).filter(Boolean);
 
-                edgeLayer.appendChild(back);
-                edgeLayer.appendChild(front);
-            });
-        }
-
-        window.onload = initiateSystem;
-
-        window.addEventListener('resize', () => {
-            if (!GLOBAL_TREE_DATA) return;
-
-            const theater = document.getElementById('research-theater');
-            const edgeLayer = document.getElementById('edge-layer');
-
-            if (!theater || !edgeLayer) return;
-
-            drawEdges(GLOBAL_TREE_DATA.edges || [], theater, edgeLayer);
+        ids.slice(0, 3).forEach(id => {
+          const item = document.createElement("div");
+          item.className = "group-item";
+          item.textContent = id;
+          list.appendChild(item);
         });
-    </script>
+
+        if (ids.length === 0) {
+          const item = document.createElement("div");
+          item.className = "group-item";
+          item.textContent = "Grouped slot";
+          list.appendChild(item);
+        }
+
+        body.appendChild(list);
+      } else {
+        const visual = document.createElement("div");
+        visual.className = "cell-visual";
+        visual.textContent = shortLabel(cell.display_name || cell.cell_id);
+        body.appendChild(visual);
+      }
+
+      el.appendChild(body);
+
+      const footer = document.createElement("div");
+      footer.className = "cell-footer";
+
+      const name = document.createElement("div");
+      name.className = "cell-name";
+      name.textContent = shortLabel(cell.display_name || cell.cell_id);
+
+      const metaWrap = document.createElement("div");
+      metaWrap.style.display = "flex";
+      metaWrap.style.alignItems = "center";
+      metaWrap.style.gap = "6px";
+
+      if (cell.type === "group") {
+        const badge = document.createElement("div");
+        badge.className = "group-badge";
+        badge.textContent = String((cell.unit_ids || []).length || (cell.units || []).length || 0);
+        metaWrap.appendChild(badge);
+      }
+
+      const meta = document.createElement("div");
+      meta.className = "cell-meta";
+      meta.textContent = cell.nation.toUpperCase();
+      metaWrap.appendChild(meta);
+
+      footer.appendChild(name);
+      footer.appendChild(metaWrap);
+
+      el.appendChild(footer);
+
+      return el;
+    }
+
+    function renderEdges(edges, rectMap) {
+      const groupedByFrom = new Map();
+
+      for (const edge of edges) {
+        if (!groupedByFrom.has(edge.from_cell)) {
+          groupedByFrom.set(edge.from_cell, []);
+        }
+        groupedByFrom.get(edge.from_cell).push(edge);
+      }
+
+      for (const edge of edges) {
+        const fromRect = rectMap.get(edge.from_cell);
+        const toRect = rectMap.get(edge.to_cell);
+        if (!fromRect || !toRect) continue;
+
+        const siblings = groupedByFrom.get(edge.from_cell) || [];
+        const index = siblings.findIndex(e => e === edge);
+        const offset = getRouteOffset(index, siblings.length);
+
+        const d = buildEdgePath(fromRect, toRect, offset);
+
+        const base = svgEl("path", {
+          d,
+          class: "edge-base"
+        });
+
+        const active = svgEl("path", {
+          d,
+          class: "edge-active"
+        });
+
+        edgeLayerEl.appendChild(base);
+        edgeLayerEl.appendChild(active);
+      }
+    }
+
+    // ============================================================
+    // GEOMETRY
+    // ============================================================
+    function getRowCountsByRank(cells) {
+      const map = new Map();
+
+      for (const c of cells) {
+        const current = map.get(c.rank) || 0;
+        map.set(c.rank, Math.max(current, c.row));
+      }
+      return map;
+    }
+
+    function getCellRect(cell, rowCountsByRank) {
+      const x = columnLeft(cell.column) + Math.round((LAYOUT.colWidth - LAYOUT.cellWidth) / 2);
+
+      const rowsInRank = Math.max(1, rowCountsByRank.get(cell.rank) || 1);
+      const usableHeight = LAYOUT.rankHeight - 56;
+      const slotStep = rowsInRank <= 1
+        ? 0
+        : Math.max(LAYOUT.cellHeight + LAYOUT.rowGap, Math.floor((usableHeight - LAYOUT.cellHeight) / (rowsInRank - 1)));
+
+      const y = rankTop(cell.rank) + 52 + ((cell.row - 1) * slotStep);
+
+      return {
+        x,
+        y,
+        w: LAYOUT.cellWidth,
+        h: LAYOUT.cellHeight
+      };
+    }
+
+    function columnLeft(col) {
+      return LAYOUT.leftPad + ((col - 1) * LAYOUT.colWidth);
+    }
+
+    function rankTop(rank) {
+      return LAYOUT.topPad + ((rank - 1) * LAYOUT.rankHeight);
+    }
+
+    function anchors(rect) {
+      return {
+        top: {
+          x: rect.x + rect.w / 2,
+          y: rect.y
+        },
+        bottom: {
+          x: rect.x + rect.w / 2,
+          y: rect.y + rect.h
+        }
+      };
+    }
+
+    function buildEdgePath(fromRect, toRect, offset = 0) {
+      const a = anchors(fromRect);
+      const b = anchors(toRect);
+
+      const x1 = a.bottom.x + offset;
+      const y1 = a.bottom.y;
+
+      const x2 = b.top.x + offset;
+      const y2 = b.top.y;
+
+      let midY;
+      if (y2 >= y1) {
+        midY = y1 + Math.max(24, (y2 - y1) / 2);
+      } else {
+        midY = y1 + 28;
+      }
+
+      return [
+        `M ${round1(x1)} ${round1(y1)}`,
+        `L ${round1(x1)} ${round1(midY)}`,
+        `L ${round1(x2)} ${round1(midY)}`,
+        `L ${round1(x2)} ${round1(y2)}`
+      ].join(" ");
+    }
+
+    function getRouteOffset(index, total) {
+      if (total <= 1) return 0;
+
+      const spacing = 8;
+      const centered = index - ((total - 1) / 2);
+      return centered * spacing;
+    }
+
+    function round1(n) {
+      return Math.round(n * 10) / 10;
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    function sortCells(a, b) {
+      return (
+        a.rank - b.rank ||
+        a.column - b.column ||
+        a.row - b.row ||
+        String(a.cell_id).localeCompare(String(b.cell_id))
+      );
+    }
+
+    function shortLabel(v) {
+      const s = String(v || "");
+      return s.length > 24 ? s.slice(0, 24) + "…" : s;
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function showError(text) {
+      treeRootEl.innerHTML = "";
+      const box = document.createElement("div");
+      box.className = "error-box";
+      box.textContent = text;
+      treeRootEl.appendChild(box);
+    }
+
+    function svgEl(tag, attrs = {}) {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (const [k, v] of Object.entries(attrs)) {
+        el.setAttribute(k, v);
+      }
+      return el;
+    }
+
+    function roman(num) {
+      const map = [
+        [10, "X"],
+        [9, "IX"],
+        [5, "V"],
+        [4, "IV"],
+        [1, "I"]
+      ];
+      let n = num;
+      let out = "";
+      for (const [value, sym] of map) {
+        while (n >= value) {
+          out += sym;
+          n -= value;
+        }
+      }
+      return out || String(num);
+    }
+  </script>
 </body>
 </html>
