@@ -4,27 +4,28 @@
     <meta charset="UTF-8">
     <title>SKY PILOT - USA STABLE V4</title>
     <style>
-        /* UI BASE: Sourcing metal background from local Home directory */
+        /* UI BASE: Using Absolute Raw Path for the Home Repository */
         body { 
-            background: #1a1a1a url('metal_background.png'); 
+            background: #1a1a1a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png'); 
             background-size: cover;
+            background-position: center;
             background-attachment: fixed;
+            background-repeat: no-repeat;
             color: white; 
             margin: 0; 
             font-family: sans-serif; 
             overflow-x: auto; 
         }
         
-        /* LOADING GRID: Sourcing Comms_Pic from local Home directory */
+        /* LOADING GRID: Using Absolute Raw Path for the Home Repository */
         #loading-overlay {
             position: fixed; inset: 0; 
-            background: black url('Comms_Pic.png') no-repeat center;
+            background: #000 url('https://raw.githubusercontent.com/KJumpmaster/Home/main/Comms_Pic.png') no-repeat center;
             background-size: contain;
             z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
             font-size: 24px; color: #00ff00;
             padding-bottom: 50px;
-            text-shadow: 2px 2px 4px black;
         }
 
         #research-wrapper {
@@ -43,10 +44,10 @@
 
         .v-card {
             width: 180px; height: 100px;
-            background: rgba(42, 42, 42, 0.9); border: 2px solid #444;
+            background: rgba(30, 30, 30, 0.9); 
+            border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             backdrop-filter: blur(5px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         .v-img { width: 100%; height: 70%; object-fit: contain; }
@@ -64,18 +65,17 @@
     </div>
 
     <script>
-        /* ASSET TETHER: Aircraft icons sourced from external Aircraft-Pics repo */
+        /* ASSET TETHER: Aircraft icons sourced from the Aircraft-Pics repo */
         const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
 
         async function initiateSystem() {
             const overlay = document.getElementById('loading-overlay');
             const theater = document.getElementById('research-theater');
             
-            // Locked 2-second Veteran Handshake delay
+            // 2-second Veteran Handshake delay
             const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
 
             try {
-                // Fetching local registry and tree data from Home repo
                 const [treeRes, regRes] = await Promise.all([
                     fetch('./usa_tree_v4.json'),
                     fetch('./SP_Registry_CANON_3_31.csv'),
@@ -90,7 +90,6 @@
                 const registry = {};
                 const lines = regText.split('\n');
                 for (let i = 1; i < lines.length; i++) {
-                    // Optimized CSV parsing for Column C (Index 2)
                     const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                     if (cols.length > 2) {
                         const id = cols[0].replace(/"/g, '').trim().toLowerCase();
@@ -107,11 +106,13 @@
                     card.style.gridColumn = cell.column;
                     card.style.gridRow = cell.row;
 
-                    // Image source matches filenames in Column C of SP_Registry_CANON_3_31.csv
+                    // Pulling from Column C filename
+                    const imgFile = registry[id] || 'placeholder.png';
+                    
                     card.innerHTML = `
-                        <img src="${PIC_BASE}${registry[id] || 'placeholder.png'}" 
+                        <img src="${PIC_BASE}${imgFile}" 
                              class="v-img" 
-                             onerror="this.src='https://placehold.co/200x100/1a1a1a/00ff00?text=SCANNING...';">
+                             onerror="this.onerror=null; this.src='https://placehold.co/200x100/1a1a1a/00ff00?text=SCANNING...';">
                         <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
                     `;
                     theater.appendChild(card);
