@@ -248,22 +248,22 @@
         }
 
         .line-solid {
-            stroke: #00ff00;
-            stroke-width: 6;
-            filter: drop-shadow(0 0 10px #00ff00);
-            opacity: 0.95;
+            stroke: #ffd84d;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 4px #ffd84d);
+            opacity: 1;
         }
 
         .line-dashed {
-            stroke: yellow;
-            stroke-width: 4;
-            stroke-dasharray: 10,8;
+            stroke: #ffd84d;
+            stroke-width: 2.5;
+            stroke-dasharray: 7,6;
             opacity: 0.95;
         }
 
         .line-faint {
-            stroke: rgba(255,255,255,0.14);
-            stroke-width: 3;
+            stroke: rgba(100, 170, 255, 0.22);
+            stroke-width: 2;
         }
     </style>
 </head>
@@ -294,14 +294,14 @@
         <div id="research-theater">
             <svg id="arrow-canvas">
                 <defs>
-                    <marker id="arrowhead-green" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
-                        <polygon points="0 0, 12 4.5, 0 9" fill="#00ff00"></polygon>
+                    <marker id="arrowhead-solid" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#ffd84d"></polygon>
                     </marker>
-                    <marker id="arrowhead-yellow" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
-                        <polygon points="0 0, 12 4.5, 0 9" fill="yellow"></polygon>
+                    <marker id="arrowhead-dashed" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="#ffd84d"></polygon>
                     </marker>
-                    <marker id="arrowhead-faint" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
-                        <polygon points="0 0, 12 4.5, 0 9" fill="rgba(255,255,255,0.18)"></polygon>
+                    <marker id="arrowhead-faint" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                        <polygon points="0 0, 8 3, 0 6" fill="rgba(100, 170, 255, 0.28)"></polygon>
                     </marker>
                 </defs>
             </svg>
@@ -413,7 +413,7 @@
                     if (cell.flags?.is_event) card.classList.add('event');
                     if (cell.flags?.is_squadron) card.classList.add('squadron');
 
-                    card.style.gridColumn = String(column + 1); // +1 because col 1 is rank marker column
+                    card.style.gridColumn = String(column + 1);
                     card.style.gridRow = String(((rank - 1) * 8) + row + 1);
 
                     card.innerHTML = `
@@ -476,14 +476,14 @@
                     return;
                 }
 
-                const achieved = ownedAircraft.includes(normalize(fromId)) && ownedAircraft.includes(normalize(toId));
-                const potential = ownedAircraft.includes(normalize(fromId)) && !ownedAircraft.includes(normalize(toId));
+                const parentOwned = ownedAircraft.includes(normalize(fromId));
+                const childOwned = ownedAircraft.includes(normalize(toId));
 
-                drawArrow(parentCard, childCard, theater, canvas, achieved, potential);
+                drawArrow(parentCard, childCard, theater, canvas, parentOwned, childOwned);
             });
         }
 
-        function drawArrow(parentCard, childCard, theater, svg, achieved, potential) {
+        function drawArrow(parentCard, childCard, theater, svg, parentOwned, childOwned) {
             const pRect = parentCard.getBoundingClientRect();
             const cRect = childCard.getBoundingClientRect();
             const tRect = theater.getBoundingClientRect();
@@ -494,25 +494,26 @@
             const x2 = cRect.left + (cRect.width / 2) - tRect.left;
             const y2 = cRect.top - tRect.top;
 
-            const midY = y1 + ((y2 - y1) / 2);
+            const verticalGap = Math.abs(y2 - y1);
+            const midY = y1 + Math.max(18, Math.min(verticalGap / 2, 40));
 
             const pathData = [
                 `M ${x1} ${y1}`,
                 `L ${x1} ${midY}`,
                 `L ${x2} ${midY}`,
-                `L ${x2} ${y2 - 10}`
+                `L ${x2} ${y2 - 8}`
             ].join(" ");
 
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
             path.setAttribute("d", pathData);
             path.classList.add("research-line");
 
-            if (achieved) {
+            if (parentOwned && childOwned) {
                 path.classList.add("line-solid");
-                path.setAttribute("marker-end", "url(#arrowhead-green)");
-            } else if (potential) {
+                path.setAttribute("marker-end", "url(#arrowhead-solid)");
+            } else if (parentOwned && !childOwned) {
                 path.classList.add("line-dashed");
-                path.setAttribute("marker-end", "url(#arrowhead-yellow)");
+                path.setAttribute("marker-end", "url(#arrowhead-dashed)");
             } else {
                 path.classList.add("line-faint");
                 path.setAttribute("marker-end", "url(#arrowhead-faint)");
