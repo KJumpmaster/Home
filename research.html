@@ -1,83 +1,83 @@
+// THE MASTER DATA LINK
+const PIC_BASE = "https://raw.githubusercontent.com/JumpingKJ/KJ_Project_NORDEN/main/Graphics/Planes/Icons/";
+
 async function initiateSystem() {
     const overlay = document.getElementById('loading-overlay');
     try {
         console.log("GEM: Initiating Handshake...");
 
-        // 1. DATA ACQUISITION
+        // 1. ACQUIRE ASSETS (No shop.blkx - Lightweight Only)
         const [treeData, groupData, regText] = await Promise.all([
-            fetch('./usa_tree_v4.json').then(r => {
-                if (!r.ok) throw new Error('usa_tree_v4.json missing');
-                return r.json();
-            }),
-            fetch('./usa_groups.json').then(r => {
-                if (!r.ok) throw new Error('usa_groups.json missing');
-                return r.json();
-            }),
-            fetch('./SP_Registry_CANON_3_31.csv').then(r => {
-                if (!r.ok) throw new Error('Registry CSV missing');
-                return r.text();
-            })
+            fetch('./usa_tree_v4.json').then(r => r.json()),
+            fetch('./usa_groups.json').then(r => r.json()),
+            fetch('./SP_Registry_CANON_3_31.csv').then(r => r.text())
         ]);
 
-        // 2. PARSE REGISTRY
+        // 2. MAP REGISTRY (ID to Image Filename)
         const registry = {};
         const lines = regText.split('\n');
         for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            if (cols.length > 3) {
-                const img = cols[2]?.replace(/"/g, '').trim();
-                const id = cols[0]?.toLowerCase().trim();
-                if (id) registry[id] = img;
+            if (cols.length > 2) {
+                const id = cols[0].replace(/"/g, '').trim().toLowerCase();
+                const img = cols[2].replace(/"/g, '').trim();
+                registry[id] = img;
             }
         }
 
-        // 3. RENDER GRID
+        // 3. RENDER THEATER
         const theater = document.getElementById('research-theater');
         theater.innerHTML = ''; 
 
         treeData.cells.forEach(cell => {
+            if (!cell.cell_id) return;
+            
             const id = cell.cell_id.toLowerCase();
-            const groupList = groupData[id] || null;
-            const isGroup = groupList !== null;
+            
+            // Check if this cell is a Group/Folder
+            const squadMembers = groupData[id] || null;
+            const isGroup = squadMembers !== null;
 
-            // Image Logic
+            // Image Selection Logic
             let imageName = registry[id] || 'placeholder.png';
             if (isGroup && !imageName.includes('Group')) {
+                // If it's a group, try to force the Group-style icon
                 imageName = imageName.split('.')[0] + ' Group.png';
             }
 
+            // Create the Card Element
             const card = document.createElement('div');
             card.className = `v-card ${isGroup ? 'group-stack' : ''}`;
             card.style.gridColumn = cell.column;
             card.style.gridRow = cell.row;
 
-            // Generate Manifest HTML for folders
-            let manifestHtml = "";
-            if (isGroup) {
-                manifestHtml = `<div class="manifest-list">${groupList.join('<br>')}</div>`;
-            }
+            // Generate Squadron List if applicable
+            let manifestHtml = isGroup 
+                ? `<div class="manifest-list">${squadMembers.join('<br>')}</div>` 
+                : "";
 
-            // Build the inside of the card
             card.innerHTML = `
                 <img src="${PIC_BASE}${imageName}" class="v-img" 
-                     onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
+                     onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=MISSING+INTEL';">
                 <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
                 ${manifestHtml}
             `;
+            
             theater.appendChild(card);
         });
 
-        console.log("GEM: Data Link Established. Grid Rendered.");
+        // 4. SYSTEM ONLINE
         overlay.style.display = 'none';
+        console.log("GEM: 34 Groups Successfully Deployed.");
 
     } catch (err) {
-        console.error("DATA LINK ERROR:", err);
-        overlay.innerHTML = `
-            <div style="padding:20px; text-align:center; color:#ff0000; border:2px solid #ff0000; background:#000;">
-                <h2 style="letter-spacing:5px;">OFFLINE</h2>
-                <p>${err.message.toUpperCase()}</p>
-                <p style="font-size:12px; color:#555;">Check Console (F12) for Intelligence Report</p>
-            </div>
-        `;
+        console.error("DATA LINK FAILURE:", err);
+        overlay.innerHTML = `<div style="color:red; padding:20px;">
+            <h2>SYSTEM OFFLINE</h2>
+            <p>${err.message.toUpperCase()}</p>
+        </div>`;
     }
 }
+
+// Start the sequence
+window.onload = initiateSystem;
