@@ -2,91 +2,86 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SKY PILOT - USA STRATEGIC TREE</title>
+    <title>SKY PILOT - USA STRATEGIC COMMAND</title>
     <style>
-        /* UI BASE */
+        /* UI BASE: Translucent and Metal Focus */
         body { 
-            background-color: #1a1a1a;
+            background-color: #0a0a0a;
             background-image: url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png');
             background-attachment: fixed;
             background-size: auto;
             color: white; margin: 0; font-family: Arial, sans-serif;
         }
         
-        /* HUD LOADING SCREEN */
-        #loading-overlay {
-            position: fixed; inset: 0; background: #000;
-            z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        #strategic-header {
+            width: 100%; display: flex; flex-direction: column; align-items: center; padding: 40px 0;
+            background: rgba(0, 0, 0, 0.7); /* Translucent to show metal behind title */
+            border-bottom: 2px solid #00ff00;
         }
-        #comms-pic { width: 380px; height: auto; margin-bottom: 20px; border: 1px solid #00ff00; }
-        #progress-container { width: 350px; height: 10px; background: #111; border: 1px solid #444; }
-        #progress-bar { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 15px #00ff00; transition: width 0.4s; }
-        #status-text { margin-top: 15px; font-family: monospace; color: #00ff00; font-size: 14px; text-transform: uppercase; }
+        #main-title {
+            font-size: 48px; font-weight: bold; color: #00ff00; letter-spacing: 8px;
+            text-shadow: 0 0 20px rgba(0,255,0,0.6); margin-bottom: 20px;
+        }
+        #banner-video {
+            max-width: 85%; height: auto; border: 1px solid #00ff00; box-shadow: 0 0 30px #000;
+        }
 
-        /* TOP BANNER */
-        #top-banner-container { width: 100%; display: flex; justify-content: center; padding: 25px 0; }
-        #top-banner { max-width: 100%; height: auto; }
+        #research-wrapper { display: flex; justify-content: center; padding: 60px 0 150px 0; }
 
-        #research-wrapper { display: flex; justify-content: center; padding-bottom: 200px; }
-
-        /* GRID: 7-Columns + Markers */
+        /* GRID: Added wider gutters (100px) for the Rank Text */
         #research-theater {
             display: grid;
-            grid-template-columns: 80px repeat(7, 210px) 80px; 
+            grid-template-columns: 100px repeat(7, 210px) 100px; 
             grid-auto-rows: min-content; 
-            grid-gap: 35px 15px;
+            grid-gap: 45px 15px;
             position: relative;
         }
 
+        /* RANK MARKERS: Bigger, Vertical, Translucent */
         .rank-marker {
             display: flex; align-items: center; justify-content: center;
-            font-weight: bold; color: #00ff00; font-size: 24px;
+            font-weight: 900; color: #00ff00; font-size: 32px; /* Bigger */
             writing-mode: vertical-rl; text-orientation: mixed;
-            transform: rotate(180deg); opacity: 0.35;
+            transform: rotate(180deg); 
+            opacity: 0.25; /* Translucent */
+            letter-spacing: 10px;
+            pointer-events: none;
         }
 
-        /* CARD DESIGN */
         .v-card {
             width: 200px; height: 130px;
-            background: rgba(5, 5, 5, 0.98); border: 2px solid #333;
+            background: rgba(10, 10, 10, 0.9); border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             cursor: pointer; position: relative; z-index: 10;
         }
-        .v-card:hover { border-color: #00ff00; box-shadow: 0 0 10px rgba(0,255,0,0.3); }
-        
-        /* Z-INDEX FIX: Expanded groups must be on top */
-        .active-group { z-index: 999 !important; border-color: #00ff00 !important; }
+        .active-group { z-index: 999 !important; border-color: #00ff00 !important; box-shadow: 0 0 20px #00ff00; }
 
         .v-img { width: 90%; height: 65%; object-fit: contain; }
         .v-name { 
             font-size: 13px; padding: 6px; text-align: center; 
             color: #fff; font-weight: bold; width: 100%; box-sizing: border-box;
-            background: rgba(0,255,0,0.1); border-top: 1px solid #222;
+            background: rgba(0,255,0,0.2);
         }
 
-        /* GROUP STACKING */
         .sub-unit-container {
             position: absolute; top: 100%; left: -2px; width: 200px;
             display: flex; flex-direction: column; gap: 8px; padding-top: 10px;
         }
         .sub-card {
-            width: 200px; height: 130px; background: #000; border: 2px solid #00ff00;
+            width: 200px; height: 130px; background: #050505; border: 2px solid #00ff00;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.9);
         }
         .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div id="loading-overlay">
-        <img src="https://raw.githubusercontent.com/KJumpmaster/Home/main/Comms_Pic.png" id="comms-pic">
-        <div id="progress-container"><div id="progress-bar"></div></div>
-        <div id="status-text">INITIATING SECURE LINK...</div>
-    </div>
 
-    <div id="top-banner-container">
-        <img src="https://raw.githubusercontent.com/KJumpmaster/Home/main/top_banner.png" id="top-banner">
-    </div>
+    <header id="strategic-header">
+        <div id="main-title">USA AIR GROUP STRATEGIC COMMAND</div>
+        <video id="banner-video" autoplay loop muted playsinline>
+            <source src="https://raw.githubusercontent.com/KJumpmaster/Home/main/USA Banner.mp4" type="video/mp4">
+        </video>
+    </header>
 
     <div id="research-wrapper">
         <div id="research-theater"></div>
@@ -96,53 +91,42 @@
         const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
         const JSON_URL = "https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json";
 
-        // THE NAUGHTY LIST (Exempt from grid, kept in reserve)
+        // NAUGHTY LIST + Missing Rank IV Premiums added to visible logic
         const NAUGHTY_LIST = ['o3u_1', 'ucav_mq_1_predator', 'uav_quadcopter'];
 
         async function initiateSystem() {
-            const bar = document.getElementById('progress-bar');
-            const status = document.getElementById('status-text');
             const theater = document.getElementById('research-theater');
 
             try {
-                bar.style.width = "25%"; status.innerText = "DOWNLOAD DATASTREAM...";
-                
                 const treeRes = await fetch(JSON_URL);
-                if (!treeRes.ok) throw new Error("LINK FAILED");
                 const treeData = await treeRes.json();
                 
-                bar.style.width = "55%"; status.innerText = "FILTERING NAUGHTY LIST...";
+                theater.innerHTML = '';
 
-                // Deployment of Rank Markers
+                // Deployment of the Side Rank Markers
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
-                    const row = (i + 1) * 8; // Multiplier increased to 8 for Rank V space
+                    const row = (i + 1) * 8;
                     const l = document.createElement('div'); l.className='rank-marker'; l.style.gridColumn=1; l.style.gridRow=row; l.innerText=label;
                     const r = document.createElement('div'); r.className='rank-marker'; r.style.gridColumn=9; r.style.gridRow=row; r.innerText=label;
                     theater.appendChild(l); theater.appendChild(r);
                 });
 
-                bar.style.width = "85%"; status.innerText = "DEPLOYING UNITS...";
-
                 treeData.cells.forEach(cell => {
-                    // EXEMPTION CHECK
-                    if (NAUGHTY_LIST.includes(cell.cell_key)) {
-                        console.log("RESERVE UNIT DETECTED:", cell.cell_key);
-                        return; // Moves to next aircraft
-                    }
+                    if (NAUGHTY_LIST.includes(cell.cell_key)) return;
 
                     const card = document.createElement('div');
                     card.className = 'v-card';
                     card.style.gridColumn = parseInt(cell.column) + 2;
-                    // Grid Row uses the multiplier 8 to prevent Rank V "Bad Shape" overlaps
                     card.style.gridRow = (parseInt(cell.rank) * 8) + parseInt(cell.row_in_rank || 1);
 
                     const imgName = `${cell.cell_key}.png`;
                     card.innerHTML = `
-                        <img src="${PIC_BASE}${imgName}" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=MISSING+INTEL';">
+                        <img src="${PIC_BASE}${imgName}" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';">
                         <div class="v-name">${(cell.display_name).replace(/_/g, ' ')}</div>
                     `;
 
+                    // Logic for Groups
                     if (cell.kind === 'group' && cell.units) {
                         const sub = document.createElement('div');
                         sub.className = 'sub-unit-container hidden';
@@ -152,7 +136,6 @@
                             sub.appendChild(sc);
                         });
                         card.appendChild(sub);
-                        
                         card.onclick = (e) => { 
                             e.stopPropagation();
                             const isOpen = sub.classList.toggle('hidden');
@@ -163,13 +146,7 @@
                     theater.appendChild(card);
                 });
 
-                bar.style.width = "100%"; status.innerText = "SYSTEM ACTIVE.";
-                setTimeout(() => document.getElementById('loading-overlay').style.display='none', 600);
-
-            } catch (err) {
-                status.innerText = "CRITICAL FAILURE: " + err.message;
-                status.style.color = "red";
-            }
+            } catch (err) { console.error("COMMS ERROR:", err); }
         }
         window.onload = initiateSystem;
     </script>
