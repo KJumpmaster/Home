@@ -1,21 +1,81 @@
 async function initiateSystem() {
+    const overlay = document.getElementById('loading-overlay');
     try {
-        // ONLY LOAD THESE THREE - DO NOT FETCH SHOP.BLKX HERE
-        const [treeRes, groupRes, regRes] = await Promise.all([
-            fetch('./usa_tree_v4.json').then(r => r.json()),
-            fetch('./usa_groups.json').then(r => r.json()), // THE NEW 34-GROUP FILE
-            fetch('./SP_Registry_CANON_3_31.csv').then(r => r.text())
+        console.log("GEM: Initiating Handshake...");
+
+        // 1. DATA ACQUISITION (No shop.blkx allowed!)
+        const [treeData, groupData, regText] = await Promise.all([
+            fetch('./usa_tree_v4.json').then(r => {
+                if (!r.ok) throw new Error('usa_tree_v4.json missing');
+                return r.json();
+            }),
+            fetch('./usa_groups.json').then(r => {
+                if (!r.ok) throw new Error('usa_groups.json missing');
+                return r.json();
+            }),
+            fetch('./SP_Registry_CANON_3_31.csv').then(r => {
+                if (!r.ok) throw new Error('Registry CSV missing');
+                return r.text();
+            })
         ]);
 
-        // ... rest of your card generation logic ...
-        console.log("GEM: Data Link Established. 34 Groups Synced.");
-        
-        // Close the loading overlay
-        document.getElementById('loading-overlay').style.display = 'none';
+        // 2. PARSE REGISTRY
+        const registry = {};
+        const lines = regText.split('\n');
+        for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            if (cols.length > 3) {
+                const img = cols[2]?.replace(/"/g, '').trim();
+                const id = cols[0]?.toLowerCase().trim();
+                if (id) registry[id] = img;
+            }
+        }
+
+        // 3. RENDER GRID
+        const theater = document.getElementById('research-theater');
+        theater.innerHTML = ''; // Clear previous attempts
+
+        // Assuming treeData.cells is where your V4 aircraft live
+        treeData.cells.forEach(cell => {
+            const id = cell.cell_id.toLowerCase();
+            const isGroup = groupData[id] ? true : false;
+            
+            // Get Image - If it's a group, we force the "Group.png"
+            let imageName = registry[id] || 'placeholder.png';
+            if (isGroup && !imageName.includes('Group')) {
+                imageName = imageName.split('.')[0] + ' Group.png';
+            }
+
+            const card = document.createElement('div');
+            card.className = `v-card ${isGroup ? 'group-stack' : ''}`;
+            card.style.gridColumn = cell.column;
+            card.style.gridRow = cell.row;
+
+            // Generate Manifest List if it's a group
+            let manifest = "";
+            if (isGroup) {
+                manifest = `<div class="manifest-list">${groupData[id].join('<br>')}</div>`;
+            }
+
+            card.innerHTML = `
+                <img src="${PIC_BASE}${imageName}" class="v-img" onerror="this.src='https://placehold.co/200x100/000000/00ff00?text=SCANNING';">
+                <div class="v-name">${(cell.display_name || cell.cell_id).replace(/_/g, ' ')}</div>
+                ${manifest}
+            `;
+            theater.appendChild(card);
+        });
+
+        console.log("GEM: Data Link Established. Grid Rendered.");
+        overlay.style.display = 'none';
 
     } catch (err) {
         console.error("DATA LINK ERROR:", err);
-        document.getElementById('loading-overlay').innerHTML = 
-            `<div style="color:red">OFFLINE: ${err.message}<br>Check if usa_groups.json is in the folder!</div>`;
+        overlay.innerHTML = `
+            <div style="padding:20px; text-align:center; color:#ff0000; border:2px solid #ff0000; background:#000;">
+                <h2 style="letter-spacing:5px;">OFFLINE</h2>
+                <p>${err.message.toUpperCase()}</p>
+                <p style="font-size:12px; color:#555;">Check Console (F12) for Intelligence Report</p>
+            </div>
+        `;
     }
 }
