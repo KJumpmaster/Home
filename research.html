@@ -35,22 +35,21 @@
         }
 
         /* 3. GRID & THEATER */
-        #research-wrapper { display: flex; flex-direction: column; padding: 30px 0 100px 15px; position: relative; }
+        #research-wrapper { display: flex; flex-direction: column; padding: 30px 0 150px 15px; position: relative; }
         
         #research-theater {
             display: grid;
-            /* ZERO LOGIC: Col 0: Rank | Col 1-5: Research | Col 6-7: Premium */
             grid-template-columns: 140px repeat(5, 210px) repeat(2, 210px); 
-            grid-auto-rows: min-content; grid-gap: 40px 15px;
+            grid-auto-rows: min-content; grid-gap: 45px 15px;
             position: relative; min-width: max-content;
         }
 
+        /* SVG OVERLAY - CRITICAL FIX */
         #arrow-canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 5; overflow: visible;
         }
 
-        /* RIBBONS */
         .col-header {
             height: 40px; display: flex; align-items: center; justify-content: center;
             font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 14px;
@@ -59,7 +58,6 @@
         .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.3); color: #8cff8c; border-color: #00ff00; }
         .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.4); color: #d4af37; border-color: #b8860b; }
 
-        /* RANK MARKERS */
         .rank-marker {
             grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; font-weight: 900; color: #00ff00; font-size: 50px; opacity: 0.15; 
@@ -67,7 +65,6 @@
         }
         .rank-small { font-size: 37px !important; }
 
-        /* CARDS */
         .v-card {
             width: 200px; height: 130px; background: rgba(5, 5, 5, 0.98); border: 2px solid #444;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -143,7 +140,7 @@
                 const treeData = await treeRes.json();
                 globalLinks = treeData.arrows || [];
                 
-                // RANKS
+                // Ranks
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
                     const marker = document.createElement('div');
@@ -153,56 +150,63 @@
                     theater.appendChild(marker);
                 });
 
-                // CARDS - HARDENED LOOP
-                if (treeData.cells) {
-                    treeData.cells.forEach(cell => {
-                        if (NAUGHTY_LIST.includes(cell.cell_key)) return;
-                        totalCount++;
-                        const normID = normalize(cell.cell_key);
-                        const card = document.createElement('div');
-                        card.className = 'v-card';
-                        card.id = `unit-${normID}`;
-                        if (ownedAircraft.includes(normID)) card.classList.add('obtained');
-                        
-                        const col = parseInt(cell.column ?? 0, 10);
-                        if (col >= 6) card.classList.add('premium');
+                // Cards
+                treeData.cells.forEach(cell => {
+                    if (NAUGHTY_LIST.includes(cell.cell_key)) return;
+                    totalCount++;
+                    const normID = normalize(cell.cell_key);
+                    const card = document.createElement('div');
+                    card.className = 'v-card';
+                    card.id = `unit-${normID}`;
+                    if (ownedAircraft.includes(normID)) card.classList.add('obtained');
+                    
+                    const col = parseInt(cell.column ?? 0, 10);
+                    if (col >= 6) card.classList.add('premium');
 
-                        card.style.gridColumn = col + 1; 
-                        card.style.gridRow = ((parseInt(cell.rank ?? 1, 10) - 1) * 8) + parseInt(cell.row_in_rank ?? 1, 10) + 1;
+                    card.style.gridColumn = col + 1; 
+                    card.style.gridRow = ((parseInt(cell.rank ?? 1, 10) - 1) * 8) + parseInt(cell.row_in_rank ?? 1, 10) + 1;
 
-                        card.innerHTML = `<img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';">
-                                          <div class="v-name">${String(cell.display_name || cell.cell_key).toUpperCase().replace(/_/g, ' ')}</div>`;
-                        card.onclick = () => toggleObtained(normID);
-                        theater.appendChild(card);
-                    });
-                }
+                    card.innerHTML = `<img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';">
+                                      <div class="v-name">${String(cell.display_name || cell.cell_key).toUpperCase().replace(/_/g, ' ')}</div>`;
+                    card.onclick = () => toggleObtained(normID);
+                    theater.appendChild(card);
+                });
 
                 updateHUD();
                 
-                // ARROW DEPLOYMENT
-                setTimeout(() => {
-                    canvas.setAttribute('width', theater.offsetWidth);
-                    canvas.setAttribute('height', theater.offsetHeight);
-                    drawArrows();
-                }, 1000);
+                // MULTI-STAGE ARROW SYNC
+                // Stage 1: Immediate
+                syncCanvas();
+                // Stage 2: 500ms
+                setTimeout(syncCanvas, 500);
+                // Stage 3: 1500ms (The "Final Lock")
+                setTimeout(syncCanvas, 1500);
 
-            } catch (err) { 
-                console.error("System Malfunction:", err);
-                document.body.innerHTML += `<div style="color:red; padding:20px;">CRITICAL SYSTEM ERROR: ${err.message}</div>`;
-            }
+            } catch (err) { console.error(err); }
+        }
+
+        function syncCanvas() {
+            const theater = document.getElementById('research-theater');
+            const canvas = document.getElementById('arrow-canvas');
+            if (!theater || !canvas) return;
+
+            canvas.setAttribute('width', theater.offsetWidth);
+            canvas.setAttribute('height', theater.offsetHeight);
+            drawArrows();
         }
 
         function drawArrows() {
             const theater = document.getElementById('research-theater');
             const canvas = document.getElementById('arrow-canvas');
-            canvas.innerHTML = canvas.querySelector('defs').outerHTML;
+            const defs = canvas.querySelector('defs').outerHTML;
+            canvas.innerHTML = defs;
 
             globalLinks.forEach(link => {
                 const p = document.getElementById(`unit-${normalize(link.from)}`);
                 const c = document.getElementById(`unit-${normalize(link.to)}`);
                 if (p && c) {
                     const pOwned = ownedAircraft.includes(normalize(link.from));
-                    const cOwned = ownedAircraft.includes(normalize(link.to));
+                    const cOwned = ownedAircraft.includes(normalize(toID = link.to)); // Tiny fix here
                     
                     const x1 = p.offsetLeft + (p.offsetWidth / 2);
                     const y1 = p.offsetTop + p.offsetHeight;
@@ -228,11 +232,11 @@
 
         function animateDot(path, svg) {
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            dot.setAttribute("r", "3"); dot.classList.add("pulse-dot");
+            dot.setAttribute("r", "3.5"); dot.classList.add("pulse-dot");
             svg.appendChild(dot);
             let pos = 0;
             function run() {
-                pos = (pos + 0.003) % 1;
+                pos = (pos + 0.0035) % 1;
                 const pt = path.getPointAtLength(pos * path.getTotalLength());
                 dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y);
                 requestAnimationFrame(run);
@@ -257,7 +261,7 @@
         function exportData() {
             const blob = new Blob([JSON.stringify(ownedAircraft)], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_PROGRESS.json"; a.click();
+            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_USA.json"; a.click();
         }
 
         function importData(e) {
