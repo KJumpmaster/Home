@@ -34,7 +34,7 @@
             cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
         }
 
-        /* 3. GRID & THEATER */
+        /* 3. GRID THEATER */
         #research-wrapper { display: flex; flex-direction: column; padding: 30px 0 150px 15px; position: relative; }
         
         #research-theater {
@@ -44,9 +44,9 @@
             position: relative; min-width: max-content;
         }
 
-        /* SVG OVERLAY - CRITICAL FIX */
+        /* THE FIX: Fixed Overlay Canvas */
         #arrow-canvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             pointer-events: none; z-index: 5; overflow: visible;
         }
 
@@ -104,15 +104,16 @@
         </div>
     </div>
 
+    <svg id="arrow-canvas">
+        <defs>
+            <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+                <polygon points="0 0, 10 4, 0 8" fill="#ffd84d" />
+            </marker>
+        </defs>
+    </svg>
+
     <div id="research-wrapper">
         <div id="research-theater">
-            <svg id="arrow-canvas">
-                <defs>
-                    <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-                        <polygon points="0 0, 10 4, 0 8" fill="#ffd84d" />
-                    </marker>
-                </defs>
-            </svg>
             <div class="col-header header-research">Researchable Airframes</div>
             <div class="col-header header-premium">Premium Vehicles</div>
         </div>
@@ -133,14 +134,11 @@
 
         async function initiateSystem() {
             const theater = document.getElementById('research-theater');
-            const canvas = document.getElementById('arrow-canvas');
-
             try {
                 const treeRes = await fetch(JSON_URL);
                 const treeData = await treeRes.json();
                 globalLinks = treeData.arrows || [];
                 
-                // Ranks
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
                     const marker = document.createElement('div');
@@ -150,14 +148,12 @@
                     theater.appendChild(marker);
                 });
 
-                // Cards
                 treeData.cells.forEach(cell => {
                     if (NAUGHTY_LIST.includes(cell.cell_key)) return;
                     totalCount++;
                     const normID = normalize(cell.cell_key);
                     const card = document.createElement('div');
-                    card.className = 'v-card';
-                    card.id = `unit-${normID}`;
+                    card.className = 'v-card'; card.id = `unit-${normID}`;
                     if (ownedAircraft.includes(normID)) card.classList.add('obtained');
                     
                     const col = parseInt(cell.column ?? 0, 10);
@@ -174,29 +170,15 @@
 
                 updateHUD();
                 
-                // MULTI-STAGE ARROW SYNC
-                // Stage 1: Immediate
-                syncCanvas();
-                // Stage 2: 500ms
-                setTimeout(syncCanvas, 500);
-                // Stage 3: 1500ms (The "Final Lock")
-                setTimeout(syncCanvas, 1500);
+                // FINAL SYNC - Wait for images to load
+                window.addEventListener('scroll', drawArrows);
+                window.addEventListener('resize', drawArrows);
+                setTimeout(drawArrows, 1000);
 
             } catch (err) { console.error(err); }
         }
 
-        function syncCanvas() {
-            const theater = document.getElementById('research-theater');
-            const canvas = document.getElementById('arrow-canvas');
-            if (!theater || !canvas) return;
-
-            canvas.setAttribute('width', theater.offsetWidth);
-            canvas.setAttribute('height', theater.offsetHeight);
-            drawArrows();
-        }
-
         function drawArrows() {
-            const theater = document.getElementById('research-theater');
             const canvas = document.getElementById('arrow-canvas');
             const defs = canvas.querySelector('defs').outerHTML;
             canvas.innerHTML = defs;
@@ -206,12 +188,18 @@
                 const c = document.getElementById(`unit-${normalize(link.to)}`);
                 if (p && c) {
                     const pOwned = ownedAircraft.includes(normalize(link.from));
-                    const cOwned = ownedAircraft.includes(normalize(toID = link.to)); // Tiny fix here
+                    const cOwned = ownedAircraft.includes(normalize(link.to));
                     
-                    const x1 = p.offsetLeft + (p.offsetWidth / 2);
-                    const y1 = p.offsetTop + p.offsetHeight;
-                    const x2 = c.offsetLeft + (c.offsetWidth / 2);
-                    const y2 = c.offsetTop;
+                    const pRect = p.getBoundingClientRect();
+                    const cRect = c.getBoundingClientRect();
+
+                    const x1 = pRect.left + (pRect.width / 2);
+                    const y1 = pRect.bottom;
+                    const x2 = cRect.left + (cRect.width / 2);
+                    const y2 = cRect.top;
+
+                    // If coordinates are off-screen, skip drawing to save performance
+                    if (y1 < 0 || y2 > window.innerHeight) return;
 
                     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
                     path.setAttribute("d", `M ${x1} ${y1} L ${x1} ${y1+20} L ${x2} ${y1+20} L ${x2} ${y2-10}`);
@@ -233,48 +221,4 @@
         function animateDot(path, svg) {
             const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             dot.setAttribute("r", "3.5"); dot.classList.add("pulse-dot");
-            svg.appendChild(dot);
-            let pos = 0;
-            function run() {
-                pos = (pos + 0.0035) % 1;
-                const pt = path.getPointAtLength(pos * path.getTotalLength());
-                dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y);
-                requestAnimationFrame(run);
-            }
-            run();
-        }
-
-        function toggleObtained(id) {
-            if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(i => i !== id);
-            else ownedAircraft.push(id);
-            localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
-            location.reload();
-        }
-
-        function updateHUD() {
-            document.getElementById('count-num').innerText = ownedAircraft.length;
-            document.getElementById('total-num').innerText = totalCount;
-            const percent = Math.round((ownedAircraft.length / totalCount) * 100) || 0;
-            document.getElementById('hud-progress-fill').style.width = percent + "%";
-        }
-
-        function exportData() {
-            const blob = new Blob([JSON.stringify(ownedAircraft)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_USA.json"; a.click();
-        }
-
-        function importData(e) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                ownedAircraft = JSON.parse(event.target.result);
-                localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
-                location.reload();
-            };
-            reader.readAsText(e.target.files[0]);
-        }
-
-        window.onload = initiateSystem;
-    </script>
-</body>
-</html>
+            svg.appendChild(
