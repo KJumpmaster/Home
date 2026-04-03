@@ -1,0 +1,41 @@
+{
+    "os2u_group": [
+        "OS2U GROUP",
+        "SB2U GROUP",
+        "TBF GROUP",
+        "P-51 A-36",
+        "A-20G",
+        "SB2C GROUP",
+        "PBJ GROUP",
+        "P-61C 1",
+        "A-26B GROUP",
+        "DOUGLAS AD GROUP",
+        "F3D 1",
+        "F-84F",
+        "A 4B GROUP",
+        "AV 8C",
+        "A 10A LATE",
+        "A 7 GROUP",
+        "A 10C",
+        "AV 8B PLUS"
+    ],
+    "tbd_group": [
+        "TBD GROUP",
+        "PBY GROUP",
+        "PBM 1",
+        "B 34",
+        "B 25J 1",
+        "B 25J 20",
+        "B 26B C",
+        "B-17 GROUP",
+        "PB4Y-2",
+        "B-17 LATE GROUP",
+        "B-29",
+        "B 57 GROUP",
+        "B 66B",
+        "F-105D",
+        "F 111A",
+        "F 111F",
+        "F 15E"
+    ]
+}
