@@ -1,20 +1,85 @@
-async function initiateSystem() {
+<script>
+        const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
+        const JSON_URL = "https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json";
+        
+        // Progress Tracking Data
+        let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
+        let totalCount = 0;
+
+        async function initiateSystem() {
             const bar = document.getElementById('comms-bar-fill');
             const status = document.getElementById('comms-status');
             const theater = document.getElementById('research-theater');
             const canvas = document.getElementById('arrow-canvas');
 
             try {
-                bar.style.width = "30%"; status.innerText = "Syncing Datastreams...";
+                // PHASE 1: CONNECTING
+                bar.style.width = "30%"; 
+                status.innerText = "Syncing Datastreams...";
+                
                 const treeRes = await fetch(JSON_URL);
                 if (!treeRes.ok) throw new Error("Link Severed (JSON Not Found)");
-                
                 const treeData = await treeRes.json();
                 
-                bar.style.width = "60%"; status.innerText = "Mapping Tactical Ranks...";
+                // PHASE 2: MAPPING RANKS
+                bar.style.width = "60%"; 
+                status.innerText = "Mapping Tactical Ranks...";
                 
-                // ... (Keep the rest of your Rank and Card logic here) ...
+                const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
+                ranks.forEach((label, i) => {
+                    const rowStart = (i + 1) * 8 + 1;
+                    const marker = document.createElement('div');
+                    marker.className = 'rank-marker';
+                    marker.style.gridRow = `${rowStart} / span 5`;
+                    const parts = label.split(" ");
+                    marker.innerHTML = parts[0].split("").join("<br>") + "<br><br>" + parts[1];
+                    theater.appendChild(marker);
+                });
 
+                // PHASE 3: DEPLOYING AIRFRAMES
+                bar.style.width = "85%"; 
+                status.innerText = "Deploying Airframes...";
+
+                treeData.cells.forEach(cell => {
+                    totalCount++;
+                    const card = document.createElement('div');
+                    card.className = 'v-card';
+                    card.id = `cell-${cell.cell_key}`;
+                    
+                    // Obtained Filter
+                    if (ownedAircraft.includes(cell.cell_key)) card.classList.add('obtained');
+                    
+                    // Classification Colors
+                    const col = parseInt(cell.column);
+                    if (col >= 5) card.classList.add('premium');
+                    if (cell.kind === 'squadron') card.classList.add('squadron');
+
+                    // Grid Position (+1 offset for Header Ribbons)
+                    card.style.gridColumn = col + 2;
+                    card.style.gridRow = (parseInt(cell.rank) * 8) + (parseInt(cell.row_in_rank || 1)) + 1;
+
+                    // Tactical Names (Forced Uppercase)
+                    card.innerHTML = `
+                        <img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';">
+                        <div class="v-name">${cell.display_name.toUpperCase().replace(/_/g, ' ')}</div>
+                    `;
+                    
+                    card.onclick = () => toggleObtained(cell.cell_key);
+                    theater.appendChild(card);
+                });
+
+                // PHASE 4: DRAWING ARROWS
+                if (treeData.arrows) {
+                    setTimeout(() => {
+                        treeData.arrows.forEach(link => {
+                            const achieved = ownedAircraft.includes(link.from) && ownedAircraft.includes(link.to);
+                            const potential = ownedAircraft.includes(link.from) && !ownedAircraft.includes(link.to);
+                            drawArrow(link.from, link.to, canvas, achieved, potential);
+                        });
+                    }, 600);
+                }
+
+                updateHUD();
                 bar.style.width = "100%";
                 status.innerText = "Link Established.";
 
@@ -23,9 +88,73 @@ async function initiateSystem() {
                 status.innerText = "CRITICAL ERROR: CHECK CONSOLE";
                 status.style.color = "red";
             } finally {
-                // EMERGENCY BYPASS: Always hide overlay after 2 seconds regardless of error
+                // EMERGENCY BYPASS: Overlay hides after 2s even if JSON fails
                 setTimeout(() => {
                     document.getElementById('loading-overlay').style.display = 'none';
                 }, 2000);
             }
         }
+
+        // --- HELPER FUNCTIONS ---
+
+        function toggleObtained(id) {
+            if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(i => i !== id);
+            else ownedAircraft.push(id);
+            localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
+            location.reload();
+        }
+
+        function updateHUD() {
+            const count = ownedAircraft.length;
+            const percent = Math.round((count / totalCount) * 100) || 0;
+            document.getElementById('count-num').innerText = count;
+            document.getElementById('total-num').innerText = totalCount;
+            document.getElementById('percent-num').innerText = percent;
+            document.getElementById('hud-progress-fill').style.width = percent + "%";
+        }
+
+        function drawArrow(pID, cID, svg, achieved, potential) {
+            const p = document.getElementById(`cell-${pID}`);
+            const c = document.getElementById(`cell-${cID}`);
+            if (!p || !c) return;
+            const pRect = p.getBoundingClientRect(); 
+            const cRect = c.getBoundingClientRect();
+            const canvasRect = svg.getBoundingClientRect();
+            const x1 = pRect.left + pRect.width / 2 - canvasRect.left;
+            const y1 = pRect.bottom - canvasRect.top;
+            const x2 = cRect.left + cRect.width / 2 - canvasRect.left;
+            const y2 = cRect.top - canvasRect.top;
+            
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1); line.setAttribute("y1", y1); 
+            line.setAttribute("x2", x2); line.setAttribute("y2", y2 - 5);
+            line.classList.add("research-line");
+            
+            if (achieved) line.classList.add("line-solid");
+            else if (potential) line.classList.add("line-dashed");
+            else line.style.opacity = "0.1";
+            
+            line.setAttribute("marker-end", "url(#arrowhead)");
+            svg.appendChild(line);
+        }
+
+        // DATA DISK EXPORT/IMPORT
+        function exportData() {
+            const blob = new Blob([JSON.stringify(ownedAircraft)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_USA_PROGRESS.json";
+            a.click();
+        }
+
+        function importData(e) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                ownedAircraft = JSON.parse(event.target.result);
+                localStorage.setItem('skyPilotProgress', JSON.stringify(ownedAircraft));
+                location.reload();
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+
+        window.onload = initiateSystem;
+    </script>
