@@ -1,8 +1,151 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SKY PILOT - USA STRATEGIC COMMAND</title>
+    <style>
+        /* 1. UI BASE: METAL BACKGROUND */
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            background: #0a0a0a url('https://raw.githubusercontent.com/KJumpmaster/Home/main/metal_background.png') no-repeat center center fixed !important;
+            background-size: cover !important;
+            color: white; font-family: 'Segoe UI', Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 2. COMMS LINK LOADING OVERLAY */
+        #loading-overlay {
+            position: fixed; inset: 0; background: #000; z-index: 10000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        #comms-pic { width: 350px; height: auto; margin-bottom: 20px; border: 1px solid #00ff00; }
+        #comms-bar-container { width: 300px; height: 10px; background: #111; border: 1px solid #444; }
+        #comms-bar-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 0.3s; }
+        #comms-status { margin-top: 15px; font-family: monospace; color: #00ff00; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* 3. TACTICAL HUD */
+        #tactical-hud {
+            position: sticky; top: 0; width: 100%; background: rgba(0, 20, 0, 0.95);
+            border-bottom: 2px solid #00ff00; padding: 10px 30px; z-index: 5000;
+            display: flex; align-items: center; justify-content: space-between; box-sizing: border-box;
+        }
+        .hud-stats { font-family: monospace; color: #00ff00; font-size: 18px; font-weight: bold; }
+        #hud-progress-bg { width: 250px; height: 12px; background: #111; border: 1px solid #00ff00; margin: 0 20px; overflow: hidden; }
+        #hud-progress-fill { width: 0%; height: 100%; background: #00ff00; box-shadow: 0 0 10px #00ff00; transition: width 0.5s; }
+        .hud-btns button {
+            background: #000; border: 1px solid #00ff00; color: #00ff00; padding: 6px 15px; 
+            cursor: pointer; font-family: monospace; text-transform: uppercase; margin-left: 10px;
+        }
+        .hud-btns button:hover { background: #00ff00; color: #000; }
+
+        /* 4. STRATEGIC HEADER */
+        #strategic-header {
+            width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px 0;
+            background: rgba(0, 0, 0, 0.8); border-bottom: 2px solid #00ff00;
+        }
+        #banner-container { 
+            width: 75%; height: 180px; overflow: hidden; border: 1px solid #444; 
+            position: relative; background: #000;
+        }
+        #banner-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7); }
+        #main-title {
+            font-size: 32px; font-weight: bold; color: #00ff00; letter-spacing: 10px;
+            text-shadow: 0 0 15px #00ff00; text-transform: uppercase; margin-top: 15px;
+        }
+
+        /* 5. RESEARCH GRID */
+        #research-wrapper { display: flex; justify-content: flex-start; padding: 40px 0 150px 15px; position: relative; }
+        #arrow-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        
+        #research-theater {
+            display: grid;
+            grid-template-columns: 80px repeat(5, 210px) repeat(2, 210px); 
+            grid-auto-rows: min-content; grid-gap: 25px 15px;
+            position: relative; z-index: 10;
+        }
+
+        .col-header {
+            height: 30px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 3px; font-size: 12px;
+            margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.2); grid-row: 1;
+        }
+        .header-research { grid-column: 2 / span 5; background: rgba(0, 255, 0, 0.2); color: #8cff8c; border-color: #00ff00; }
+        .header-premium { grid-column: 7 / span 2; background: rgba(184, 134, 11, 0.3); color: #d4af37; border-color: #b8860b; }
+
+        .rank-marker {
+            grid-column: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-weight: 900; color: #00ff00; font-size: 22px; opacity: 0.3; 
+            text-transform: uppercase; pointer-events: none; line-height: 1.1;
+        }
+
+        .v-card {
+            width: 200px; height: 130px; background: rgba(5, 5, 5, 0.95); border: 2px solid #444;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; position: relative; transition: all 0.2s; filter: grayscale(1); opacity: 0.5;
+        }
+        .v-card.obtained { filter: grayscale(0); opacity: 1; border-color: #00ff00; box-shadow: 0 0 15px rgba(0,255,0,0.4); }
+        .v-card.premium { border-color: #b8860b; }
+        .v-card.premium .v-name { background: rgba(184, 134, 11, 0.5) !important; }
+        
+        .v-img { width: 92%; height: 68%; object-fit: contain; pointer-events: none; }
+        .v-name { 
+            font-size: 11px; padding: 5px; text-align: center; font-weight: bold; width: 100%; 
+            box-sizing: border-box; background: rgba(0,255,0,0.15); text-transform: uppercase;
+        }
+
+        .research-line { stroke: yellow; stroke-width: 3; fill: none; transition: 0.3s; }
+        .line-solid { stroke: #00ff00; stroke-width: 4; filter: drop-shadow(0 0 5px #00ff00); }
+        .line-dashed { stroke: yellow; stroke-width: 2; stroke-dasharray: 6,4; opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <img src="https://raw.githubusercontent.com/KJumpmaster/Home/main/Comms_Pic.png" id="comms-pic">
+        <div id="comms-bar-container"><div id="comms-bar-fill"></div></div>
+        <div id="comms-status">Establishing Command Link...</div>
+    </div>
+
+    <div id="tactical-hud">
+        <div class="hud-stats">
+            OBTAINED: <span id="count-num">0</span> / <span id="total-num">0</span> 
+            (<span id="percent-num">0</span>%)
+        </div>
+        <div id="hud-progress-bg"><div id="hud-progress-fill"></div></div>
+        <div class="hud-btns">
+            <button onclick="exportData()">Export Data Disk</button>
+            <button onclick="document.getElementById('import-input').click()">Import Data Disk</button>
+            <input type="file" id="import-input" style="display:none" onchange="importData(event)">
+        </div>
+    </div>
+
+    <header id="strategic-header">
+        <div id="banner-container">
+            <video id="banner-video" autoplay loop muted playsinline>
+                <source src="https://raw.githubusercontent.com/KJumpmaster/Home/main/USA Banner.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div id="main-title">USA AIR GROUP STRATEGIC COMMAND</div>
+    </header>
+
+    <div id="research-wrapper">
+        <svg id="arrow-canvas">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="yellow" />
+                </marker>
+            </defs>
+        </svg>
+        <div id="research-theater">
+            <div class="col-header header-research">Researchable Airframes</div>
+            <div class="col-header header-premium">Premium Vehicles</div>
+        </div>
+    </div>
+
+    <script>
         const PIC_BASE = "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
         const JSON_URL = "https://raw.githubusercontent.com/KJumpmaster/Home/main/usa_tree_pass2_with_arrows.json";
         
-        // Progress Tracking Data
         let ownedAircraft = JSON.parse(localStorage.getItem('skyPilotProgress')) || [];
         let totalCount = 0;
 
@@ -13,17 +156,12 @@
             const canvas = document.getElementById('arrow-canvas');
 
             try {
-                // PHASE 1: CONNECTING
-                bar.style.width = "30%"; 
-                status.innerText = "Syncing Datastreams...";
-                
+                bar.style.width = "30%"; status.innerText = "Syncing Datastreams...";
                 const treeRes = await fetch(JSON_URL);
-                if (!treeRes.ok) throw new Error("Link Severed (JSON Not Found)");
+                if (!treeRes.ok) throw new Error("Link Failed");
                 const treeData = await treeRes.json();
                 
-                // PHASE 2: MAPPING RANKS
-                bar.style.width = "60%"; 
-                status.innerText = "Mapping Tactical Ranks...";
+                bar.style.width = "60%"; status.innerText = "Mapping Tactical Ranks...";
                 
                 const ranks = ["Rank I", "Rank II", "Rank III", "Rank IV", "Rank V", "Rank VI", "Rank VII", "Rank VIII", "Rank IX"];
                 ranks.forEach((label, i) => {
@@ -32,33 +170,26 @@
                     marker.className = 'rank-marker';
                     marker.style.gridRow = `${rowStart} / span 5`;
                     const parts = label.split(" ");
-                    marker.innerHTML = parts[0].split("").join("<br>") + "<br><br>" + parts[1];
+                    marker.innerHTML = parts[0].split("").join("<br>") + "<br><br>" + (parts[1] || "");
                     theater.appendChild(marker);
                 });
 
-                // PHASE 3: DEPLOYING AIRFRAMES
-                bar.style.width = "85%"; 
-                status.innerText = "Deploying Airframes...";
+                bar.style.width = "85%"; status.innerText = "Deploying Airframes...";
 
                 treeData.cells.forEach(cell => {
                     totalCount++;
                     const card = document.createElement('div');
                     card.className = 'v-card';
                     card.id = `cell-${cell.cell_key}`;
-                    
-                    // Obtained Filter
                     if (ownedAircraft.includes(cell.cell_key)) card.classList.add('obtained');
                     
-                    // Classification Colors
                     const col = parseInt(cell.column);
                     if (col >= 5) card.classList.add('premium');
                     if (cell.kind === 'squadron') card.classList.add('squadron');
 
-                    // Grid Position (+1 offset for Header Ribbons)
                     card.style.gridColumn = col + 2;
                     card.style.gridRow = (parseInt(cell.rank) * 8) + (parseInt(cell.row_in_rank || 1)) + 1;
 
-                    // Tactical Names (Forced Uppercase)
                     card.innerHTML = `
                         <img src="${PIC_BASE}${cell.cell_key}.png" class="v-img" onerror="this.src='https://placehold.co/200x130/1a1a1a/00ff00?text=SCANNING...';">
                         <div class="v-name">${cell.display_name.toUpperCase().replace(/_/g, ' ')}</div>
@@ -68,7 +199,8 @@
                     theater.appendChild(card);
                 });
 
-                // PHASE 4: DRAWING ARROWS
+                updateHUD();
+
                 if (treeData.arrows) {
                     setTimeout(() => {
                         treeData.arrows.forEach(link => {
@@ -79,23 +211,15 @@
                     }, 600);
                 }
 
-                updateHUD();
-                bar.style.width = "100%";
-                status.innerText = "Link Established.";
+                bar.style.width = "100%"; status.innerText = "Link Established.";
 
             } catch (err) { 
-                console.error("COMMS FAILURE:", err);
-                status.innerText = "CRITICAL ERROR: CHECK CONSOLE";
-                status.style.color = "red";
+                console.error("FAILURE:", err); 
+                status.innerText = "CRITICAL ERROR: " + err.message;
             } finally {
-                // EMERGENCY BYPASS: Overlay hides after 2s even if JSON fails
-                setTimeout(() => {
-                    document.getElementById('loading-overlay').style.display = 'none';
-                }, 2000);
+                setTimeout(() => { document.getElementById('loading-overlay').style.display = 'none'; }, 2000);
             }
         }
-
-        // --- HELPER FUNCTIONS ---
 
         function toggleObtained(id) {
             if (ownedAircraft.includes(id)) ownedAircraft = ownedAircraft.filter(i => i !== id);
@@ -117,32 +241,26 @@
             const p = document.getElementById(`cell-${pID}`);
             const c = document.getElementById(`cell-${cID}`);
             if (!p || !c) return;
-            const pRect = p.getBoundingClientRect(); 
-            const cRect = c.getBoundingClientRect();
+            const pRect = p.getBoundingClientRect(); const cRect = c.getBoundingClientRect();
             const canvasRect = svg.getBoundingClientRect();
             const x1 = pRect.left + pRect.width / 2 - canvasRect.left;
             const y1 = pRect.bottom - canvasRect.top;
             const x2 = cRect.left + cRect.width / 2 - canvasRect.left;
             const y2 = cRect.top - canvasRect.top;
-            
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", x1); line.setAttribute("y1", y1); 
-            line.setAttribute("x2", x2); line.setAttribute("y2", y2 - 5);
+            line.setAttribute("x1", x1); line.setAttribute("y1", y1); line.setAttribute("x2", x2); line.setAttribute("y2", y2 - 5);
             line.classList.add("research-line");
-            
             if (achieved) line.classList.add("line-solid");
             else if (potential) line.classList.add("line-dashed");
             else line.style.opacity = "0.1";
-            
             line.setAttribute("marker-end", "url(#arrowhead)");
             svg.appendChild(line);
         }
 
-        // DATA DISK EXPORT/IMPORT
         function exportData() {
             const blob = new Blob([JSON.stringify(ownedAircraft)], {type: "application/json"});
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_USA_PROGRESS.json";
+            const a = document.createElement('a'); a.href = url; a.download = "SKY_PILOT_PROGRESS.json";
             a.click();
         }
 
@@ -158,3 +276,5 @@
 
         window.onload = initiateSystem;
     </script>
+</body>
+</html>
