@@ -3,618 +3,662 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sky Pilot — Research Tree</title>
+  <title>Sky Pilot Research Tree</title>
   <style>
-    :root{
-      --bg-0:#06101c;
-      --bg-1:#0a1524;
-      --bg-2:#0e1b2d;
-      --text:#eef5ff;
-      --muted:#9cb0cf;
-      --line:rgba(120,170,255,0.18);
-      --rank-band:rgba(255,255,255,0.02);
-      --rank-band-alt:rgba(110,170,255,0.045);
-      --tile-border:rgba(255,255,255,0.08);
-      --tile-shadow:rgba(0,0,0,0.34);
-      --unit-top-1:#284a78;
-      --unit-top-2:#1f3758;
-      --group-top-1:#456a9f;
-      --group-top-2:#28476f;
-      --side1-top-1:#6a4d9c;
-      --side1-top-2:#3d2c5f;
-      --side2-top-1:#3f6c86;
-      --side2-top-2:#234355;
+    :root {
+      --bg: #0b1118;
+      --bg-2: #101823;
+      --panel: rgba(19, 27, 38, 0.92);
+      --panel-2: rgba(29, 40, 56, 0.94);
+      --line: rgba(130, 170, 220, 0.18);
+      --line-strong: rgba(130, 170, 220, 0.35);
+      --text: #e7eef7;
+      --muted: #91a2b6;
+      --accent: #7fb3ff;
+      --premium: #d4aa40;
+      --premium-bg-1: rgba(61, 50, 22, 0.98);
+      --premium-bg-2: rgba(29, 24, 14, 0.98);
+      --squadron: #58b261;
+      --squadron-bg-1: rgba(25, 52, 28, 0.98);
+      --squadron-bg-2: rgba(15, 28, 17, 0.98);
+      --danger: #ff7272;
+
+      --sidebar-w: 360px;
+      --rank-header-h: 44px;
+      --rank-gap: 26px;
+      --rank-inner-top: 18px;
+      --rank-inner-bottom: 18px;
+      --cell-w: 170px;
+      --cell-h: 108px;
+      --cell-gap-x: 18px;
+      --cell-gap-y: 14px;
+      --tree-pad: 28px;
+      --img-h: 62px;
+      --radius: 14px;
+      --shadow-soft: 0 10px 30px rgba(0,0,0,0.28);
     }
 
     * { box-sizing: border-box; }
-
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
-      color: var(--text);
-      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
       background:
-        radial-gradient(circle at 12% 10%, rgba(85,130,220,0.12), transparent 24%),
-        radial-gradient(circle at 85% 12%, rgba(90,160,220,0.08), transparent 24%),
-        linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 45%, #08111d 100%);
+        radial-gradient(circle at top, rgba(44, 69, 102, 0.18), transparent 30%),
+        linear-gradient(180deg, #0b1118 0%, #0a0f15 100%);
+      color: var(--text);
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      overflow: hidden;
     }
 
-    #app {
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
+    .app {
+      display: grid;
+      grid-template-columns: 1fr var(--sidebar-w);
+      width: 100%;
+      height: 100%;
     }
 
-    .topbar {
-      flex: 0 0 auto;
-      height: 40px;
+    .main {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .toolbar {
+      height: 54px;
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 0 14px;
-      background: linear-gradient(180deg, rgba(8,14,25,0.96), rgba(8,14,25,0.88));
+      justify-content: space-between;
+      padding: 0 16px;
+      background: rgba(9, 14, 21, 0.88);
       border-bottom: 1px solid rgba(255,255,255,0.05);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.25);
-      z-index: 50;
+      backdrop-filter: blur(12px);
     }
 
-    .title {
-      font-size: 18px;
-      font-weight: 800;
-      color: #f4f8ff;
-      white-space: nowrap;
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .status {
+    .title-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(99, 154, 226, 0.5), rgba(60, 107, 176, 0.2));
+      border: 1px solid rgba(143, 190, 255, 0.26);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+
+    .title-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .title-text strong {
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .title-text span {
       font-size: 12px;
       color: var(--muted);
-      white-space: nowrap;
     }
 
-    .toolbar-spacer { flex: 1 1 auto; }
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-    button {
-      appearance: none;
-      border: 1px solid rgba(255,255,255,0.08);
-      color: var(--text);
-      background: linear-gradient(180deg, rgba(32,49,76,0.95), rgba(18,28,45,0.95));
-      border-radius: 9px;
-      padding: 7px 11px;
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 6px 10px;
       font-size: 12px;
-      cursor: pointer;
+      color: var(--muted);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
     }
 
-    #viewport {
-      position: relative;
-      flex: 1 1 auto;
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .legend-dot.standard { background: rgba(127, 179, 255, 0.9); }
+    .legend-dot.premium { background: rgba(212, 170, 64, 0.95); }
+    .legend-dot.squadron { background: rgba(88, 178, 97, 0.95); }
+
+    .tree-scroll {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 54px;
+      bottom: 0;
       overflow: auto;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0)),
-        radial-gradient(circle at 50% 0%, rgba(65,120,200,0.08), transparent 40%);
+      padding: 18px;
     }
 
-    #treeRoot {
+    .tree-shell {
       position: relative;
-      min-width: 1200px;
-      min-height: 900px;
+      min-width: max-content;
+      min-height: 100%;
+      padding: var(--tree-pad);
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, rgba(18, 26, 37, 0.92), rgba(10, 15, 22, 0.96));
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(255,255,255,0.05);
+      overflow: hidden;
+    }
+
+    .tree-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+      mask-image: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.2));
+    }
+
+    .rank-layer,
+    .edge-layer,
+    .node-layer {
+      position: absolute;
+      inset: 0;
     }
 
     .rank-band {
       position: absolute;
       left: 0;
       right: 0;
-      border-top: 1px solid rgba(255,255,255,0.05);
-      border-bottom: 1px solid rgba(255,255,255,0.035);
-      background: linear-gradient(180deg, var(--rank-band), rgba(255,255,255,0.008));
-      pointer-events: none;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(24, 34, 48, 0.55), rgba(13, 20, 29, 0.42));
+      border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
 
-    .rank-band.alt {
-      background: linear-gradient(180deg, var(--rank-band-alt), rgba(255,255,255,0.008));
+    .rank-band::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: var(--rank-header-h);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(146, 176, 215, 0.26), transparent);
     }
 
     .rank-label {
       position: absolute;
-      left: 12px;
-      width: 72px;
-      height: 34px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 11px;
-      font-weight: 800;
-      font-size: 12px;
-      letter-spacing: 1.1px;
-      color: #eef5ff;
-      background: linear-gradient(180deg, rgba(36,55,85,0.95), rgba(17,27,43,0.96));
-      border: 1px solid rgba(255,255,255,0.08);
-      box-shadow:
-        0 10px 20px rgba(0,0,0,0.24),
-        inset 0 1px 0 rgba(255,255,255,0.05);
-      pointer-events: none;
-      z-index: 3;
-    }
-
-    .column-guide {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 220px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .column-guide::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 1px;
-      background: rgba(255,255,255,0.03);
-    }
-
-    .column-guide.side {
-      background: linear-gradient(180deg, rgba(160,180,255,0.03), rgba(130,160,220,0.015));
-    }
-
-    .column-label {
-      position: absolute;
-      top: 4px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 11px;
-      letter-spacing: 1px;
-      color: rgba(235,242,255,0.45);
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .side-divider {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.10), rgba(255,255,255,0.02));
+      left: 16px;
+      top: 10px;
       z-index: 1;
-      pointer-events: none;
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #c6d4e5;
+      font-weight: 700;
     }
 
-    #edgeLayer {
+    .edge-layer svg {
       position: absolute;
       inset: 0;
-      z-index: 1;
-      pointer-events: none;
       overflow: visible;
     }
 
-    .edge-base {
+    .edge-path {
       fill: none;
-      stroke: var(--line);
-      stroke-width: 2.2;
-      stroke-linejoin: round;
+      stroke: rgba(132, 177, 235, 0.24);
+      stroke-width: 2.5;
       stroke-linecap: round;
-    }
-
-    #nodeLayer {
-      position: absolute;
-      inset: 0;
-      z-index: 4;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 6px rgba(93, 144, 221, 0.08));
     }
 
     .cell-wrap {
       position: absolute;
-      width: 176px;
-      height: 124px;
+      width: var(--cell-w);
+      height: var(--cell-h);
+      z-index: 3;
     }
 
-    .cell-wrap.grouped .cell-shadow-1,
-    .cell-wrap.grouped .cell-shadow-2 {
-      position: absolute;
-      inset: 0;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.05);
-      pointer-events: none;
-    }
-
+    .cell-wrap.grouped .cell-shadow-2,
     .cell-wrap.grouped .cell-shadow-1 {
-      transform: translate(7px, -6px);
-      opacity: 0.35;
-      background: linear-gradient(180deg, rgba(88,127,182,0.22), rgba(29,52,84,0.16));
-      z-index: 0;
-    }
-
-    .cell-wrap.grouped .cell-shadow-2 {
-      transform: translate(13px, -11px);
-      opacity: 0.18;
-      background: linear-gradient(180deg, rgba(88,127,182,0.18), rgba(29,52,84,0.12));
-      z-index: -1;
-    }
-
-    .cell {
       position: absolute;
       inset: 0;
-      border-radius: 16px;
+      border-radius: var(--radius);
+      background: rgba(35, 47, 64, 0.60);
+      border: 1px solid rgba(144, 176, 216, 0.18);
+      pointer-events: none;
+    }
+
+    .cell-wrap.grouped .cell-shadow-2 { transform: translate(9px, 9px); opacity: 0.32; }
+    .cell-wrap.grouped .cell-shadow-1 { transform: translate(4px, 4px); opacity: 0.50; }
+
+    .cell-wrap.premium .cell-shadow-1,
+    .cell-wrap.premium .cell-shadow-2 {
+      background: rgba(70, 58, 28, 0.55);
+      border-color: rgba(212, 170, 64, 0.28);
+    }
+
+    .cell-wrap.squadron .cell-shadow-1,
+    .cell-wrap.squadron .cell-shadow-2 {
+      background: rgba(31, 58, 34, 0.55);
+      border-color: rgba(88, 178, 97, 0.26);
+    }
+
+    .tree-cell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: var(--radius);
       overflow: hidden;
-      background: linear-gradient(180deg, rgba(24,38,61,0.96), rgba(13,22,36,0.98));
-      border: 1px solid var(--tile-border);
+      background: linear-gradient(180deg, rgba(36, 44, 57, 0.96), rgba(19, 24, 32, 0.98));
+      border: 1px solid rgba(130, 145, 170, 0.22);
       box-shadow:
-        0 16px 28px var(--tile-shadow),
-        inset 0 1px 0 rgba(255,255,255,0.045);
-      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+        0 8px 22px rgba(0,0,0,0.30),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      cursor: pointer;
+      transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
     }
 
-    .cell:hover {
+    .tree-cell:hover {
       transform: translateY(-2px);
-      border-color: rgba(255,255,255,0.16);
+      border-color: rgba(150, 191, 255, 0.38);
       box-shadow:
-        0 18px 34px rgba(0,0,0,0.40),
-        0 0 0 1px rgba(120,180,255,0.12),
-        inset 0 1px 0 rgba(255,255,255,0.05);
+        0 10px 26px rgba(0,0,0,0.34),
+        0 0 18px rgba(99, 154, 226, 0.12),
+        inset 0 1px 0 rgba(255,255,255,0.06);
     }
 
-    .cell-top-accent {
-      position: absolute;
-      left: 0;
-      top: 0;
-      right: 0;
-      height: 22px;
-      background: linear-gradient(90deg, var(--accent1), var(--accent2));
-      opacity: 0.96;
+    .tree-cell.selected {
+      border-color: rgba(162, 204, 255, 0.62);
+      box-shadow:
+        0 12px 28px rgba(0,0,0,0.36),
+        0 0 22px rgba(127, 179, 255, 0.18),
+        inset 0 1px 0 rgba(255,255,255,0.08);
     }
 
-    .cell-top-gloss {
+    .tree-cell.premium {
+      border-color: rgba(212, 170, 64, 0.72);
+      background: linear-gradient(180deg, var(--premium-bg-1), var(--premium-bg-2));
+      box-shadow:
+        0 8px 22px rgba(0,0,0,0.30),
+        0 0 0 1px rgba(212, 170, 64, 0.16),
+        0 0 18px rgba(212, 170, 64, 0.14),
+        inset 0 1px 0 rgba(255, 236, 178, 0.10);
+    }
+
+    .tree-cell.premium::before,
+    .tree-cell.squadron::before {
+      content: "";
       position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      height: 42px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
+      inset: 0;
       pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 40%);
     }
 
-    .cell-inner-frame {
-      position: absolute;
-      inset: 6px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.045);
-      pointer-events: none;
+    .tree-cell.squadron {
+      border-color: rgba(88, 178, 97, 0.72);
+      background: linear-gradient(180deg, var(--squadron-bg-1), var(--squadron-bg-2));
+      box-shadow:
+        0 8px 22px rgba(0,0,0,0.30),
+        0 0 0 1px rgba(88, 178, 97, 0.16),
+        0 0 18px rgba(88, 178, 97, 0.12),
+        inset 0 1px 0 rgba(197, 255, 201, 0.08);
     }
 
-    .cell-header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 24px;
+    .cell-top {
+      position: relative;
+      height: calc(var(--img-h) + 8px);
+      padding: 8px 10px 0 10px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0));
+    }
+
+    .cell-image-wrap {
+      position: relative;
+      height: var(--img-h);
+      border-radius: 10px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at center, rgba(145, 175, 220, 0.10), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 8px;
-      z-index: 3;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      color: rgba(242,247,255,0.92);
+      justify-content: center;
+    }
+
+    .cell-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.22));
+    }
+
+    .cell-fallback {
+      font-size: 11px;
+      color: #8ea1b8;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    .cell-header-right {
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: rgba(5,10,18,0.22);
-      border: 1px solid rgba(255,255,255,0.12);
-    }
-
     .cell-body {
-      position: absolute;
-      left: 8px;
-      right: 8px;
-      top: 28px;
-      bottom: 30px;
-      border-radius: 12px;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 50% 35%, rgba(146,187,255,0.18), rgba(146,187,255,0.02) 55%, transparent 68%),
-        linear-gradient(180deg, rgba(17,28,45,0.96), rgba(12,20,33,0.98));
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .visual-subtle-grid {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
-      background-size: 14px 14px;
-      mask-image: linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.04));
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .image-wrap {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-    }
-
-    .unit-image {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      object-position: center 58%;
-      filter: drop-shadow(0 10px 12px rgba(0,0,0,0.35)) saturate(1.08) contrast(1.03);
-      opacity: 0.96;
-    }
-
-    .image-fade {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(8,13,22,0.12), rgba(8,13,22,0.02) 30%, rgba(8,13,22,0.36) 100%);
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .image-fallback {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px;
-      text-align: center;
-      color: rgba(232,239,251,0.86);
-      font-weight: 700;
-      font-size: 15px;
-      z-index: 1;
-    }
-
-    .group-stack {
-      position: absolute;
-      inset: 10px;
+      padding: 6px 10px 10px 10px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      justify-content: center;
-      z-index: 3;
+      gap: 4px;
     }
 
-    .group-mini {
-      height: 18px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      padding: 0 8px;
-      color: #e4edff;
-      font-size: 11px;
-      font-weight: 600;
-      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035));
-      border: 1px solid rgba(255,255,255,0.07);
+    .cell-title {
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 700;
+      color: #eef5ff;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
+      min-height: 28px;
     }
 
-    .group-hero {
-      position: absolute;
-      right: 4px;
-      bottom: 0;
-      width: 72%;
-      height: 90%;
-      object-fit: contain;
-      object-position: right bottom;
-      opacity: 0.28;
-      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.25));
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .cell-footer {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 30px;
+    .cell-meta {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 0 10px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.22));
-      border-top: 1px solid rgba(255,255,255,0.05);
-      z-index: 4;
-    }
-
-    .cell-name {
-      flex: 1 1 auto;
-      min-width: 0;
-      font-size: 12px;
-      font-weight: 800;
-      color: #f0f6ff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .cell-meta {
-      flex: 0 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--muted);
       font-size: 10px;
-      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    .count-badge {
-      min-width: 18px;
-      height: 18px;
-      padding: 0 6px;
-      border-radius: 999px;
+    .tag {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.08);
-      color: #edf4ff;
-      font-size: 10px;
-      font-weight: 800;
+      min-width: 0;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 3px 7px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.05);
+      white-space: nowrap;
     }
 
-    .error-box {
-      margin: 20px;
-      padding: 16px 18px;
+    .tag.premium {
+      color: #f0d48d;
+      border-color: rgba(212,170,64,0.25);
+      background: rgba(212,170,64,0.10);
+    }
+
+    .tag.squadron {
+      color: #97db9d;
+      border-color: rgba(88,178,97,0.22);
+      background: rgba(88,178,97,0.10);
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, rgba(12, 18, 27, 0.98), rgba(8, 12, 18, 1));
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .sidebar-head {
+      padding: 18px 18px 12px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .sidebar-head h2 {
+      margin: 0 0 6px 0;
+      font-size: 18px;
+    }
+
+    .sidebar-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .detail {
+      padding: 18px;
+      overflow: auto;
+      min-height: 0;
+    }
+
+    .detail-card {
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(22,31,44,0.92), rgba(12,18,26,0.98));
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .detail-hero {
+      padding: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+    }
+
+    .detail-img-wrap {
+      height: 160px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at center, rgba(145, 175, 220, 0.14), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .detail-img-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .detail-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .detail-title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .detail-title strong {
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .detail-title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat {
       border-radius: 12px;
-      background: rgba(72,20,20,0.65);
-      border: 1px solid rgba(255,120,120,0.20);
-      color: #ffd6d6;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .stat label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .stat div {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .empty-state {
+      color: var(--muted);
       font-size: 14px;
-      line-height: 1.5;
-      white-space: pre-wrap;
+      line-height: 1.55;
+      padding: 6px 2px;
+    }
+
+    .status {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      z-index: 20;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #d8e6f6;
+      background: rgba(12, 18, 27, 0.92);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: var(--shadow-soft);
+      max-width: 520px;
+      backdrop-filter: blur(10px);
+    }
+
+    .status.error { border-color: rgba(255,114,114,0.28); color: #ffd5d5; }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div class="topbar">
-      <div class="title">Sky Pilot — Research Tree</div>
-      <div id="status" class="status">Loading…</div>
-      <div class="toolbar-spacer"></div>
-      <button id="fitBtn" type="button">Fit to Top</button>
-      <button id="reloadBtn" type="button">Reload</button>
-    </div>
-
-    <div id="viewport">
-      <div id="treeRoot">
-        <svg id="edgeLayer"></svg>
-        <div id="nodeLayer"></div>
+  <div class="app">
+    <section class="main">
+      <div class="toolbar">
+        <div class="title-wrap">
+          <div class="title-badge"></div>
+          <div class="title-text">
+            <strong>Sky Pilot Research Tree</strong>
+            <span>Custom aircraft progression viewer</span>
+          </div>
+        </div>
+        <div class="toolbar-right">
+          <div class="pill"><span class="legend-dot standard"></span> Standard</div>
+          <div class="pill"><span class="legend-dot premium"></span> Premium</div>
+          <div class="pill"><span class="legend-dot squadron"></span> Squadron</div>
+        </div>
       </div>
-    </div>
+
+      <div class="tree-scroll" id="treeScroll">
+        <div class="tree-shell" id="treeShell">
+          <div class="rank-layer" id="rankLayer"></div>
+          <div class="edge-layer" id="edgeLayer"></div>
+          <div class="node-layer" id="nodeLayer"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <h2>Aircraft Details</h2>
+        <p>Select an aircraft card to inspect placement, type, image source, and core metadata.</p>
+      </div>
+      <div class="detail" id="detailPanel">
+        <div class="empty-state">
+          Pick a card in the tree. This panel is wired for a later richer details view, but already gives you a clean target for hover/selection expansion.
+        </div>
+      </div>
+    </aside>
   </div>
 
+  <div class="status" id="statusBox">Loading tree…</div>
+
   <script>
-    const DATA_CANDIDATES = [
-      "usa_tree_v4.json",
-      "tree_cells.json",
-      "usa_tree.json",
-      "tree.json"
-    ];
+    const TREE_JSON_URL = "japan_tree_cells.json";
+    const EDGES_JSON_URL = "japan_tree_edges.json";
+    const REGISTRY_CSV_URL = "SP_Registry_CANON_3_31.csv";
+    const PIC_BASE = "https://kjumpmaster.github.io/Aircraft-Pics/";
 
-    const REGISTRY_CSV_URL =
-      "https://raw.githubusercontent.com/KJumpmaster/Home/main/SP_Registry_CANON_3_31.csv";
+    const PREMIUM_COLUMNS = new Set([6, 7]);
 
-    const IMAGE_RAW_BASE =
-      "https://raw.githubusercontent.com/KJumpmaster/Aircraft-Pics/main/";
-
-    const LAYOUT = {
-      leftPad: 110,
-      topPad: 24,
-      rightPad: 32,
-      bottomPad: 40,
-      colWidth: 220,
-      cellWidth: 176,
-      cellHeight: 124,
-      rowGap: 18,
-      totalColumns: 7,
-      mainColumns: 5,
-      rankTopPadding: 52,
-      rankBottomPadding: 28,
-      minRankHeight: 312
-    };
-
-    let registryImageMap = new Map();
-
-    const statusEl = document.getElementById("status");
-    const viewportEl = document.getElementById("viewport");
-    const treeRootEl = document.getElementById("treeRoot");
+    const treeShellEl = document.getElementById("treeShell");
+    const rankLayerEl = document.getElementById("rankLayer");
     const edgeLayerEl = document.getElementById("edgeLayer");
     const nodeLayerEl = document.getElementById("nodeLayer");
-    const fitBtn = document.getElementById("fitBtn");
-    const reloadBtn = document.getElementById("reloadBtn");
+    const detailPanelEl = document.getElementById("detailPanel");
+    const statusBoxEl = document.getElementById("statusBox");
 
-    fitBtn.addEventListener("click", () => {
-      viewportEl.scrollTo({ left: 0, top: 0, behavior: "smooth" });
-    });
+    let selectedCellId = null;
+    let registryByMasterKey = new Map();
+    let registryByWtImage = new Map();
 
-    reloadBtn.addEventListener("click", () => location.reload());
-
-    init();
-
-    async function init() {
-      try {
-        setStatus("Loading registry…");
-        registryImageMap = await loadRegistryImageMap(REGISTRY_CSV_URL);
-
-        setStatus("Loading tree data…");
-        const payload = await loadFirstAvailableJson(DATA_CANDIDATES);
-        const normalized = normalizePayload(payload.data);
-
-        if (!normalized.cells.length) {
-          throw new Error("No cells found in JSON.");
-        }
-
-        renderTree(normalized, payload.name);
-      } catch (err) {
-        console.error(err);
-        showError("Could not load/render research tree.\n\n" + String(err.message || err));
-        setStatus("Load failed");
-      }
+    function setStatus(message, isError = false) {
+      statusBoxEl.textContent = message;
+      statusBoxEl.classList.toggle("error", !!isError);
     }
 
-    async function loadFirstAvailableJson(names) {
-      const errors = [];
-      for (const name of names) {
-        try {
-          const res = await fetch(name, { cache: "no-store" });
-          if (!res.ok) {
-            errors.push(`${name}: HTTP ${res.status}`);
-            continue;
-          }
-          const data = await res.json();
-          return { name, data };
-        } catch (err) {
-          errors.push(`${name}: ${err.message}`);
-        }
-      }
-      throw new Error("None of the candidate JSON files could be loaded.\n\n" + errors.join("\n"));
+    function normalizeKey(value) {
+      return String(value || "").trim();
     }
 
-    async function loadRegistryImageMap(url) {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`Registry CSV failed to load: HTTP ${res.status}`);
+    function normalizeType(value) {
+      return String(value || "").trim().toLowerCase();
+    }
 
-      const csvText = await res.text();
-      const rows = parseCSV(csvText);
-      const header = rows[0].map(v => String(v || "").trim());
+    function isPremium(cell) {
+      const t = normalizeType(cell.type);
+      return t.includes("premium");
+    }
 
-      const masterKeyIndex = header.findIndex(h => h === "master_key");
-      const wtImageIndex = header.findIndex(h => h === "wt_image");
-      if (masterKeyIndex === -1 || wtImageIndex === -1) {
-        throw new Error("Registry CSV is missing master_key and/or wt_image.");
-      }
+    function isSquadron(cell) {
+      const t = normalizeType(cell.type);
+      return t.includes("squadron");
+    }
 
-      const map = new Map();
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        const masterKey = String(row[masterKeyIndex] || "").trim();
-        const wtImage = String(row[wtImageIndex] || "").trim();
-        if (masterKey && wtImage) map.set(masterKey, ensureImageExtension(wtImage));
-      }
-      return map;
+    function isGroup(cell) {
+      return normalizeType(cell.type) === "group";
+    }
+
+    function isPremiumLike(cell) {
+      return isPremium(cell) || isSquadron(cell);
+    }
+
+    function isStandard(cell) {
+      return !isPremiumLike(cell);
+    }
+
+    function labelForType(cell) {
+      if (isPremium(cell)) return "Premium";
+      if (isSquadron(cell)) return "Squadron";
+      if (isGroup(cell)) return "Group";
+      return "Standard";
     }
 
     function parseCSV(text) {
       const rows = [];
       let row = [];
-      let cell = "";
+      let cur = "";
       let inQuotes = false;
 
       for (let i = 0; i < text.length; i++) {
@@ -623,221 +667,374 @@
 
         if (ch === '"') {
           if (inQuotes && next === '"') {
-            cell += '"';
+            cur += '"';
             i++;
           } else {
             inQuotes = !inQuotes;
           }
-          continue;
-        }
-
-        if (ch === "," && !inQuotes) {
-          row.push(cell);
-          cell = "";
-          continue;
-        }
-
-        if ((ch === "\n" || ch === "\r") && !inQuotes) {
+        } else if (ch === "," && !inQuotes) {
+          row.push(cur);
+          cur = "";
+        } else if ((ch === "\n" || ch === "\r") && !inQuotes) {
           if (ch === "\r" && next === "\n") i++;
-          row.push(cell);
-          rows.push(row);
+          row.push(cur);
+          cur = "";
+          if (row.some(v => String(v).length > 0)) rows.push(row);
           row = [];
-          cell = "";
-          continue;
+        } else {
+          cur += ch;
         }
-
-        cell += ch;
       }
 
-      if (cell.length || row.length) {
-        row.push(cell);
-        rows.push(row);
+      row.push(cur);
+      if (row.some(v => String(v).length > 0)) rows.push(row);
+      if (!rows.length) return [];
+
+      const headers = rows[0].map(h => String(h || "").trim());
+      return rows.slice(1).map(r => {
+        const obj = {};
+        headers.forEach((h, idx) => {
+          obj[h] = r[idx] ?? "";
+        });
+        return obj;
+      });
+    }
+
+    async function fetchJSON(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Failed to load ${url} (${res.status})`);
+      return res.json();
+    }
+
+    async function fetchText(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Failed to load ${url} (${res.status})`);
+      return res.text();
+    }
+
+    function buildRegistryMaps(rows) {
+      registryByMasterKey = new Map();
+      registryByWtImage = new Map();
+
+      for (const row of rows) {
+        const masterKey = normalizeKey(row.master_key);
+        const wtImage = normalizeKey(row.wt_image);
+        if (masterKey) registryByMasterKey.set(masterKey, row);
+        if (wtImage) registryByWtImage.set(wtImage, row);
       }
-
-      return rows;
     }
 
-    function normalizePayload(raw) {
-      const cells = extractCells(raw).map(normalizeCell);
-      const edges = extractEdges(raw).map(normalizeEdge).filter(Boolean);
-      return { cells, edges };
+    function getCellMasterKey(cell) {
+      return normalizeKey(
+        cell.master_key ||
+        cell.unit_id ||
+        cell.id ||
+        cell.aircraft_id ||
+        cell.key ||
+        ""
+      );
     }
 
-    function extractCells(raw) {
-      if (Array.isArray(raw)) return raw;
-      if (Array.isArray(raw.cells)) return raw.cells;
-      if (Array.isArray(raw.tree_cells)) return raw.tree_cells;
-      if (Array.isArray(raw.cell_data)) return raw.cell_data;
-      if (Array.isArray(raw.nodes)) return raw.nodes;
-      return [];
+    function getDisplayName(cell, registryRow) {
+      return (
+        cell.display_name ||
+        cell.wiki_name ||
+        cell.name ||
+        cell.title ||
+        registryRow?.wt_display_name_new ||
+        registryRow?.wt_name ||
+        registryRow?.rw_name ||
+        getCellMasterKey(cell) ||
+        "Unknown Aircraft"
+      );
     }
 
-    function extractEdges(raw) {
-      if (!raw || Array.isArray(raw)) return [];
-      if (Array.isArray(raw.edges)) return raw.edges;
-      if (Array.isArray(raw.connections)) return raw.connections;
-      if (Array.isArray(raw.links)) return raw.links;
-      if (Array.isArray(raw.progression_edges)) return raw.progression_edges;
-      return [];
+    function getRegistryRowForCell(cell) {
+      const masterKey = getCellMasterKey(cell);
+      if (masterKey && registryByMasterKey.has(masterKey)) {
+        return registryByMasterKey.get(masterKey);
+      }
+      return null;
     }
 
-    function normalizeCell(cell) {
-      const type = String(
-        cell.type ||
-        cell.cell_type ||
-        (Array.isArray(cell.units) && cell.units.length > 1 ? "group" : "unit")
-      ).toLowerCase();
+    function buildImageCandidates(cell, registryRow) {
+      const candidates = [];
+      const masterKey = getCellMasterKey(cell);
+      const wtImage = normalizeKey(registryRow?.wt_image);
+      const direct = normalizeKey(cell.wt_image || cell.image || cell.image_name);
+      const groupName = normalizeKey(cell.group_filename || cell.group_image || cell.cell_id);
 
-      const units = Array.isArray(cell.units) ? cell.units : [];
-      const unitIds = Array.isArray(cell.unit_ids)
-        ? cell.unit_ids
-        : units.map(u => u.id).filter(Boolean);
+      if (wtImage) candidates.push(`${PIC_BASE}${wtImage}.png`);
+      if (direct) candidates.push(`${PIC_BASE}${direct}.png`);
+      if (groupName) candidates.push(`${PIC_BASE}${groupName}.png`);
+      if (masterKey) candidates.push(`${PIC_BASE}${masterKey}.png`);
+      if (masterKey && !masterKey.endsWith("_group")) candidates.push(`${PIC_BASE}${masterKey}_group.png`);
 
-      return {
-        raw: cell,
-        cell_id: String(cell.cell_id || cell.id || cell.key || ""),
-        nation: String(cell.nation || "unknown"),
-        rank: num(cell.rank, 1),
-        column: num(cell.column || cell.col, 1),
-        row: num(cell.row, 1),
-        type,
-        display_name: String(cell.display_name || cell.name || cell.unit_name || cell.cell_id || "unknown"),
-        units,
-        unit_ids: unitIds
-      };
+      return [...new Set(candidates)];
     }
 
-    function normalizeEdge(edge) {
-      const fromId = edge.from_cell || edge.from || edge.source || edge.parent || edge.from_id;
-      const toId = edge.to_cell || edge.to || edge.target || edge.child || edge.to_id;
-      if (!fromId || !toId) return null;
-      return { from_cell: String(fromId), to_cell: String(toId) };
+    async function resolveImageURL(cell, registryRow) {
+      const candidates = buildImageCandidates(cell, registryRow);
+      for (const url of candidates) {
+        try {
+          const img = new Image();
+          const ok = await new Promise(resolve => {
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url;
+          });
+          if (ok) return url;
+        } catch (_) {}
+      }
+      return null;
     }
 
-    function num(v, fallback) {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : fallback;
+    function getMaxColumn(cells) {
+      return Math.max(...cells.map(c => Number(c.column) || 0), 7);
     }
 
-    function getRowCountsByRank(cells) {
+    function groupCellsByRank(cells) {
       const map = new Map();
-      for (const c of cells) {
-        map.set(c.rank, Math.max(map.get(c.rank) || 0, c.row));
+      for (const cell of cells) {
+        const rank = Number(cell.rank);
+        if (!map.has(rank)) map.set(rank, []);
+        map.get(rank).push(cell);
       }
       return map;
     }
 
-    function buildRankLayout(rowCountsByRank) {
-      const rankHeights = new Map();
-      const rankTops = new Map();
-      const ranks = [...rowCountsByRank.keys()].sort((a, b) => a - b);
+    function getRowCountsByRank(cells) {
+      const byRank = groupCellsByRank(cells);
+      const result = new Map();
+      for (const [rank, rankCells] of byRank.entries()) {
+        const maxRow = Math.max(...rankCells.map(c => Number(c.row) || 0), 1);
+        result.set(rank, maxRow);
+      }
+      return result;
+    }
 
-      let currentTop = LAYOUT.topPad;
+    function computeRankLayout(cells) {
+      const rowCountsByRank = getRowCountsByRank(cells);
+      const ranks = [...rowCountsByRank.keys()].sort((a, b) => a - b);
+      const rankLayout = new Map();
+      let y = varNum("--tree-pad");
 
       for (const rank of ranks) {
-        const rows = Math.max(1, rowCountsByRank.get(rank) || 1);
-        const neededHeight =
-          LAYOUT.rankTopPadding +
-          (rows * LAYOUT.cellHeight) +
-          ((rows - 1) * LAYOUT.rowGap) +
-          LAYOUT.rankBottomPadding;
-
-        const rankHeight = Math.max(LAYOUT.minRankHeight, neededHeight);
-
-        rankTops.set(rank, currentTop);
-        rankHeights.set(rank, rankHeight);
-        currentTop += rankHeight;
+        const rows = rowCountsByRank.get(rank) || 1;
+        const contentH = rows * varNum("--cell-h") + Math.max(0, rows - 1) * varNum("--cell-gap-y");
+        const bandH = varNum("--rank-header-h") + varNum("--rank-inner-top") + contentH + varNum("--rank-inner-bottom");
+        rankLayout.set(rank, { y, height: bandH, rows });
+        y += bandH + varNum("--rank-gap");
       }
 
-      return {
-        rankHeights,
-        rankTops,
-        totalHeight: currentTop + LAYOUT.bottomPad
-      };
+      const maxCol = getMaxColumn(cells);
+      const width = varNum("--tree-pad") * 2 + maxCol * varNum("--cell-w") + (maxCol - 1) * varNum("--cell-gap-x");
+      const height = y + varNum("--tree-pad") - varNum("--rank-gap");
+
+      return { rankLayout, rowCountsByRank, width, height, maxCol };
     }
 
-    function renderTree(data, sourceName) {
-      const cells = [...data.cells].sort(sortCells);
-      const edges = data.edges;
-
-      nodeLayerEl.innerHTML = "";
-      edgeLayerEl.innerHTML = "";
-      removeScaffold();
-
-      const rowCountsByRank = getRowCountsByRank(cells);
-      const rankLayout = buildRankLayout(rowCountsByRank);
-      const columnCount = Math.max(LAYOUT.totalColumns, ...cells.map(c => c.column));
-
-      const treeWidth = LAYOUT.leftPad + (columnCount * LAYOUT.colWidth) + LAYOUT.rightPad;
-      const treeHeight = rankLayout.totalHeight;
-
-      treeRootEl.style.width = treeWidth + "px";
-      treeRootEl.style.height = treeHeight + "px";
-      edgeLayerEl.setAttribute("width", treeWidth);
-      edgeLayerEl.setAttribute("height", treeHeight);
-      edgeLayerEl.setAttribute("viewBox", `0 0 ${treeWidth} ${treeHeight}`);
-
-      renderScaffold(rankLayout, columnCount);
-      const rectMap = renderCells(cells, rowCountsByRank, rankLayout);
-      renderEdges(edges, rectMap);
-
-      setStatus(`Loaded ${sourceName} · Registry images: ${registryImageMap.size} · Cells: ${cells.length} · Edges: ${edges.length}`);
+    function varNum(name) {
+      return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
     }
 
-    function renderScaffold(rankLayout, columnCount) {
-      const ranks = [...rankLayout.rankTops.keys()].sort((a, b) => a - b);
+    function validateCellPlacement(cell) {
+      const rank = Number(cell.rank);
+      const col = Number(cell.column);
+      const row = Number(cell.row);
 
-      for (const rank of ranks) {
+      if (!Number.isFinite(rank) || !Number.isFinite(col) || !Number.isFinite(row)) {
+        console.warn("[SKIP invalid placement] non-numeric rank/column/row", cell);
+        return false;
+      }
+      if (rank < 1 || col < 1 || row < 1) {
+        console.warn("[SKIP invalid placement] rank/column/row below 1", cell);
+        return false;
+      }
+      if (isStandard(cell) && PREMIUM_COLUMNS.has(col)) {
+        console.warn("[SKIP invalid placement] standard aircraft in premium/squadron column", cell);
+        return false;
+      }
+      if (isPremiumLike(cell) && !PREMIUM_COLUMNS.has(col)) {
+        console.warn("[SKIP invalid placement] premium/squadron aircraft outside premium zone", cell);
+        return false;
+      }
+      return true;
+    }
+
+    function getCellRect(cell, rowCountsByRank, rankLayout) {
+      const rank = Number(cell.rank);
+      const col = Number(cell.column);
+      const row = Number(cell.row);
+      if (!Number.isFinite(rank) || !Number.isFinite(col) || !Number.isFinite(row)) {
+        throw new Error(`Invalid cell placement for ${cell.cell_id || getCellMasterKey(cell) || "unknown"}`);
+      }
+
+      const layout = rankLayout.get(rank);
+      if (!layout) {
+        throw new Error(`Missing rank layout for rank ${rank}`);
+      }
+
+      const x = varNum("--tree-pad") + (col - 1) * (varNum("--cell-w") + varNum("--cell-gap-x"));
+      const y = layout.y + varNum("--rank-header-h") + varNum("--rank-inner-top") + (row - 1) * (varNum("--cell-h") + varNum("--cell-gap-y"));
+      return { x, y, w: varNum("--cell-w"), h: varNum("--cell-h") };
+    }
+
+    function renderRankBands(rankLayout, width) {
+      rankLayerEl.innerHTML = "";
+      for (const [rank, layout] of [...rankLayout.entries()].sort((a, b) => a[0] - b[0])) {
         const band = document.createElement("div");
-        band.className = "rank-band" + (rank % 2 === 0 ? " alt" : "");
-        band.style.top = rankLayout.rankTops.get(rank) + "px";
-        band.style.height = rankLayout.rankHeights.get(rank) + "px";
-        treeRootEl.appendChild(band);
+        band.className = "rank-band";
+        band.style.left = "0px";
+        band.style.top = `${layout.y}px`;
+        band.style.width = `${width}px`;
+        band.style.height = `${layout.height}px`;
 
         const label = document.createElement("div");
         label.className = "rank-label";
-        label.style.top = (rankLayout.rankTops.get(rank) + 12) + "px";
-        label.textContent = `RANK ${roman(rank)}`;
-        treeRootEl.appendChild(label);
+        label.textContent = `Rank ${romanize(rank)}`;
+        band.appendChild(label);
+        rankLayerEl.appendChild(band);
       }
-
-      for (let col = 1; col <= columnCount; col++) {
-        const guide = document.createElement("div");
-        guide.className = "column-guide" + (col > LAYOUT.mainColumns ? " side" : "");
-        guide.style.left = columnLeft(col) + "px";
-
-        const label = document.createElement("div");
-        label.className = "column-label";
-        label.textContent = col <= LAYOUT.mainColumns ? `COL ${col}` : `SIDE ${col - LAYOUT.mainColumns}`;
-        guide.appendChild(label);
-
-        treeRootEl.appendChild(guide);
-      }
-
-      const divider = document.createElement("div");
-      divider.className = "side-divider";
-      divider.style.left = (columnLeft(LAYOUT.mainColumns + 1) - 16) + "px";
-      treeRootEl.appendChild(divider);
     }
 
-    function removeScaffold() {
-      [...treeRootEl.querySelectorAll(".rank-band, .rank-label, .column-guide, .side-divider")]
-        .forEach(el => el.remove());
+    function romanize(num) {
+      const map = [
+        [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+        [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+        [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+      ];
+      let out = "";
+      for (const [v, s] of map) {
+        while (num >= v) { out += s; num -= v; }
+      }
+      return out || String(num);
     }
 
-    function renderCells(cells, rowCountsByRank, rankLayout) {
+    function createCellElement(cell, registryRow, imageUrl) {
+      const el = document.createElement("div");
+      el.className = "tree-cell";
+      if (isPremium(cell)) el.classList.add("premium");
+      if (isSquadron(cell)) el.classList.add("squadron");
+      if (selectedCellId && selectedCellId === cell.cell_id) el.classList.add("selected");
+
+      const title = getDisplayName(cell, registryRow);
+      const tagLabel = labelForType(cell);
+      const rankLabel = `R${cell.rank} C${cell.column} Y${cell.row}`;
+
+      el.innerHTML = `
+        <div class="cell-top">
+          <div class="cell-image-wrap"></div>
+        </div>
+        <div class="cell-body">
+          <div class="cell-title"></div>
+          <div class="cell-meta">
+            <span class="tag ${isPremium(cell) ? "premium" : isSquadron(cell) ? "squadron" : ""}">${tagLabel}</span>
+            <span>${rankLabel}</span>
+          </div>
+        </div>
+      `;
+
+      el.querySelector(".cell-title").textContent = title;
+      const imgWrap = el.querySelector(".cell-image-wrap");
+
+      if (imageUrl) {
+        const img = document.createElement("img");
+        img.className = "cell-image";
+        img.alt = title;
+        img.src = imageUrl;
+        imgWrap.appendChild(img);
+      } else {
+        const fallback = document.createElement("div");
+        fallback.className = "cell-fallback";
+        fallback.textContent = "No Image";
+        imgWrap.appendChild(fallback);
+      }
+
+      el.addEventListener("click", () => {
+        selectedCellId = cell.cell_id;
+        document.querySelectorAll(".tree-cell.selected").forEach(n => n.classList.remove("selected"));
+        el.classList.add("selected");
+        renderDetailPanel(cell, registryRow, imageUrl);
+      });
+
+      return el;
+    }
+
+    function renderDetailPanel(cell, registryRow, imageUrl) {
+      const title = getDisplayName(cell, registryRow);
+      const typeLabel = labelForType(cell);
+      const masterKey = getCellMasterKey(cell) || "—";
+      const wtImage = registryRow?.wt_image || cell.wt_image || "—";
+      const nation = registryRow?.nation || cell.nation || "—";
+
+      detailPanelEl.innerHTML = `
+        <div class="detail-card">
+          <div class="detail-hero">
+            <div class="detail-img-wrap"></div>
+          </div>
+          <div class="detail-body">
+            <div class="detail-title">
+              <strong>${escapeHtml(title)}</strong>
+              <span>${escapeHtml(typeLabel)} aircraft</span>
+            </div>
+            <div class="detail-grid">
+              <div class="stat"><label>Master Key</label><div>${escapeHtml(masterKey)}</div></div>
+              <div class="stat"><label>Nation</label><div>${escapeHtml(nation)}</div></div>
+              <div class="stat"><label>Rank</label><div>${escapeHtml(String(cell.rank ?? "—"))}</div></div>
+              <div class="stat"><label>Column / Row</label><div>${escapeHtml(`${cell.column ?? "—"} / ${cell.row ?? "—"}`)}</div></div>
+              <div class="stat"><label>Cell ID</label><div>${escapeHtml(String(cell.cell_id || "—"))}</div></div>
+              <div class="stat"><label>WT Image Key</label><div>${escapeHtml(String(wtImage))}</div></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const imgWrap = detailPanelEl.querySelector(".detail-img-wrap");
+      if (imageUrl) {
+        const img = document.createElement("img");
+        img.src = imageUrl;
+        img.alt = title;
+        imgWrap.appendChild(img);
+      } else {
+        imgWrap.innerHTML = '<div class="cell-fallback">No Image</div>';
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    async function renderCells(cells, rowCountsByRank, rankLayout) {
+      nodeLayerEl.innerHTML = "";
       const rectMap = new Map();
+      const warnings = [];
 
       for (const cell of cells) {
+        if (!validateCellPlacement(cell)) {
+          warnings.push(cell.cell_id || getCellMasterKey(cell) || "unknown");
+          continue;
+        }
+
         const rect = getCellRect(cell, rowCountsByRank, rankLayout);
         rectMap.set(cell.cell_id, rect);
 
-        const wrap = document.createElement("div");
-        wrap.className = "cell-wrap" + (cell.type === "group" ? " grouped" : "");
-        wrap.style.left = rect.x + "px";
-        wrap.style.top = rect.y + "px";
+        const registryRow = getRegistryRowForCell(cell);
+        const imageUrl = await resolveImageURL(cell, registryRow);
 
-        if (cell.type === "group") {
+        const wrap = document.createElement("div");
+        wrap.className = "cell-wrap" + (isGroup(cell) ? " grouped" : "");
+        if (isPremium(cell)) wrap.classList.add("premium");
+        if (isSquadron(cell)) wrap.classList.add("squadron");
+        wrap.style.left = `${rect.x}px`;
+        wrap.style.top = `${rect.y}px`;
+
+        if (isGroup(cell)) {
           const s2 = document.createElement("div");
           s2.className = "cell-shadow-2";
           const s1 = document.createElement("div");
@@ -846,302 +1043,96 @@
           wrap.appendChild(s1);
         }
 
-        wrap.appendChild(createCellElement(cell));
+        wrap.appendChild(createCellElement(cell, registryRow, imageUrl));
         nodeLayerEl.appendChild(wrap);
       }
 
-      return rectMap;
+      return { rectMap, warnings };
     }
 
-    function getCellRect(cell, rowCountsByRank, rankLayout) {
-      const x = columnLeft(cell.column) + Math.round((LAYOUT.colWidth - LAYOUT.cellWidth) / 2);
-      const rankTopValue = rankLayout.rankTops.get(cell.rank) ?? LAYOUT.topPad;
-      const y = rankTopValue + LAYOUT.rankTopPadding + ((cell.row - 1) * (LAYOUT.cellHeight + LAYOUT.rowGap));
-      return { x, y, w: LAYOUT.cellWidth, h: LAYOUT.cellHeight };
+    function getRectAnchor(rect, side) {
+      if (side === "right") return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
+      if (side === "left") return { x: rect.x, y: rect.y + rect.h / 2 };
+      if (side === "top") return { x: rect.x + rect.w / 2, y: rect.y };
+      return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
     }
 
-    function createCellElement(cell) {
-      const el = document.createElement("div");
-      el.className = "cell";
+    function makeOrthogonalPath(a, b) {
+      const midX = Math.round((a.x + b.x) / 2);
+      return `M ${a.x} ${a.y} L ${midX} ${a.y} L ${midX} ${b.y} L ${b.x} ${b.y}`;
+    }
 
-      const accents = getAccentColors(cell);
-      el.style.setProperty("--accent1", accents[0]);
-      el.style.setProperty("--accent2", accents[1]);
+    function renderEdges(edges, rectMap, width, height) {
+      edgeLayerEl.innerHTML = "";
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", width);
+      svg.setAttribute("height", height);
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
-      const headerLeft = `R${cell.rank} · C${cell.column} · Row ${cell.row}`;
-      const headerRight = cell.type === "group" ? "GROUP" : "UNIT";
+      for (const edge of edges || []) {
+        const fromId = edge.from || edge.source || edge.parent || edge.from_cell_id;
+        const toId = edge.to || edge.target || edge.child || edge.to_cell_id;
+        if (!rectMap.has(fromId) || !rectMap.has(toId)) continue;
 
-      el.innerHTML = `
-        <div class="cell-top-accent"></div>
-        <div class="cell-top-gloss"></div>
-        <div class="cell-inner-frame"></div>
-        <div class="cell-header">
-          <div>${headerLeft}</div>
-          <div class="cell-header-right">${headerRight}</div>
-        </div>
-        <div class="cell-body"></div>
-        <div class="cell-footer">
-          <div class="cell-name">${escapeHtml(prettyLabel(cell.display_name || cell.cell_id))}</div>
-          <div class="cell-meta"></div>
-        </div>
-      `;
+        const fromRect = rectMap.get(fromId);
+        const toRect = rectMap.get(toId);
+        const a = getRectAnchor(fromRect, "right");
+        const b = getRectAnchor(toRect, "left");
 
-      const body = el.querySelector(".cell-body");
-      const meta = el.querySelector(".cell-meta");
-
-      const grid = document.createElement("div");
-      grid.className = "visual-subtle-grid";
-      body.appendChild(grid);
-
-      if (cell.type === "group") {
-        const heroFilename = resolveCellImageFilename(cell);
-        if (heroFilename) {
-          const hero = document.createElement("img");
-          hero.className = "group-hero";
-          hero.src = IMAGE_RAW_BASE + heroFilename;
-          hero.onerror = () => hero.remove();
-          body.appendChild(hero);
-        }
-
-        const stack = document.createElement("div");
-        stack.className = "group-stack";
-
-        const ids = cell.unit_ids && cell.unit_ids.length
-          ? cell.unit_ids
-          : (cell.units || []).map(u => u.id).filter(Boolean);
-
-        ids.slice(0, 3).forEach(id => {
-          const mini = document.createElement("div");
-          mini.className = "group-mini";
-          mini.textContent = prettyLabel(id);
-          stack.appendChild(mini);
-        });
-
-        if (ids.length === 0) {
-          const mini = document.createElement("div");
-          mini.className = "group-mini";
-          mini.textContent = "Grouped slot";
-          stack.appendChild(mini);
-        }
-
-        body.appendChild(stack);
-
-        const badge = document.createElement("div");
-        badge.className = "count-badge";
-        badge.textContent = String(ids.length || 0);
-        meta.appendChild(badge);
-      } else {
-        const imageWrap = document.createElement("div");
-        imageWrap.className = "image-wrap";
-
-        const img = document.createElement("img");
-        img.className = "unit-image";
-
-        const fallback = document.createElement("div");
-        fallback.className = "image-fallback";
-        fallback.textContent = shortLabel(prettyLabel(cell.display_name || cell.cell_id), 16);
-
-        const fade = document.createElement("div");
-        fade.className = "image-fade";
-
-        imageWrap.appendChild(img);
-        imageWrap.appendChild(fallback);
-        imageWrap.appendChild(fade);
-        body.appendChild(imageWrap);
-
-        const imageFilename = resolveCellImageFilename(cell);
-        if (imageFilename) {
-          img.src = IMAGE_RAW_BASE + imageFilename;
-          img.onload = () => { fallback.style.display = "none"; };
-          img.onerror = () => { img.remove(); };
-        } else {
-          img.remove();
-        }
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", makeOrthogonalPath(a, b));
+        path.setAttribute("class", "edge-path");
+        svg.appendChild(path);
       }
 
-      const nation = document.createElement("div");
-      nation.textContent = String(cell.nation || "").toUpperCase();
-      meta.appendChild(nation);
-
-      return el;
+      edgeLayerEl.appendChild(svg);
     }
 
-    function resolveCellImageFilename(cell) {
-      const rawCandidates = [];
-
-      if (cell.cell_id) rawCandidates.push(cell.cell_id);
-      if (Array.isArray(cell.unit_ids)) rawCandidates.push(...cell.unit_ids);
-      if (Array.isArray(cell.units)) {
-        for (const u of cell.units) {
-          if (u && u.id) rawCandidates.push(u.id);
-        }
-      }
-
-      const candidates = [...new Set(rawCandidates.map(v => String(v || "").trim()).filter(Boolean))];
-
-      for (const key of candidates) {
-        const hit = registryImageMap.get(key);
-        if (hit) return ensureImageExtension(hit);
-      }
-
-      for (const key of candidates) {
-        const norm = normalizeKey(key);
-        for (const [masterKey, wtImage] of registryImageMap.entries()) {
-          if (normalizeKey(masterKey) === norm) return ensureImageExtension(wtImage);
-        }
-      }
-
-      for (const key of candidates) {
-        const variants = generateNameVariants(key);
-        if (variants.length) return ensureImageExtension(variants[0]);
-      }
-
-      return null;
+    function normalizeCellsPayload(payload) {
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload.cells)) return payload.cells;
+      if (Array.isArray(payload.nodes)) return payload.nodes;
+      throw new Error("Could not find cells array in tree JSON");
     }
 
-    function ensureImageExtension(name) {
-      const s = String(name || "").trim();
-      if (!s) return "";
-      return /\.(png|jpg|jpeg|webp)$/i.test(s) ? s : `${s}.png`;
+    function normalizeEdgesPayload(payload) {
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload.edges)) return payload.edges;
+      return [];
     }
 
-    function normalizeKey(name) {
-      return String(name || "")
-        .trim()
-        .toLowerCase()
-        .replace(/\.(png|jpg|jpeg|webp)$/i, "")
-        .replace(/[\s\-]+/g, "_")
-        .replace(/_+/g, "_")
-        .replace(/^_+|_+$/g, "");
-    }
+    async function initiateSystem() {
+      try {
+        setStatus("Loading tree, edges, and registry…");
 
-    function generateNameVariants(name) {
-      const base = String(name || "").replace(/\.(png|jpg|jpeg|webp)$/i, "").trim();
-      if (!base) return [];
-      const variants = new Set();
-      variants.add(base);
-      variants.add(base.replace(/_/g, "-"));
-      variants.add(base.replace(/-/g, "_"));
-      variants.add(base.replace(/-/g, "_").replace(/_+/g, "_"));
-      variants.add(base.replace(/_/g, "-").replace(/-+/g, "-"));
-      return [...variants];
-    }
+        const [treePayload, edgePayload, registryText] = await Promise.all([
+          fetchJSON(TREE_JSON_URL),
+          fetchJSON(EDGES_JSON_URL).catch(() => []),
+          fetchText(REGISTRY_CSV_URL)
+        ]);
 
-    function getAccentColors(cell) {
-      if (cell.type === "group") return ["var(--group-top-1)", "var(--group-top-2)"];
-      if (cell.column === 6) return ["var(--side1-top-1)", "var(--side1-top-2)"];
-      if (cell.column >= 7) return ["var(--side2-top-1)", "var(--side2-top-2)"];
-      return ["var(--unit-top-1)", "var(--unit-top-2)"];
-    }
+        const cells = normalizeCellsPayload(treePayload);
+        const edges = normalizeEdgesPayload(edgePayload);
+        const registryRows = parseCSV(registryText);
+        buildRegistryMaps(registryRows);
 
-    function renderEdges(edges, rectMap) {
-      for (const edge of edges) {
-        const fromRect = rectMap.get(edge.from_cell);
-        const toRect = rectMap.get(edge.to_cell);
-        if (!fromRect || !toRect) continue;
+        const { rankLayout, rowCountsByRank, width, height } = computeRankLayout(cells);
+        treeShellEl.style.width = `${width}px`;
+        treeShellEl.style.height = `${height}px`;
 
-        const d = buildEdgePath(fromRect, toRect);
-        edgeLayerEl.appendChild(svgEl("path", { d, class: "edge-base" }));
+        renderRankBands(rankLayout, width);
+        const { rectMap, warnings } = await renderCells(cells, rowCountsByRank, rankLayout);
+        renderEdges(edges, rectMap, width, height);
+
+        const warnText = warnings.length ? ` Skipped ${warnings.length} invalid placement${warnings.length === 1 ? "" : "s"}.` : "";
+        setStatus(`Loaded ${cells.length} cells and ${edges.length} edges.${warnText}`);
+      } catch (err) {
+        console.error(err);
+        setStatus(`Load failed: ${err.message}`, true);
       }
     }
 
-    function buildEdgePath(fromRect, toRect) {
-      const a = anchors(fromRect);
-      const b = anchors(toRect);
-
-      const x1 = a.bottom.x;
-      const y1 = a.bottom.y;
-      const x2 = b.top.x;
-      const y2 = b.top.y;
-      const midY = y1 + Math.max(24, (y2 - y1) / 2);
-
-      return [
-        `M ${round1(x1)} ${round1(y1)}`,
-        `L ${round1(x1)} ${round1(midY)}`,
-        `L ${round1(x2)} ${round1(midY)}`,
-        `L ${round1(x2)} ${round1(y2)}`
-      ].join(" ");
-    }
-
-    function anchors(rect) {
-      return {
-        top: { x: rect.x + rect.w / 2, y: rect.y },
-        bottom: { x: rect.x + rect.w / 2, y: rect.y + rect.h }
-      };
-    }
-
-    function columnLeft(col) {
-      return LAYOUT.leftPad + ((col - 1) * LAYOUT.colWidth);
-    }
-
-    function svgEl(tag, attrs = {}) {
-      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
-      for (const [k, v] of Object.entries(attrs)) {
-        el.setAttribute(k, v);
-      }
-      return el;
-    }
-
-    function round1(n) {
-      return Math.round(n * 10) / 10;
-    }
-
-    function sortCells(a, b) {
-      return (
-        a.rank - b.rank ||
-        a.column - b.column ||
-        a.row - b.row ||
-        String(a.cell_id).localeCompare(String(b.cell_id))
-      );
-    }
-
-    function shortLabel(v, maxLen = 24) {
-      const s = String(v || "");
-      return s.length > maxLen ? s.slice(0, maxLen) + "…" : s;
-    }
-
-    function prettyLabel(v) {
-      let s = String(v || "").trim();
-      if (!s) return "";
-      s = s.replace(/_group\b/gi, "");
-      s = s.replace(/_/g, " ");
-      s = s.replace(/\s+/g, " ").trim();
-      return s;
-    }
-
-    function escapeHtml(s) {
-      return String(s)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
-    }
-
-    function roman(num) {
-      const map = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
-      let n = num;
-      let out = "";
-      for (const [value, sym] of map) {
-        while (n >= value) {
-          out += sym;
-          n -= value;
-        }
-      }
-      return out || String(num);
-    }
-
-    function setStatus(text) {
-      statusEl.textContent = text;
-    }
-
-    function showError(text) {
-      treeRootEl.innerHTML = "";
-      const box = document.createElement("div");
-      box.className = "error-box";
-      box.textContent = text;
-      treeRootEl.appendChild(box);
-    }
+    initiateSystem();
   </script>
 </body>
 </html>
