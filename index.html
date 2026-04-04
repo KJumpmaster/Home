@@ -7,60 +7,51 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="caoc-page">
-  <div class="caoc-overlay"></div>
 
   <main class="hub-shell">
-    <header class="hub-header">
-      <div class="header-frame">
-        <div class="side-brand left-brand">
-          <img src="sky_pilot_logo.png" alt="Sky Pilot Logo" class="side-logo" />
+    <section class="hero-row">
+      <div class="side-logo-box">
+        <img src="sky_pilot_logo.png" alt="Sky Pilot Logo" class="side-logo" />
+      </div>
+
+      <div class="center-stage">
+        <div class="video-frame">
+          <video class="hero-video" autoplay muted loop playsinline>
+            <source src="main_movie.mp4" type="video/mp4" />
+          </video>
         </div>
 
-        <div class="hero-center">
-          <div class="hero-video-frame">
-            <video
-              class="hero-video"
-              autoplay
-              muted
-              loop
-              playsinline
-            >
-              <source src="main_movie.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
-
-          <div class="hero-title-block">
-            <h1 class="main-title">COMBINED AIR OPERATIONS CENTER</h1>
-            <p class="main-subtitle">Strategic Systems Hub</p>
-          </div>
-        </div>
-
-        <div class="side-brand right-brand">
-          <img src="norden_ii_logo.png" alt="Norden II Logo" class="side-logo" />
+        <div class="title-block">
+          <h1>COMBINED AIR OPERATIONS CENTER</h1>
+          <p>Strategic Systems Hub</p>
         </div>
       </div>
-    </header>
 
-    <section class="hub-options">
-      <a href="research.html" class="hub-card">
-        <span class="card-kicker">Sky Pilot</span>
-        <span class="card-title">Commander's Manifest</span>
-        <span class="card-desc">Enter the aircraft research tree and operational review interface.</span>
+      <div class="side-logo-box">
+        <img src="norden_ii_logo.png" alt="Norden II Logo" class="side-logo" />
+      </div>
+    </section>
+
+    <section class="bottom-options">
+      <a href="research.html" class="option-card">
+        <div class="option-top">SKY PILOT</div>
+        <div class="option-title">Commander's Manifest</div>
+        <div class="option-text">Aircraft research tree and operational review interface.</div>
       </a>
 
-      <a href="norden.html" class="hub-card">
-        <span class="card-kicker">Norden II</span>
-        <span class="card-title">Bombing Calculator</span>
-        <span class="card-desc">Open the strike-planning and drop-analysis system.</span>
+      <a href="norden.html" class="option-card">
+        <div class="option-top">NORDEN II</div>
+        <div class="option-title">Bombing Calculator</div>
+        <div class="option-text">Strike planning and drop analysis system.</div>
       </a>
 
-      <a href="intel.html" class="hub-card">
-        <span class="card-kicker">CAOC</span>
-        <span class="card-title">Command Briefing</span>
-        <span class="card-desc">Access central command tools, briefings, and future systems modules.</span>
+      <a href="intel.html" class="option-card">
+        <div class="option-top">CAOC</div>
+        <div class="option-title">Command Briefing</div>
+        <div class="option-text">Central command tools, briefings, and future systems.</div>
       </a>
     </section>
   </main>
+
 </body>
 </html>
