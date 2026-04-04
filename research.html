@@ -596,6 +596,24 @@
   <div class="status" id="statusBox">Loading tree…</div>
 
   <script>
+    window.addEventListener("error", (e) => {
+      const box = document.getElementById("statusBox");
+      if (box) {
+        box.textContent = `JS error: ${e.message} at ${e.filename || "inline"}:${e.lineno || 0}`;
+        box.classList.add("error");
+      }
+      console.error("window error", e);
+    });
+
+    window.addEventListener("unhandledrejection", (e) => {
+      const box = document.getElementById("statusBox");
+      if (box) {
+        box.textContent = `Promise error: ${e.reason?.message || e.reason || "Unknown promise failure"}`;
+        box.classList.add("error");
+      }
+      console.error("unhandled rejection", e.reason);
+    });
+
     const TREE_FILE_CANDIDATES = [
       "usa_tree_pass2_with_arrows.json",
       "usa_tree_v4.json"
@@ -616,6 +634,10 @@
     const nodeLayerEl = document.getElementById("nodeLayer");
     const detailPanelEl = document.getElementById("detailPanel");
     const statusBoxEl = document.getElementById("statusBox");
+
+    if (statusBoxEl) {
+      statusBoxEl.textContent = "Script booted. Starting load...";
+    }
 
     let selectedCellId = null;
     let registryByMasterKey = new Map();
@@ -988,4 +1010,159 @@
 
       el.addEventListener("click", () => {
         selectedCellId = cell.cell_id;
-        document.querySelectorAl
+        document.querySelectorAll(".tree-cell.selected").forEach(n => n.classList.remove("selected"));
+        el.classList.add("selected");
+        renderDetailPanel(cell, registryRow, imageUrl);
+      });
+      return el;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function renderDetailPanel(cell, registryRow, imageUrl) {
+      const title = getDisplayName(cell, registryRow);
+      const typeLabel = labelForType(cell);
+      const masterKey = getCellMasterKey(cell) || "—";
+      const wtImage = registryRow?.wt_image || cell.wt_image || "—";
+      const nation = registryRow?.nation || cell.nation || "—";
+      detailPanelEl.innerHTML = `
+        <div class="detail-card">
+          <div class="detail-hero"><div class="detail-img-wrap"></div></div>
+          <div class="detail-body">
+            <div class="detail-title">
+              <strong>${escapeHtml(title)}</strong>
+              <span>${escapeHtml(typeLabel)} aircraft</span>
+            </div>
+            <div class="detail-grid">
+              <div class="stat"><label>Master Key</label><div>${escapeHtml(masterKey)}</div></div>
+              <div class="stat"><label>Nation</label><div>${escapeHtml(nation)}</div></div>
+              <div class="stat"><label>Rank</label><div>${escapeHtml(String(cell.rank ?? "—"))}</div></div>
+              <div class="stat"><label>Column / Row</label><div>${escapeHtml(`${cell.column ?? "—"} / ${cell.row ?? "—"}`)}</div></div>
+              <div class="stat"><label>Cell ID</label><div>${escapeHtml(String(cell.cell_id || "—"))}</div></div>
+              <div class="stat"><label>WT Image Key</label><div>${escapeHtml(String(wtImage))}</div></div>
+            </div>
+          </div>
+        </div>
+      `;
+      const imgWrap = detailPanelEl.querySelector(".detail-img-wrap");
+      if (imageUrl) {
+        const img = document.createElement("img");
+        img.src = imageUrl;
+        img.alt = title;
+        imgWrap.appendChild(img);
+      } else {
+        imgWrap.innerHTML = '<div class="cell-fallback">No Image</div>';
+      }
+    }
+
+    async function renderCells(cells, rowCountsByRank, rankLayout) {
+      nodeLayerEl.innerHTML = "";
+      const rectMap = new Map();
+      let skippedInvalid = 0;
+      for (const cell of cells) {
+        if (!validateCellPlacement(cell)) {
+          skippedInvalid++;
+          continue;
+        }
+        const rect = getCellRect(cell, rowCountsByRank, rankLayout);
+        rectMap.set(cell.cell_id, rect);
+        const registryRow = getRegistryRowForCell(cell);
+        const imageUrl = await resolveImageURL(cell, registryRow);
+        const wrap = document.createElement("div");
+        wrap.className = "cell-wrap" + (isGroup(cell) ? " grouped" : "");
+        if (isPremium(cell)) wrap.classList.add("premium");
+        if (isSquadron(cell)) wrap.classList.add("squadron");
+        wrap.style.left = `${rect.x}px`;
+        wrap.style.top = `${rect.y}px`;
+        if (isGroup(cell)) {
+          const s2 = document.createElement("div");
+          s2.className = "cell-shadow-2";
+          const s1 = document.createElement("div");
+          s1.className = "cell-shadow-1";
+          wrap.appendChild(s2);
+          wrap.appendChild(s1);
+        }
+        wrap.appendChild(createCellElement(cell, registryRow, imageUrl));
+        nodeLayerEl.appendChild(wrap);
+      }
+      return { rectMap, skippedInvalid };
+    }
+
+    function getRectAnchor(rect, side) {
+      if (side === "right") return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
+      if (side === "left") return { x: rect.x, y: rect.y + rect.h / 2 };
+      if (side === "top") return { x: rect.x + rect.w / 2, y: rect.y };
+      return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
+    }
+
+    function makeOrthogonalPath(a, b) {
+      const midX = Math.round((a.x + b.x) / 2);
+      return `M ${a.x} ${a.y} L ${midX} ${a.y} L ${midX} ${b.y} L ${b.x} ${b.y}`;
+    }
+
+    function renderEdges(edges, rectMap, width, height) {
+      edgeLayerEl.innerHTML = "";
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", width);
+      svg.setAttribute("height", height);
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      for (const edge of edges || []) {
+        const fromId = edge.from || edge.source || edge.parent || edge.from_cell_id || edge.from_id;
+        const toId = edge.to || edge.target || edge.child || edge.to_cell_id || edge.to_id;
+        if (!rectMap.has(fromId) || !rectMap.has(toId)) continue;
+        const fromRect = rectMap.get(fromId);
+        const toRect = rectMap.get(toId);
+        const a = getRectAnchor(fromRect, "right");
+        const b = getRectAnchor(toRect, "left");
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", makeOrthogonalPath(a, b));
+        path.setAttribute("class", "edge-path");
+        svg.appendChild(path);
+      }
+      edgeLayerEl.appendChild(svg);
+    }
+
+    async function initiateSystem() {
+      console.log("Sky Pilot loader booted");
+      try {
+        setStatus("Loading tree and registry...");
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const treeRes = await tryFetchJSON(TREE_FILE_CANDIDATES);
+        const registryRes = await tryFetchText(REGISTRY_FILE_CANDIDATES);
+
+        const treePayload = treeRes.data;
+        const cells = normalizeCellsPayload(treePayload);
+        const edges = normalizeEdgesPayload(treePayload);
+        const registryRows = parseCSV(registryRes.data);
+        buildRegistryMaps(registryRows);
+
+        const { rankLayout, rowCountsByRank, width, height } = computeRankLayout(cells);
+        treeShellEl.style.width = `${width}px`;
+        treeShellEl.style.height = `${height}px`;
+
+        renderRankBands(rankLayout, width);
+        const { rectMap, skippedInvalid } = await renderCells(cells, rowCountsByRank, rankLayout);
+        renderEdges(edges, rectMap, width, height);
+
+        setStatus(
+          `Loaded tree from ${treeRes.url}\n` +
+          `Loaded registry from ${registryRes.url}\n` +
+          `Cells: ${cells.length} | Edges: ${edges.length} | Skipped invalid placements: ${skippedInvalid}`
+        );
+      } catch (err) {
+        console.error(err);
+        setStatus(`Load failed: ${err.message}`, true);
+      }
+    }
+
+    initiateSystem();
+  </script>
+</body>
+</html>
