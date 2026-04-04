@@ -656,13 +656,17 @@
     }
 
     function isPremium(cell) {
-      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind);
-      return t.includes("premium");
+      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class || cell.reward_type);
+      if (t.includes("premium")) return true;
+      const col = Number(cell.column ?? cell.col ?? cell.x ?? cell.grid_x ?? cell.c);
+      return col === 6;
     }
 
     function isSquadron(cell) {
-      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind);
-      return t.includes("squadron");
+      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class || cell.reward_type);
+      if (t.includes("squadron")) return true;
+      const col = Number(cell.column ?? cell.col ?? cell.x ?? cell.grid_x ?? cell.c);
+      return col === 7;
     }
 
     function isGroup(cell) {
@@ -926,8 +930,6 @@
       const row = Number(cell.row);
       if (!Number.isFinite(rank) || !Number.isFinite(col) || !Number.isFinite(row)) return false;
       if (rank < 1 || col < 1 || row < 1) return false;
-      if (isStandard(cell) && PREMIUM_COLUMNS.has(col)) return false;
-      if (isPremiumLike(cell) && !PREMIUM_COLUMNS.has(col)) return false;
       return true;
     }
 
@@ -1148,6 +1150,7 @@
         treeShellEl.style.height = `${height}px`;
 
         renderRankBands(rankLayout, width);
+        console.log("Sample normalized cells:", cells.slice(0, 12));
         const { rectMap, skippedInvalid } = await renderCells(cells, rowCountsByRank, rankLayout);
         renderEdges(edges, rectMap, width, height);
 
