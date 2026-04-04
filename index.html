@@ -1,61 +1,172 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CAOC - Combined Air Operations Center</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body class="caoc-page">
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-  <div class="page-wrap">
-    <div class="top-row">
-      <div class="side-panel">
-        <video class="side-video" autoplay muted loop playsinline>
-          <source src="SKY_PILOT_LOGO.mp4" type="video/mp4" />
-        </video>
-      </div>
+body.caoc-page {
+  min-height: 100vh;
+  color: #ecfff4;
+  background-image:
+    linear-gradient(rgba(5, 10, 9, 0.45), rgba(5, 10, 9, 0.72)),
+    url("metal_background.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #0a0f0e;
+}
 
-      <div class="center-panel">
-        <div class="main-video-frame">
-          <video class="main-video" autoplay muted loop playsinline>
-            <source src="caoc_banner.mp4" type="video/mp4" />
-          </video>
-        </div>
+.page-wrap {
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
 
-        <div class="title-area">
-          <h1>COMBINED AIR OPERATIONS CENTER</h1>
-          <p>Strategic Systems Hub</p>
-        </div>
-      </div>
+.top-row {
+  max-width: 1500px;
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: 24px;
+  align-items: center;
+}
 
-      <div class="side-panel">
-        <video class="side-video" autoplay muted loop playsinline>
-          <source src="Norden II Logo.mp4" type="video/mp4" />
-        </video>
-      </div>
-    </div>
+.side-panel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-    <div class="bottom-row">
-      <a class="menu-card" href="research.html">
-        <div class="menu-tag">SKY PILOT</div>
-        <div class="menu-title">Commander's Manifest</div>
-        <div class="menu-text">Aircraft research tree and operational review interface.</div>
-      </a>
+.side-video {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  display: block;
+  background: rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(124, 255, 178, 0.25);
+  border-radius: 12px;
+  box-shadow:
+    0 0 18px rgba(124, 255, 178, 0.10),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+}
 
-      <a class="menu-card" href="norden.html">
-        <div class="menu-tag">NORDEN II</div>
-        <div class="menu-title">Bombing Calculator</div>
-        <div class="menu-text">Strike planning and drop analysis system.</div>
-      </a>
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
 
-      <a class="menu-card" href="intel.html">
-        <div class="menu-tag">CAOC</div>
-        <div class="menu-title">Command Briefing</div>
-        <div class="menu-text">Central command tools, briefings, and future systems.</div>
-      </a>
-    </div>
-  </div>
+.main-video-frame {
+  width: 100%;
+  max-width: 860px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(124, 255, 178, 0.28);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 0 24px rgba(124, 255, 178, 0.10),
+    0 12px 30px rgba(0, 0, 0, 0.40);
+}
 
-</body>
-</html>
+.main-video {
+  width: 100%;
+  display: block;
+  max-height: 460px;
+  background: #000;
+}
+
+.title-area {
+  text-align: center;
+}
+
+.title-area h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2vw, 2.3rem);
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 10px rgba(124, 255, 178, 0.14);
+}
+
+.title-area p {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #b9d9c8;
+}
+
+.bottom-row {
+  max-width: 1500px;
+  width: 100%;
+  margin: 28px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.menu-card {
+  display: block;
+  min-height: 160px;
+  padding: 20px;
+  text-decoration: none;
+  color: #ecfff4;
+  background: rgba(10, 22, 18, 0.88);
+  border: 1px solid rgba(124, 255, 178, 0.28);
+  border-radius: 14px;
+  box-shadow:
+    0 0 18px rgba(124, 255, 178, 0.08),
+    0 10px 24px rgba(0, 0, 0, 0.32);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(124, 255, 178, 0.45);
+  box-shadow:
+    0 0 24px rgba(124, 255, 178, 0.16),
+    0 14px 28px rgba(0, 0, 0, 0.38);
+}
+
+.menu-tag {
+  font-size: 0.78rem;
+  font-weight: bold;
+  letter-spacing: 0.22em;
+  color: #9be8bc;
+}
+
+.menu-title {
+  margin-top: 10px;
+  font-size: 1.28rem;
+  font-weight: bold;
+}
+
+.menu-text {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #b9d9c8;
+}
+
+@media (max-width: 1150px) {
+  .top-row {
+    grid-template-columns: 1fr;
+  }
+
+  .side-video {
+    max-width: 240px;
+  }
+}
+
+@media (max-width: 900px) {
+  .bottom-row {
+    grid-template-columns: 1fr;
+  }
+
+  .main-video {
+    max-height: 340px;
+  }
+}
