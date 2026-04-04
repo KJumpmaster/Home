@@ -1569,7 +1569,15 @@ ${JSON.stringify(bad[0], null, 2)}`, true);
       }
 
       const edgeRows = parseCSV(edgeText);
+      const jsonEdges = Array.isArray(treePayload.edges)
+        ? treePayload.edges
+        : (Array.isArray(treePayload.arrows) ? treePayload.arrows : []);
+
       state.edges = buildVisibleEdges(edgeRows, visibleUnitSet, cellsById);
+
+      if (!state.edges.length && jsonEdges.length) {
+        state.edges = buildVisibleEdges(jsonEdges, visibleUnitSet, cellsById);
+      }
 
       const { rankLayout, width, height } = computeRankLayout(state.cells);
       treeShellEl.style.width = `${width}px`;
