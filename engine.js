@@ -5,8 +5,8 @@ const EDGES_CSV_URL = "usa_tree_pass2_edges.csv";
 const PIC_BASE = "https://kjumpmaster.github.io/Aircraft-Pics/";
 
 const EXEMPT_UNIT_IDS = new Set([
-  "ucav_MQ1_predator",
-  "uav_quadcopter",
+  "ucav",
+  "quadcopter",
   "o3u_1"
 ].map(normId));
 
@@ -72,11 +72,6 @@ function toBool(v) {
   if (v === true || v === 1) return true;
   const s = String(v || "").trim().toLowerCase();
   return ["true", "1", "yes", "y", "t"].includes(s);
-}
-
-function safeInt(v, fallback = 0) {
-  const n = parseInt(String(v ?? "").trim(), 10);
-  return Number.isFinite(n) ? n : fallback;
 }
 
 function romanize(num) {
@@ -371,6 +366,13 @@ function classifyUnit(unitId, fallbackCell = null) {
     add(reg.wt_image);
   }
 
+  if (fallbackCell) {
+    if (toBool(fallbackCell.squadron)) return "squadron";
+    if (toBool(fallbackCell.event)) return "event";
+    if (toBool(fallbackCell.pack)) return "pack";
+    if (toBool(fallbackCell.premium)) return "premium";
+  }
+
   for (const key of candidates) {
     const f = state.flagMap.get(key);
     if (!f) continue;
@@ -387,7 +389,9 @@ function classifyUnit(unitId, fallbackCell = null) {
       fallbackCell.group_type,
       fallbackCell.kind,
       fallbackCell.class,
-      fallbackCell.reward_type
+      fallbackCell.reward_type,
+      fallbackCell.classification,
+      fallbackCell.flag_type
     ]));
 
     const nameText = normalizeType(firstNonBlank([
@@ -415,6 +419,15 @@ function summarizeGroupTypes(unitIds, fallbackCell = null) {
     counts[t] = (counts[t] || 0) + 1;
   }
   return counts;
+}
+
+function pickMainType(unitIds, fallbackCell = null) {
+  const counts = summarizeGroupTypes(unitIds, fallbackCell);
+  if (counts.squadron > 0) return "squadron";
+  if (counts.event > 0) return "event";
+  if (counts.pack > 0) return "pack";
+  if (counts.premium > 0) return "premium";
+  return "tech";
 }
 
 function buildImageCandidates(registryRow, unitId) {
@@ -562,6 +575,8 @@ function prepareCells(rawCells) {
     const primaryUnitId = unitIds[0];
     const registryRow = getRegistryRowByUnitId(primaryUnitId) || getRegistryRowByUnitId(getCellMasterKey(raw)) || null;
     const members = unitIds.map(uid => buildMember(uid, raw, registryRow));
+    const mainType = pickMainType(unitIds, raw);
+    const groupCounts = summarizeGroupTypes(unitIds, raw);
 
     prepared.push({
       ...raw,
@@ -569,8 +584,8 @@ function prepareCells(rawCells) {
       primaryUnitId,
       members,
       isGroup: unitIds.length > 1 || (Array.isArray(raw.units) && raw.units.length > 1) || (Array.isArray(raw.members) && raw.members.length > 1),
-      mainType: classifyUnit(primaryUnitId, raw),
-      groupCounts: summarizeGroupTypes(unitIds, raw),
+      mainType,
+      groupCounts,
       displayTitle: getDisplayName(raw, registryRow)
     });
   }
@@ -658,8 +673,8 @@ function getRectAnchor(rect, side) {
 }
 
 function makeCurvedPath(a, b) {
-  const midX = Math.round((a.x + b.x) / 2);
-  return `M ${a.x} ${a.y} C ${midX} ${a.y}, ${midX} ${b.y}, ${b.x} ${b.y}`;
+  const dx = Math.max(26, Math.abs(b.x - a.x) * 0.42);
+  return `M ${a.x} ${a.y} C ${a.x + dx} ${a.y}, ${b.x - dx} ${b.y}, ${b.x} ${b.y}`;
 }
 
 function ensureArrowMarkers(svg) {
@@ -667,27 +682,27 @@ function ensureArrowMarkers(svg) {
 
   const blue = document.createElementNS("http://www.w3.org/2000/svg", "marker");
   blue.setAttribute("id", "arrowhead-blue");
-  blue.setAttribute("markerWidth", "12");
-  blue.setAttribute("markerHeight", "12");
-  blue.setAttribute("refX", "10");
-  blue.setAttribute("refY", "6");
+  blue.setAttribute("markerWidth", "10");
+  blue.setAttribute("markerHeight", "10");
+  blue.setAttribute("refX", "8.5");
+  blue.setAttribute("refY", "5");
   blue.setAttribute("orient", "auto");
   blue.setAttribute("markerUnits", "strokeWidth");
   const bluePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  bluePath.setAttribute("d", "M 0 0 L 12 6 L 0 12 Z");
+  bluePath.setAttribute("d", "M 0 0 L 10 5 L 0 10 Z");
   bluePath.setAttribute("class", "edge-head-blue");
   blue.appendChild(bluePath);
 
   const gold = document.createElementNS("http://www.w3.org/2000/svg", "marker");
   gold.setAttribute("id", "arrowhead-gold");
-  gold.setAttribute("markerWidth", "12");
-  gold.setAttribute("markerHeight", "12");
-  gold.setAttribute("refX", "10");
-  gold.setAttribute("refY", "6");
+  gold.setAttribute("markerWidth", "10");
+  gold.setAttribute("markerHeight", "10");
+  gold.setAttribute("refX", "8.5");
+  gold.setAttribute("refY", "5");
   gold.setAttribute("orient", "auto");
   gold.setAttribute("markerUnits", "strokeWidth");
   const goldPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  goldPath.setAttribute("d", "M 0 0 L 12 6 L 0 12 Z");
+  goldPath.setAttribute("d", "M 0 0 L 10 5 L 0 10 Z");
   goldPath.setAttribute("class", "edge-head-gold");
   gold.appendChild(goldPath);
 
@@ -744,42 +759,33 @@ function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
   }
 
   for (const row of rows) {
-    const scalarStrings = [];
+    const fromRef = firstNonBlank([
+      row.from_id, row.from, row.source, row.parent, row.parent_id,
+      row.source_cell_key, row.src, row.From, row.Source, row.Parent,
+      row.source_id, row.start, row.a, row.u, row.unit_from, row.cell_from
+    ]);
 
-    for (const v of Object.values(row)) {
-      if (typeof v !== "string") continue;
-      const s = v.trim();
-      if (!s || s.length > 120) continue;
-      scalarStrings.push(s);
-    }
+    const toRef = firstNonBlank([
+      row.to_id, row.to, row.target, row.child, row.child_id,
+      row.target_cell_key, row.dst, row.To, row.Target, row.Child,
+      row.target_id, row.end, row.b, row.v, row.unit_to, row.cell_to
+    ]);
 
-    const leftCandidates = [
-      row.from_id, row.from, row.source, row.parent, row.parent_id, row.source_cell_key,
-      row.src, row.From, row.Source, row.Parent, row.source_id, row.start,
-      row.a, row.u, row.unit_from, row.cell_from
-    ].map(v => String(v || "").trim()).filter(Boolean);
-
-    const rightCandidates = [
-      row.to_id, row.to, row.target, row.child, row.child_id, row.target_cell_key,
-      row.dst, row.To, row.Target, row.Child, row.target_id, row.end,
-      row.b, row.v, row.unit_to, row.cell_to
-    ].map(v => String(v || "").trim()).filter(Boolean);
-
-    for (const a of leftCandidates) {
-      for (const b of rightCandidates) {
-        addEdge(resolveCell(a), resolveCell(b), row, "explicit-fields");
-      }
-    }
-
-    for (let i = 0; i < scalarStrings.length; i++) {
-      for (let j = 0; j < scalarStrings.length; j++) {
-        if (i === j) continue;
-        addEdge(resolveCell(scalarStrings[i]), resolveCell(scalarStrings[j]), row, "all-row-values");
-      }
+    if (fromRef && toRef) {
+      addEdge(resolveCell(fromRef), resolveCell(toRef), row, "explicit-fields");
+      continue;
     }
 
     if (Array.isArray(row.path) && row.path.length >= 2) {
       addEdge(resolveCell(row.path[0]), resolveCell(row.path[row.path.length - 1]), row, "path-array");
+      continue;
+    }
+
+    if (typeof row.path === "string" && row.path.trim()) {
+      const parts = row.path.split(/>|,|;/).map(s => s.trim()).filter(Boolean);
+      if (parts.length >= 2) {
+        addEdge(resolveCell(parts[0]), resolveCell(parts[parts.length - 1]), row, "path-string");
+      }
     }
   }
 
@@ -931,7 +937,6 @@ async function initiateSystem() {
     throw new Error(`No valid cells found. First raw cell: ${JSON.stringify(rawCells[0], null, 2)}`);
   }
 
-  const visibleUnitSet = new Set();
   const cellsById = new Map();
 
   for (const cell of state.cells) {
@@ -951,8 +956,6 @@ async function initiateSystem() {
     }
 
     for (const id of cell.unitIds) {
-      visibleUnitSet.add(id);
-      visibleUnitSet.add(normId(id));
       cellsById.set(id, cell);
       cellsById.set(normId(id), cell);
     }
@@ -963,11 +966,11 @@ async function initiateSystem() {
     ? treePayload.edges
     : (Array.isArray(treePayload.arrows) ? treePayload.arrows : []);
 
-  state.edges = buildVisibleEdges(edgeRows, visibleUnitSet, cellsById);
+  state.edges = buildVisibleEdges(edgeRows, null, cellsById);
   state.arrowSourceUsed = "csv";
 
   if (!state.edges.length && jsonEdges.length) {
-    state.edges = buildVisibleEdges(jsonEdges, visibleUnitSet, cellsById);
+    state.edges = buildVisibleEdges(jsonEdges, null, cellsById);
     state.arrowSourceUsed = "json-fallback";
   }
 
