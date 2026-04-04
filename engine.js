@@ -359,6 +359,27 @@ function getRenderableUnitIds(cell) {
   return getCellUnitIds(cell).filter(id => !EXEMPT_UNIT_IDS.has(normId(id)));
 }
 
+function getCellTextBlob(cell) {
+  return normalizeType([
+    cell.type,
+    cell.vehicle_type,
+    cell.group_type,
+    cell.kind,
+    cell.class,
+    cell.reward_type,
+    cell.classification,
+    cell.flag_type,
+    cell.category,
+    cell.vehicle_class,
+    cell.display_name,
+    cell.wiki_name,
+    cell.name,
+    cell.title,
+    cell.master_key,
+    cell.unit_id
+  ].filter(v => v != null && String(v).trim() !== "").join(" | "));
+}
+
 function classifyUnit(unitId, fallbackCell = null) {
   const candidates = new Set();
 
@@ -409,46 +430,33 @@ function classifyUnit(unitId, fallbackCell = null) {
     if (f.premium) return "premium";
   }
 
-  if (fallbackCell) {
-    const cellTypeText = normalizeType(firstNonBlank([
-      fallbackCell.type,
-      fallbackCell.vehicle_type,
-      fallbackCell.group_type,
-      fallbackCell.kind,
-      fallbackCell.class,
-      fallbackCell.reward_type,
-      fallbackCell.classification,
-      fallbackCell.flag_type,
-      fallbackCell.category,
-      fallbackCell.vehicle_class
-    ]));
+  const textBlob = fallbackCell ? getCellTextBlob(fallbackCell) : "";
 
-    const nameText = normalizeType(firstNonBlank([
-      fallbackCell.display_name,
-      fallbackCell.wiki_name,
-      fallbackCell.name,
-      fallbackCell.title,
-      fallbackCell.master_key,
-      fallbackCell.unit_id
-    ]));
-
-    const megaText = `${cellTypeText} | ${nameText}`;
-
-    if (megaText.includes("squadron")) return "squadron";
-    if (megaText.includes("event")) return "event";
-    if (megaText.includes("pack")) return "pack";
-    if (megaText.includes("premium")) return "premium";
-  }
+  if (textBlob.includes("squadron")) return "squadron";
+  if (textBlob.includes("event")) return "event";
+  if (textBlob.includes("pack")) return "pack";
+  if (textBlob.includes("premium")) return "premium";
 
   return "tech";
 }
 
 function summarizeGroupTypes(unitIds, fallbackCell = null) {
   const counts = { tech: 0, premium: 0, squadron: 0, event: 0, pack: 0 };
+
   for (const id of unitIds) {
     const t = classifyUnit(id, fallbackCell);
     counts[t] = (counts[t] || 0) + 1;
   }
+
+  const textBlob = fallbackCell ? getCellTextBlob(fallbackCell) : "";
+
+  if (fallbackCell) {
+    if (toBool(fallbackCell.squadron) || textBlob.includes("squadron")) counts.squadron += 1000;
+    if (toBool(fallbackCell.event) || textBlob.includes("event")) counts.event += 1000;
+    if (toBool(fallbackCell.pack) || textBlob.includes("pack")) counts.pack += 1000;
+    if (toBool(fallbackCell.premium) || textBlob.includes("premium")) counts.premium += 1000;
+  }
+
   return counts;
 }
 
@@ -655,8 +663,6 @@ function createCellElement(cell) {
 
   const topEl = el.querySelector(".cell-top");
   const imgWrap = el.querySelector(".cell-image-wrap");
-  const bodyEl = el.querySelector(".cell-body");
-  const titleEl = el.querySelector(".cell-title");
 
   if (topEl) {
     topEl.style.flex = "0 0 auto";
@@ -668,14 +674,6 @@ function createCellElement(cell) {
     imgWrap.style.display = "flex";
     imgWrap.style.alignItems = "center";
     imgWrap.style.justifyContent = "center";
-  }
-
-  if (bodyEl) {
-    bodyEl.style.minHeight = "0";
-  }
-
-  if (titleEl) {
-    titleEl.style.lineHeight = "1.05";
   }
 
   if (lead && lead.imageUrl) {
@@ -734,14 +732,24 @@ function renderCells(cells, rankLayout) {
   return rectMap;
 }
 
-function getRectAnchor(rect, side) {
-  if (side === "right") return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
-  return { x: rect.x, y: rect.y + rect.h / 2 };
+function getRectAnchor(rect, role) {
+  if (role === "from") {
+    return {
+      x: rect.x + rect.w - 10,
+      y: rect.y + rect.h - 10
+    };
+  }
+
+  return {
+    x: rect.x + 10,
+    y: rect.y + 10
+  };
 }
 
 function makeCurvedPath(a, b) {
-  const dx = Math.max(40, Math.abs(b.x - a.x) * 0.34);
-  return `M ${a.x} ${a.y} C ${a.x + dx} ${a.y}, ${b.x - dx} ${b.y}, ${b.x} ${b.y}`;
+  const dx = Math.max(46, Math.abs(b.x - a.x) * 0.36);
+  const dy = Math.max(26, Math.abs(b.y - a.y) * 0.22);
+  return `M ${a.x} ${a.y} C ${a.x + dx} ${a.y + dy}, ${b.x - dx} ${b.y - dy}, ${b.x} ${b.y}`;
 }
 
 function ensureArrowMarkers(svg) {
@@ -749,30 +757,28 @@ function ensureArrowMarkers(svg) {
 
   const blue = document.createElementNS("http://www.w3.org/2000/svg", "marker");
   blue.setAttribute("id", "arrowhead-blue");
-  blue.setAttribute("markerWidth", "14");
-  blue.setAttribute("markerHeight", "14");
-  blue.setAttribute("refX", "11.5");
-  blue.setAttribute("refY", "7");
+  blue.setAttribute("markerWidth", "18");
+  blue.setAttribute("markerHeight", "18");
+  blue.setAttribute("refX", "15");
+  blue.setAttribute("refY", "9");
   blue.setAttribute("orient", "auto");
   blue.setAttribute("markerUnits", "userSpaceOnUse");
-
   const bluePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  bluePath.setAttribute("d", "M 0 0 L 14 7 L 0 14 Z");
-  bluePath.setAttribute("fill", "rgba(125, 190, 255, 0.92)");
+  bluePath.setAttribute("d", "M 0 0 L 18 9 L 0 18 Z");
+  bluePath.setAttribute("fill", "rgba(125, 190, 255, 0.95)");
   blue.appendChild(bluePath);
 
   const gold = document.createElementNS("http://www.w3.org/2000/svg", "marker");
   gold.setAttribute("id", "arrowhead-gold");
-  gold.setAttribute("markerWidth", "14");
-  gold.setAttribute("markerHeight", "14");
-  gold.setAttribute("refX", "11.5");
-  gold.setAttribute("refY", "7");
+  gold.setAttribute("markerWidth", "18");
+  gold.setAttribute("markerHeight", "18");
+  gold.setAttribute("refX", "15");
+  gold.setAttribute("refY", "9");
   gold.setAttribute("orient", "auto");
   gold.setAttribute("markerUnits", "userSpaceOnUse");
-
   const goldPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  goldPath.setAttribute("d", "M 0 0 L 14 7 L 0 14 Z");
-  goldPath.setAttribute("fill", "rgba(255, 221, 110, 0.98)");
+  goldPath.setAttribute("d", "M 0 0 L 18 9 L 0 18 Z");
+  goldPath.setAttribute("fill", "rgba(255, 221, 110, 0.99)");
   gold.appendChild(goldPath);
 
   defs.appendChild(blue);
@@ -897,6 +903,7 @@ function renderEdges() {
   svg.style.height = `${height}px`;
   svg.style.overflow = "visible";
   svg.style.pointerEvents = "none";
+
   ensureArrowMarkers(svg);
 
   for (const edge of state.edges) {
@@ -908,8 +915,8 @@ function renderEdges() {
     const toRect = state.rectMap.get(toCell.cell_id);
     if (!fromRect || !toRect) continue;
 
-    const a = getRectAnchor(fromRect, "right");
-    const b = getRectAnchor(toRect, "left");
+    const a = getRectAnchor(fromRect, "from");
+    const b = getRectAnchor(toRect, "to");
     const active = state.selectedUnitId && (state.selectedUnitId === edge.fromId || state.selectedUnitId === edge.toId);
 
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -919,16 +926,12 @@ function renderEdges() {
     path.setAttribute("stroke-linejoin", "round");
 
     if (active) {
-      path.setAttribute("stroke", "rgba(255, 221, 110, 0.96)");
-      path.setAttribute("stroke-width", "3.4");
-      path.setAttribute("opacity", "1");
-      path.setAttribute("filter", "drop-shadow(0 0 4px rgba(255,221,110,0.65))");
+      path.setAttribute("class", "edge-path active");
+      path.setAttribute("stroke-width", "3.9");
       path.setAttribute("marker-end", "url(#arrowhead-gold)");
     } else {
-      path.setAttribute("stroke", "rgba(125, 190, 255, 0.68)");
-      path.setAttribute("stroke-width", "2.2");
-      path.setAttribute("opacity", "0.95");
-      path.setAttribute("stroke-dasharray", "7 8");
+      path.setAttribute("class", "edge-path");
+      path.setAttribute("stroke-width", "2.8");
       path.setAttribute("marker-end", "url(#arrowhead-blue)");
     }
 
