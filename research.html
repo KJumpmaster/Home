@@ -8,28 +8,10 @@
     :root {
       --bg-0: #070b11;
       --bg-1: #0c121b;
-      --bg-2: #111927;
-      --bg-3: #172233;
-      --panel: rgba(13, 19, 29, 0.92);
-      --panel-2: rgba(20, 29, 43, 0.92);
       --text: #e8eef8;
       --muted: #9cafc7;
       --dim: #6d7f97;
       --line: rgba(255,255,255,0.08);
-      --line-2: rgba(255,255,255,0.14);
-      --shadow: rgba(0, 0, 0, 0.38);
-      --blue: #79a8ff;
-      --blue-soft: rgba(121, 168, 255, 0.25);
-      --gold: #ffd75f;
-      --gold-soft: rgba(255, 215, 95, 0.35);
-      --cyan: #54e6ff;
-      --cyan-soft: rgba(84, 230, 255, 0.35);
-      --purple: #c986ff;
-      --purple-soft: rgba(201, 134, 255, 0.35);
-      --orange: #ffac58;
-      --orange-soft: rgba(255, 172, 88, 0.35);
-      --steel: #90abc8;
-      --steel-soft: rgba(144, 171, 200, 0.3);
       --sidebar-w: 390px;
       --rank-header-h: 48px;
       --rank-gap: 34px;
@@ -504,9 +486,7 @@
       text-transform: uppercase;
     }
 
-    .hero-content {
-      padding: 16px;
-    }
+    .hero-content { padding: 16px; }
 
     .hero-kicker {
       display: flex;
@@ -554,9 +534,7 @@
       word-break: break-word;
     }
 
-    .section {
-      margin-top: 18px;
-    }
+    .section { margin-top: 18px; }
 
     .section-title {
       display: flex;
@@ -571,10 +549,7 @@
       margin-bottom: 10px;
     }
 
-    .member-list {
-      display: grid;
-      gap: 10px;
-    }
+    .member-list { display: grid; gap: 10px; }
 
     .member-item {
       display: grid;
@@ -638,7 +613,7 @@
       color: #d8e6f6;
       background: rgba(12, 18, 27, .92);
       border: 1px solid rgba(255,255,255,.06);
-      max-width: 920px;
+      max-width: 940px;
       white-space: pre-wrap;
     }
 
@@ -653,9 +628,7 @@
 
     @media (max-width: 1100px) {
       .app { grid-template-columns: 1fr; }
-      .sidebar {
-        display: none;
-      }
+      .sidebar { display: none; }
     }
   </style>
 </head>
@@ -675,7 +648,7 @@
           <div class="pill"><span class="dot pack"></span> Pack</div>
         </div>
       </div>
-      <div class="tree-scroll" id="treeScroll">
+      <div class="tree-scroll">
         <div class="tree-shell" id="treeShell">
           <div class="tree-grid"></div>
           <div class="rank-layer" id="rankLayer"></div>
@@ -704,7 +677,6 @@
     const EDGES_CSV_URL = 'usa_tree_pass2_edges.csv';
     const PIC_BASE = 'https://kjumpmaster.github.io/Aircraft-Pics/';
 
-    // Put the 3 exact bad ids here once you confirm them.
     const EXEMPT_UNIT_IDS = new Set([
       // 'example_unit_1',
       // 'example_unit_2',
@@ -725,7 +697,8 @@
       selectedUnitId: '',
       cells: [],
       edges: [],
-      rectMap: new Map()
+      rectMap: new Map(),
+      arrowSourceUsed: 'csv'
     };
 
     function setStatus(message, isError = false) {
@@ -790,6 +763,20 @@
       return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
     }
 
+    function escapeHTML(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function cssEscape(v) {
+      if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(v);
+      return String(v).replace(/([ #;?%&,.+*~\\':"!^$\[\]()=>|\/])/g, '\\$1');
+    }
+
     function parseCSV(text) {
       const rows = [];
       let row = [];
@@ -835,6 +822,24 @@
       return await res.text();
     }
 
+    function collectObjectsDeep(root) {
+      const out = [];
+      const seen = new Set();
+      (function walk(node) {
+        if (!node || typeof node !== 'object' || seen.has(node)) return;
+        seen.add(node);
+        if (Array.isArray(node)) {
+          for (const item of node) walk(item);
+          return;
+        }
+        const keys = Object.keys(node);
+        const rowish = keys.some(k => /(^|_)(id|name|unit|plane|type|premium|event|pack|squadron)$/i.test(k));
+        if (rowish) out.push(node);
+        for (const value of Object.values(node)) walk(value);
+      })(root);
+      return out;
+    }
+
     function buildRegistryMaps(rows) {
       state.registryByMasterKey = new Map();
       for (const row of rows) {
@@ -855,46 +860,87 @@
       }
     }
 
-    function collectObjectsDeep(root) {
-      const out = [];
-      const seen = new Set();
-      (function walk(node) {
-        if (!node || typeof node !== 'object' || seen.has(node)) return;
-        seen.add(node);
-        if (Array.isArray(node)) {
-          for (const item of node) walk(item);
-          return;
-        }
-        const keys = Object.keys(node);
-        const rowish = keys.some(k => /(^|_)(id|name|unit|plane|type|premium|event|pack|squadron)$/i.test(k));
-        if (rowish) out.push(node);
-        for (const value of Object.values(node)) walk(value);
-      })(root);
-      return out;
-    }
-
     function buildFlagMap(flagJson) {
       const map = new Map();
       const rows = collectObjectsDeep(flagJson);
+
+      function addAlias(alias, payload) {
+        const raw = String(alias || '').trim();
+        const nid = normId(raw);
+        if (!raw && !nid) return;
+
+        const existing = map.get(raw) || map.get(nid) || {
+          premium: false,
+          squadron: false,
+          event: false,
+          pack: false,
+          rawAliases: new Set()
+        };
+
+        existing.premium = existing.premium || !!payload.premium;
+        existing.squadron = existing.squadron || !!payload.squadron;
+        existing.event = existing.event || !!payload.event;
+        existing.pack = existing.pack || !!payload.pack;
+        existing.rawAliases.add(raw || nid);
+
+        if (raw) map.set(raw, existing);
+        if (nid) map.set(nid, existing);
+      }
+
       for (const row of rows) {
-        const id = firstNonBlank([
-          row.unit_id, row.aircraft_id, row.id, row.name, row.plane, row.vehicle, row.value, row.master_key
-        ]);
-        const nid = normId(id);
-        if (!nid) continue;
         const typeText = normalizeType(firstNonBlank([
-          row.vehicle_type, row.type, row.unit_type, row.classification, row.flag_type
+          row.vehicle_type, row.type, row.unit_type, row.classification, row.flag_type,
+          row.reward_type, row.kind, row.class
         ]));
-        map.set(nid, {
+
+        const payload = {
           premium: toBool(row.premium) || typeText.includes('premium'),
           squadron: toBool(row.squadron) || typeText.includes('squadron'),
           event: toBool(row.event) || typeText.includes('event'),
-          pack: toBool(row.pack) || typeText.includes('pack'),
-          vehicleType: typeText,
-          raw: row
-        });
+          pack: toBool(row.pack) || typeText.includes('pack')
+        };
+
+        [
+          row.unit_id, row.aircraft_id, row.id, row.name, row.plane, row.vehicle,
+          row.value, row.master_key, row.wt_name, row.display_name, row.title
+        ].forEach(v => addAlias(v, payload));
+
+        for (const v of Object.values(row)) {
+          if (typeof v !== 'string') continue;
+          const s = v.trim();
+          if (!s || s.length > 120) continue;
+          addAlias(s, payload);
+        }
+
+        for (const v of Object.values(row)) {
+          if (!Array.isArray(v)) continue;
+          for (const item of v) {
+            if (typeof item === 'string') addAlias(item, payload);
+            else if (item && typeof item === 'object') {
+              [item.unit_id, item.aircraft_id, item.id, item.master_key, item.name, item.title, item.value].forEach(x => addAlias(x, payload));
+            }
+          }
+        }
       }
+
       return map;
+    }
+
+    function getRegistryRowByUnitId(unitId) {
+      const raw = String(unitId || '').trim();
+      const normalized = normId(unitId);
+      return state.registryByMasterKey.get(raw) || state.registryByMasterKey.get(normalized) || null;
+    }
+
+    function getCellMasterKey(cell) {
+      return normalizeKey(firstNonBlank([
+        cell.master_key,
+        cell.cell_key,
+        cell.unit_id,
+        cell.id,
+        cell.key,
+        Array.isArray(cell.units) && cell.units.length ? (typeof cell.units[0] === 'string' ? cell.units[0] : firstNonBlank([cell.units[0].unit_id, cell.units[0].id, cell.units[0].master_key])) : ''
+      ]));
     }
 
     function getCellUnitIds(cell) {
@@ -937,11 +983,44 @@
     }
 
     function classifyUnit(unitId, fallbackCell = null) {
-      const f = state.flagMap.get(normId(unitId)) || {};
-      if (f.squadron) return 'squadron';
-      if (f.event) return 'event';
-      if (f.pack) return 'pack';
-      if (f.premium) return 'premium';
+      const candidates = new Set();
+      const add = (v) => {
+        const raw = String(v || '').trim();
+        const nid = normId(raw);
+        if (raw) candidates.add(raw);
+        if (nid) candidates.add(nid);
+      };
+
+      add(unitId);
+
+      if (fallbackCell) {
+        add(fallbackCell.master_key);
+        add(fallbackCell.cell_key);
+        add(fallbackCell.unit_id);
+        add(fallbackCell.id);
+        add(fallbackCell.key);
+        add(fallbackCell.name);
+        add(fallbackCell.display_name);
+        add(fallbackCell.title);
+      }
+
+      const reg = getRegistryRowByUnitId(unitId);
+      if (reg) {
+        add(reg.master_key);
+        add(reg.wt_name);
+        add(reg.wt_display_name_new);
+        add(reg.rw_name);
+        add(reg.wt_image);
+      }
+
+      for (const key of candidates) {
+        const f = state.flagMap.get(key);
+        if (!f) continue;
+        if (f.squadron) return 'squadron';
+        if (f.event) return 'event';
+        if (f.pack) return 'pack';
+        if (f.premium) return 'premium';
+      }
 
       if (fallbackCell) {
         const cellTypeText = normalizeType(firstNonBlank([
@@ -952,6 +1031,7 @@
           fallbackCell.class,
           fallbackCell.reward_type
         ]));
+
         const nameText = normalizeType(firstNonBlank([
           fallbackCell.display_name,
           fallbackCell.wiki_name,
@@ -968,37 +1048,6 @@
       }
 
       return 'tech';
-    }
-
-    function getCellMasterKey(cell) {
-      return normalizeKey(firstNonBlank([
-        cell.master_key,
-        cell.cell_key,
-        cell.unit_id,
-        cell.id,
-        cell.key,
-        Array.isArray(cell.units) && cell.units.length ? (typeof cell.units[0] === 'string' ? cell.units[0] : firstNonBlank([cell.units[0].unit_id, cell.units[0].id, cell.units[0].master_key])) : ''
-      ]));
-    }
-
-    function getRegistryRowByUnitId(unitId) {
-      const raw = String(unitId || '').trim();
-      const normalized = normId(unitId);
-      return state.registryByMasterKey.get(raw) || state.registryByMasterKey.get(normalized) || null;
-    }
-
-    function getDisplayName(cell, registryRow) {
-      return (
-        cell.display_name ||
-        cell.wiki_name ||
-        cell.name ||
-        cell.title ||
-        registryRow?.wt_display_name_new ||
-        registryRow?.wt_name ||
-        registryRow?.rw_name ||
-        getCellMasterKey(cell) ||
-        'Unknown Aircraft'
-      );
     }
 
     function summarizeGroupTypes(unitIds, fallbackCell = null) {
@@ -1019,15 +1068,27 @@
         else if (/\.(png|jpg|jpeg|webp)$/i.test(wtImage)) out.push(`${PIC_BASE}${wtImage}`);
         else out.push(`${PIC_BASE}${wtImage}.png`);
       }
-      if (masterKey) {
-        out.push(`${PIC_BASE}${masterKey}.png`);
-      }
+      if (masterKey) out.push(`${PIC_BASE}${masterKey}.png`);
       return [...new Set(out)];
     }
 
     function resolveImageURL(registryRow, unitId) {
       const candidates = buildImageCandidates(registryRow, unitId);
       return candidates[0] || null;
+    }
+
+    function getDisplayName(cell, registryRow) {
+      return (
+        cell.display_name ||
+        cell.wiki_name ||
+        cell.name ||
+        cell.title ||
+        registryRow?.wt_display_name_new ||
+        registryRow?.wt_name ||
+        registryRow?.rw_name ||
+        getCellMasterKey(cell) ||
+        'Unknown Aircraft'
+      );
     }
 
     function normalizeCell(raw, idx) {
@@ -1046,8 +1107,7 @@
     }
 
     function validateCellPlacement(cell) {
-      return Number.isFinite(cell.rank) && Number.isFinite(cell.column) && Number.isFinite(cell.row) &&
-        cell.rank >= 1 && cell.column >= 1 && cell.row >= 1;
+      return Number.isFinite(cell.rank) && Number.isFinite(cell.column) && Number.isFinite(cell.row) && cell.rank >= 1 && cell.column >= 1 && cell.row >= 1;
     }
 
     function getRowCountsByRank(cells) {
@@ -1077,518 +1137,4 @@
         y += bandH + varNum('--rank-gap');
       }
       const maxCol = getMaxColumn(cells);
-      const width = varNum('--tree-pad') * 2 + maxCol * varNum('--cell-w') + (maxCol - 1) * varNum('--cell-gap-x');
-      const height = y + varNum('--tree-pad') - varNum('--rank-gap');
-      return { rankLayout, width, height };
-    }
-
-    function getCellRect(cell, rankLayout) {
-      const layout = rankLayout.get(Number(cell.rank));
-      return {
-        x: varNum('--tree-pad') + (Number(cell.column) - 1) * (varNum('--cell-w') + varNum('--cell-gap-x')),
-        y: layout.y + varNum('--rank-header-h') + varNum('--rank-inner-top') + (Number(cell.row) - 1) * (varNum('--cell-h') + varNum('--cell-gap-y')),
-        w: varNum('--cell-w'),
-        h: varNum('--cell-h')
-      };
-    }
-
-    function renderRankBands(rankLayout, width) {
-      rankLayerEl.innerHTML = '';
-      for (const [rank, layout] of [...rankLayout.entries()].sort((a,b) => a[0]-b[0])) {
-        const band = document.createElement('div');
-        band.className = 'rank-band';
-        band.style.left = '0px';
-        band.style.top = `${layout.y}px`;
-        band.style.width = `${width}px`;
-        band.style.height = `${layout.height}px`;
-        const label = document.createElement('div');
-        label.className = 'rank-label';
-        label.textContent = `Rank ${romanize(rank)}`;
-        band.appendChild(label);
-        rankLayerEl.appendChild(band);
-      }
-    }
-
-    function renderSingleUnitPanel(member) {
-      const row = member.registryRow || null;
-      detailPanelEl.innerHTML = `
-        <div class="hero-card">
-          <div class="hero-image ${member.imageUrl ? '' : 'placeholder'}">
-            ${member.imageUrl ? `<img src="${escapeHTML(member.imageUrl)}" alt="${escapeHTML(member.displayName)}" />` : 'No Image'}
-          </div>
-          <div class="hero-content">
-            <div class="hero-kicker"><span class="tag ${member.type}">${member.type}</span></div>
-            <h3 class="hero-name">${escapeHTML(member.displayName)}</h3>
-            <div class="meta-grid">
-              <div class="meta-box">
-                <div class="meta-label">Unit ID</div>
-                <div class="meta-value">${escapeHTML(member.unitId || '—')}</div>
-              </div>
-              <div class="meta-box">
-                <div class="meta-label">Nation</div>
-                <div class="meta-value">${escapeHTML(row?.nation || 'USA')}</div>
-              </div>
-              <div class="meta-box">
-                <div class="meta-label">WT Name</div>
-                <div class="meta-value">${escapeHTML(row?.wt_name || '—')}</div>
-              </div>
-              <div class="meta-box">
-                <div class="meta-label">Master Key</div>
-                <div class="meta-value">${escapeHTML(row?.master_key || member.unitId || '—')}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderGroupPanel(cell) {
-      const summaryTags = [];
-      for (const t of ['squadron', 'event', 'pack', 'premium', 'tech']) {
-        const n = cell.groupCounts[t] || 0;
-        if (n > 0) summaryTags.push(`<span class="tag ${t}">${t} ${n}</span>`);
-      }
-
-      const listHtml = cell.members.map(member => `
-        <div class="member-item" data-member-unit-id="${escapeHTML(member.unitId)}">
-          <div class="member-thumb ${member.imageUrl ? '' : 'placeholder'}">
-            ${member.imageUrl ? `<img src="${escapeHTML(member.imageUrl)}" alt="${escapeHTML(member.displayName)}" />` : 'No Image'}
-          </div>
-          <div>
-            <div class="member-name">${escapeHTML(member.displayName)}</div>
-            <div class="badge-row" style="margin-top:0;">
-              <span class="tag ${member.type}">${member.type}</span>
-            </div>
-            <div style="margin-top:6px;font-size:11px;color:var(--muted);">${escapeHTML(member.unitId)}</div>
-          </div>
-        </div>
-      `).join('');
-
-      detailPanelEl.innerHTML = `
-        <div class="hero-card">
-          <div class="hero-content">
-            <div class="hero-kicker">${summaryTags.join(' ')}</div>
-            <h3 class="hero-name">${escapeHTML(cell.displayTitle)}</h3>
-            <div style="color:var(--muted);font-size:13px;line-height:1.5;">Grouped aircraft folder. Select a member below to inspect the exact aircraft record.</div>
-            <div class="meta-grid" style="margin-top:16px;">
-              <div class="meta-box">
-                <div class="meta-label">Group Members</div>
-                <div class="meta-value">${cell.members.length}</div>
-              </div>
-              <div class="meta-box">
-                <div class="meta-label">Primary Unit</div>
-                <div class="meta-value">${escapeHTML(cell.primaryUnitId || '—')}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="section">
-          <div class="section-title"><span>Folder Members</span></div>
-          <div class="member-list">${listHtml}</div>
-        </div>
-      `;
-
-      detailPanelEl.querySelectorAll('[data-member-unit-id]').forEach(el => {
-        el.addEventListener('click', () => {
-          const unitId = el.getAttribute('data-member-unit-id');
-          const member = cell.members.find(m => m.unitId === unitId);
-          if (member) renderSingleUnitPanel(member);
-        });
-      });
-    }
-
-    function escapeHTML(value) {
-      return String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function createCellElement(cell) {
-      const el = document.createElement('div');
-      el.className = `tree-cell ${cell.mainType}`;
-      el.dataset.cellId = cell.cell_id;
-      el.dataset.unitId = cell.primaryUnitId;
-
-      const lead = cell.members[0] || null;
-      const title = cell.displayTitle;
-      const metaRight = cell.isGroup ? `${cell.members.length} aircraft` : `R${cell.rank} C${cell.column} Y${cell.row}`;
-      const badges = [`<span class="tag ${cell.mainType}">${cell.mainType}</span>`];
-      if (cell.isGroup) badges.push('<span class="tag group">Group</span>');
-
-      el.innerHTML = `
-        <div class="cell-accent"></div>
-        ${cell.isGroup ? `<div class="group-corner">${cell.members.length}</div>` : ''}
-        <div class="cell-top">
-          <div class="cell-image-wrap"></div>
-        </div>
-        <div class="cell-body">
-          <div class="cell-title"></div>
-          <div class="cell-meta">
-            <span>${cell.primaryUnitId ? escapeHTML(cell.primaryUnitId) : ''}</span>
-            <span>${escapeHTML(metaRight)}</span>
-          </div>
-          <div class="badge-row">${badges.join('')}</div>
-        </div>
-      `;
-
-      el.querySelector('.cell-title').textContent = title;
-      const imgWrap = el.querySelector('.cell-image-wrap');
-      if (lead && lead.imageUrl) {
-        const img = document.createElement('img');
-        img.className = 'cell-image';
-        img.alt = title;
-        img.src = lead.imageUrl;
-        imgWrap.appendChild(img);
-      } else {
-        const fallback = document.createElement('div');
-        fallback.className = 'cell-fallback';
-        fallback.textContent = 'No Image';
-        imgWrap.appendChild(fallback);
-      }
-
-      el.addEventListener('click', () => selectCell(cell));
-      return el;
-    }
-
-    function getRectAnchor(rect, side) {
-      if (side === 'right') return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
-      return { x: rect.x, y: rect.y + rect.h / 2 };
-    }
-
-    function makeCurvedPath(a, b) {
-      const midX = Math.round((a.x + b.x) / 2);
-      return `M ${a.x} ${a.y} C ${midX} ${a.y}, ${midX} ${b.y}, ${b.x} ${b.y}`;
-    }
-
-    function ensureArrowMarkers(svg) {
-      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-
-      const blue = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-      blue.setAttribute('id', 'arrowhead-blue');
-      blue.setAttribute('markerWidth', '8');
-      blue.setAttribute('markerHeight', '8');
-      blue.setAttribute('refX', '7');
-      blue.setAttribute('refY', '4');
-      blue.setAttribute('orient', 'auto');
-      blue.setAttribute('markerUnits', 'strokeWidth');
-      const bluePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      bluePath.setAttribute('d', 'M 0 0 L 8 4 L 0 8 Z');
-      bluePath.setAttribute('class', 'edge-head-blue');
-      blue.appendChild(bluePath);
-
-      const gold = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-      gold.setAttribute('id', 'arrowhead-gold');
-      gold.setAttribute('markerWidth', '8');
-      gold.setAttribute('markerHeight', '8');
-      gold.setAttribute('refX', '7');
-      gold.setAttribute('refY', '4');
-      gold.setAttribute('orient', 'auto');
-      gold.setAttribute('markerUnits', 'strokeWidth');
-      const goldPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      goldPath.setAttribute('d', 'M 0 0 L 8 4 L 0 8 Z');
-      goldPath.setAttribute('class', 'edge-head-gold');
-      gold.appendChild(goldPath);
-
-      defs.appendChild(blue);
-      defs.appendChild(gold);
-      svg.appendChild(defs);
-    }
-
-    function renderEdges() {
-      edgeLayerEl.innerHTML = '';
-      const width = parseFloat(treeShellEl.style.width) || 0;
-      const height = parseFloat(treeShellEl.style.height) || 0;
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('width', width);
-      svg.setAttribute('height', height);
-      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-      ensureArrowMarkers(svg);
-
-      for (const edge of state.edges) {
-        let fromCell = null;
-        let toCell = null;
-
-        if (edge.matchMode === 'cell') {
-          fromCell = state.cells.find(c => c.cell_id === edge.fromRef || c.cell_key === edge.fromRef);
-          toCell = state.cells.find(c => c.cell_id === edge.toRef || c.cell_key === edge.toRef);
-        } else {
-          fromCell = state.cells.find(c => c.unitIds.includes(edge.fromId));
-          toCell = state.cells.find(c => c.unitIds.includes(edge.toId));
-        }
-
-        if (!fromCell || !toCell) continue;
-        const fromRect = state.rectMap.get(fromCell.cell_id);
-        const toRect = state.rectMap.get(toCell.cell_id);
-        if (!fromRect || !toRect) continue;
-        const a = getRectAnchor(fromRect, 'right');
-        const b = getRectAnchor(toRect, 'left');
-        const active = state.selectedUnitId && (state.selectedUnitId === edge.fromId || state.selectedUnitId === edge.toId);
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', makeCurvedPath(a, b));
-        path.setAttribute('class', `edge-path${active ? ' active' : ''}`);
-        path.setAttribute('marker-end', active ? 'url(#arrowhead-gold)' : 'url(#arrowhead-blue)');
-        svg.appendChild(path);
-      }
-
-      edgeLayerEl.appendChild(svg);
-    }
-
-    function selectCell(cell) {
-      state.selectedCellId = cell.cell_id;
-      state.selectedUnitId = cell.primaryUnitId || '';
-      document.querySelectorAll('.tree-cell.active').forEach(el => el.classList.remove('active'));
-      const activeEl = document.querySelector(`.tree-cell[data-cell-id="${cssEscape(cell.cell_id)}"]`);
-      if (activeEl) activeEl.classList.add('active');
-      if (cell.isGroup) renderGroupPanel(cell);
-      else renderSingleUnitPanel(cell.members[0]);
-      renderEdges();
-    }
-
-    function cssEscape(v) {
-      if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(v);
-      return String(v).replace(/([ #;?%&,.+*~\':"!^$\[\]()=>|\/])/g, '\\$1');
-    }
-
-    function buildMember(unitId, fallbackCell, registryRow) {
-      const row = registryRow || getRegistryRowByUnitId(unitId) || null;
-      return {
-        unitId,
-        type: classifyUnit(unitId, fallbackCell),
-        displayName: (
-          row?.wt_display_name_new ||
-          row?.wt_name ||
-          row?.rw_name ||
-          fallbackCell.display_name ||
-          fallbackCell.title ||
-          fallbackCell.name ||
-          unitId
-        ),
-        registryRow: row,
-        imageUrl: resolveImageURL(row, unitId)
-      };
-    }
-
-    function prepareCells(rawCells) {
-      const validCells = rawCells.map(normalizeCell).filter(validateCellPlacement);
-      const prepared = [];
-      for (const raw of validCells) {
-        const unitIds = getRenderableUnitIds(raw);
-        if (!unitIds.length) continue;
-        const primaryUnitId = unitIds[0];
-        const registryRow = getRegistryRowByUnitId(primaryUnitId) || getRegistryRowByUnitId(getCellMasterKey(raw)) || null;
-        const members = unitIds.map(uid => buildMember(uid, raw, registryRow));
-        prepared.push({
-          ...raw,
-          unitIds,
-          primaryUnitId,
-          members,
-          isGroup: unitIds.length > 1 || Array.isArray(raw.units) && raw.units.length > 1 || Array.isArray(raw.members) && raw.members.length > 1,
-          mainType: classifyUnit(primaryUnitId, raw),
-          groupCounts: summarizeGroupTypes(unitIds, raw),
-          displayTitle: getDisplayName(raw, registryRow)
-        });
-      }
-      return prepared;
-    }
-
-    function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
-      const edges = [];
-      const seen = new Set();
-
-      function addEdge(fromCell, toCell, row, matchMode, sourceTag) {
-        if (!fromCell || !toCell) return;
-        const key = `${fromCell.cell_id}__${toCell.cell_id}`;
-        if (seen.has(key)) return;
-        seen.add(key);
-        edges.push({
-          fromId: fromCell.primaryUnitId,
-          toId: toCell.primaryUnitId,
-          fromRef: fromCell.cell_id,
-          toRef: toCell.cell_id,
-          raw: row,
-          matchMode,
-          sourceTag
-        });
-      }
-
-      function resolveCell(ref) {
-        const raw = String(ref || '').trim();
-        const nid = normId(raw);
-        if (!raw && !nid) return null;
-
-        return (
-          cellsById.get(raw) ||
-          cellsById.get(nid) ||
-          state.cells.find(c =>
-            c.cell_id === raw || c.cell_key === raw ||
-            normId(c.cell_id) === nid || normId(c.cell_key) === nid ||
-            c.unitIds.includes(raw) || c.unitIds.includes(nid) ||
-            c.primaryUnitId === raw || c.primaryUnitId === nid ||
-            normId(c.displayTitle) === nid || normId(c.master_key) === nid || normId(c.name) === nid || normId(c.title) === nid
-          ) ||
-          null
-        );
-      }
-
-      for (const row of rows) {
-        const candidatesA = [
-          row.from_id, row.from, row.source, row.parent, row.parent_id, row.source_cell_key, row.src,
-          row.From, row.Source, row.Parent, row.source_id, row.start, row.a, row.u, row.unit_from, row.cell_from
-        ].map(v => String(v || '').trim()).filter(Boolean);
-
-        const candidatesB = [
-          row.to_id, row.to, row.target, row.child, row.child_id, row.target_cell_key, row.dst,
-          row.To, row.Target, row.Child, row.target_id, row.end, row.b, row.v, row.unit_to, row.cell_to
-        ].map(v => String(v || '').trim()).filter(Boolean);
-
-        for (const a of candidatesA) {
-          for (const b of candidatesB) {
-            const fromCell = resolveCell(a);
-            const toCell = resolveCell(b);
-            if (fromCell && toCell) {
-              addEdge(fromCell, toCell, row, 'resolved', 'direct');
-            }
-          }
-        }
-
-        if (Array.isArray(row.path) && row.path.length >= 2) {
-          const fromCell = resolveCell(row.path[0]);
-          const toCell = resolveCell(row.path[row.path.length - 1]);
-          addEdge(fromCell, toCell, row, 'resolved', 'path');
-        }
-      }
-
-      return edges;
-    }
-
-    function renderCells(cells, rankLayout) {
-      nodeLayerEl.innerHTML = '';
-      const rectMap = new Map();
-
-      for (const cell of cells) {
-        const rect = getCellRect(cell, rankLayout);
-        rectMap.set(cell.cell_id, rect);
-
-        const wrap = document.createElement('div');
-        wrap.className = 'cell-wrap' + (cell.isGroup ? ' grouped' : '');
-        wrap.style.left = `${rect.x}px`;
-        wrap.style.top = `${rect.y}px`;
-
-        if (cell.isGroup) {
-          const s2 = document.createElement('div');
-          s2.className = 'cell-shadow-2';
-          const s1 = document.createElement('div');
-          s1.className = 'cell-shadow-1';
-          wrap.appendChild(s2);
-          wrap.appendChild(s1);
-        }
-
-        wrap.appendChild(createCellElement(cell));
-        nodeLayerEl.appendChild(wrap);
-      }
-
-      return rectMap;
-    }
-
-    async function initiateSystem() {
-      setStatus('Loading tree, flags, registry, and edge truth...');
-
-      const [treePayload, flagsPayload, regText, edgeText] = await Promise.all([
-        fetchJSON(TREE_JSON_URL),
-        fetchJSON(FLAGS_JSON_URL),
-        fetchText(REGISTRY_CSV_URL),
-        fetchText(EDGES_CSV_URL)
-      ]);
-
-      const registryRows = parseCSV(regText);
-      buildRegistryMaps(registryRows);
-      state.flagMap = buildFlagMap(flagsPayload);
-
-      const rawCells = Array.isArray(treePayload.cells) ? treePayload.cells : [];
-      const bad = rawCells.map(normalizeCell).filter(c => !validateCellPlacement(c));
-      if (bad.length) {
-        setStatus(`Some cells invalid.
-First bad cell:
-${JSON.stringify(bad[0], null, 2)}`, true);
-      }
-
-      state.cells = prepareCells(rawCells);
-      if (!state.cells.length) {
-        throw new Error(`No valid cells found. First raw cell: ${JSON.stringify(rawCells[0], null, 2)}`);
-      }
-
-      const visibleUnitSet = new Set();
-      const cellsById = new Map();
-
-      for (const cell of state.cells) {
-        cellsById.set(cell.cell_id, cell);
-        cellsById.set(normId(cell.cell_id), cell);
-        cellsById.set(cell.cell_key, cell);
-        cellsById.set(normId(cell.cell_key), cell);
-
-        if (cell.primaryUnitId) {
-          cellsById.set(cell.primaryUnitId, cell);
-          cellsById.set(normId(cell.primaryUnitId), cell);
-        }
-
-        if (cell.displayTitle) {
-          cellsById.set(cell.displayTitle, cell);
-          cellsById.set(normId(cell.displayTitle), cell);
-        }
-
-        for (const id of cell.unitIds) {
-          visibleUnitSet.add(id);
-          visibleUnitSet.add(normId(id));
-          cellsById.set(id, cell);
-          cellsById.set(normId(id), cell);
-        }
-      }
-
-      const edgeRows = parseCSV(edgeText);
-      const jsonEdges = Array.isArray(treePayload.edges)
-        ? treePayload.edges
-        : (Array.isArray(treePayload.arrows) ? treePayload.arrows : []);
-
-      state.edges = buildVisibleEdges(edgeRows, visibleUnitSet, cellsById);
-      let arrowSourceUsed = 'csv';
-
-      if (!state.edges.length && jsonEdges.length) {
-        state.edges = buildVisibleEdges(jsonEdges, visibleUnitSet, cellsById);
-        arrowSourceUsed = 'json-fallback';
-      }
-
-      state.arrowSourceUsed = arrowSourceU
-
-      const { rankLayout, width, height } = computeRankLayout(state.cells);
-      treeShellEl.style.width = `${width}px`;
-      treeShellEl.style.height = `${height}px`;
-
-      renderRankBands(rankLayout, width);
-      state.rectMap = renderCells(state.cells, rankLayout);
-      renderEdges();
-
-      const first = state.cells.find(c => !c.isGroup) || state.cells[0];
-      if (first) selectCell(first);
-
-      const counts = { tech: 0, premium: 0, squadron: 0, event: 0, pack: 0 };
-      for (const cell of state.cells) {
-        counts[cell.mainType] = (counts[cell.mainType] || 0) + 1;
-      }
-
-      setStatus(`Loaded OK
-Tree: ${TREE_JSON_URL}
-Flags: ${FLAGS_JSON_URL}
-Registry: ${REGISTRY_CSV_URL}
-Edges: ${EDGES_CSV_URL}
-Visible cells: ${state.cells.length}
-Drawn arrows: ${state.edges.length}
-Premium: ${counts.premium} | Squadron: ${counts.squadron} | Event: ${counts.event} | Pack: ${counts.pack}
-FlagFlag rows indexed: ${state.flagMap.size}\nArrow source used: ${state.arrowSourceUsed || 'cs }
-
-    initiateSystem();
-  </script>
-</body>
-</html>
+      const width =
