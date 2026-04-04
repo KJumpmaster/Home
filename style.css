@@ -27,7 +27,6 @@
   --shadow-mid: 0 14px 30px rgba(0, 0, 0, 0.38);
   --shadow-strong: 0 18px 40px rgba(0, 0, 0, 0.46);
 
-  /* tree geometry used by engine.js */
   --tree-pad: 28;
   --cell-w: 176;
   --cell-h: 192;
@@ -53,9 +52,7 @@ body {
   background: #09100f;
 }
 
-/* =========================================================
-   HOME / CAOC PAGE
-   ========================================================= */
+/* HOME / CAOC PAGE */
 
 body.caoc-page {
   min-height: 100vh;
@@ -207,9 +204,7 @@ body.caoc-page {
   color: #b9d9c8;
 }
 
-/* =========================================================
-   RESEARCH TREE PAGE
-   ========================================================= */
+/* RESEARCH TREE PAGE */
 
 body {
   background:
@@ -359,8 +354,6 @@ body {
   color: #bfe8d1;
   text-shadow: 0 0 10px rgba(124, 255, 178, 0.12);
 }
-
-/* cards */
 
 .cell-wrap {
   position: absolute;
@@ -576,8 +569,6 @@ body {
   background: rgba(215,247,230,0.06);
 }
 
-/* arrows */
-
 .edge-path {
   fill: none;
   stroke: var(--blue-line);
@@ -601,8 +592,6 @@ body {
 .edge-head-gold {
   fill: var(--gold-line);
 }
-
-/* sidebar */
 
 .sidebar {
   display: flex;
@@ -802,8 +791,6 @@ body {
   color: var(--text);
 }
 
-/* status */
-
 .status {
   position: fixed;
   left: 16px;
@@ -825,8 +812,6 @@ body {
   border-color: rgba(255, 105, 97, 0.38);
   color: #ffd7d3;
 }
-
-/* responsive */
 
 @media (max-width: 1450px) {
   .app {
