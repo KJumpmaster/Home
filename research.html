@@ -1,6 +1,4 @@
-from pathlib import Path
-
-html = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -8,141 +6,657 @@ html = r'''<!DOCTYPE html>
   <title>Sky Pilot Research Tree</title>
   <style>
     :root {
-      --bg: #0b1118;
-      --text: #e7eef7;
-      --muted: #91a2b6;
-      --premium: #d4aa40;
-      --squadron: #58b261;
-      --sidebar-w: 360px;
-      --rank-header-h: 44px;
-      --rank-gap: 26px;
+      --bg-0: #070b11;
+      --bg-1: #0c121b;
+      --bg-2: #111927;
+      --bg-3: #172233;
+      --panel: rgba(13, 19, 29, 0.92);
+      --panel-2: rgba(20, 29, 43, 0.92);
+      --text: #e8eef8;
+      --muted: #9cafc7;
+      --dim: #6d7f97;
+      --line: rgba(255,255,255,0.08);
+      --line-2: rgba(255,255,255,0.14);
+      --shadow: rgba(0, 0, 0, 0.38);
+      --blue: #79a8ff;
+      --blue-soft: rgba(121, 168, 255, 0.25);
+      --gold: #ffd75f;
+      --gold-soft: rgba(255, 215, 95, 0.35);
+      --cyan: #54e6ff;
+      --cyan-soft: rgba(84, 230, 255, 0.35);
+      --purple: #c986ff;
+      --purple-soft: rgba(201, 134, 255, 0.35);
+      --orange: #ffac58;
+      --orange-soft: rgba(255, 172, 88, 0.35);
+      --steel: #90abc8;
+      --steel-soft: rgba(144, 171, 200, 0.3);
+      --sidebar-w: 390px;
+      --rank-header-h: 48px;
+      --rank-gap: 34px;
       --rank-inner-top: 18px;
       --rank-inner-bottom: 18px;
       --cell-w: 170px;
-      --cell-h: 108px;
-      --cell-gap-x: 18px;
-      --cell-gap-y: 14px;
+      --cell-h: 122px;
+      --cell-gap-x: 36px;
+      --cell-gap-y: 22px;
       --tree-pad: 28px;
-      --img-h: 62px;
-      --radius: 14px;
+      --img-h: 66px;
+      --radius: 16px;
+      --font: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
 
     * { box-sizing: border-box; }
     html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      background: linear-gradient(180deg, #0b1118 0%, #0a0f15 100%);
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: var(--font);
       color: var(--text);
-      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(62, 88, 128, 0.18), transparent 34%),
+        radial-gradient(circle at top right, rgba(255, 210, 80, 0.07), transparent 26%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-0));
       overflow: hidden;
     }
 
-    .app { display: grid; grid-template-columns: 1fr var(--sidebar-w); width: 100%; height: 100%; }
-    .main { position: relative; min-width: 0; min-height: 0; border-right: 1px solid rgba(255,255,255,0.05); }
-    .toolbar {
-      height: 54px; display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px; background: rgba(9, 14, 21, 0.95); border-bottom: 1px solid rgba(255,255,255,0.05);
+    .app {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--sidebar-w);
+      width: 100%;
+      height: 100%;
     }
-    .toolbar strong { font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
-    .toolbar span { color: var(--muted); font-size: 12px; }
-    .legend { display: flex; gap: 10px; align-items: center; }
-    .pill {
-      display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 6px 10px;
-      font-size: 12px; color: var(--muted); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-    }
-    .dot { width: 9px; height: 9px; border-radius: 999px; display: inline-block; }
-    .dot.standard { background: rgba(127, 179, 255, .9); }
-    .dot.premium { background: rgba(212, 170, 64, .95); }
-    .dot.squadron { background: rgba(88, 178, 97, .95); }
 
-    .tree-scroll { position: absolute; left: 0; right: 0; top: 54px; bottom: 0; overflow: auto; padding: 18px; }
-    .tree-shell {
-      position: relative; min-width: max-content; min-height: 100%; padding: var(--tree-pad);
-      border-radius: 22px; background: linear-gradient(180deg, rgba(18, 26, 37, .92), rgba(10, 15, 22, .96));
-      border: 1px solid rgba(255,255,255,0.05); overflow: hidden;
+    .main {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      border-right: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.02), transparent 15%),
+        linear-gradient(180deg, rgba(22, 32, 48, 0.96), rgba(8, 12, 18, 0.98));
     }
-    .rank-layer, .edge-layer, .node-layer { position: absolute; inset: 0; }
+
+    .toolbar {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 16px;
+      background: linear-gradient(180deg, rgba(8, 12, 18, 0.98), rgba(8, 12, 18, 0.86));
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+    }
+
+    .toolbar strong {
+      font-size: 14px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    .toolbar span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    .dot.standard { background: rgba(144,171,200, .95); }
+    .dot.premium { background: rgba(255,215,95, .98); }
+    .dot.squadron { background: rgba(84,230,255, .98); }
+    .dot.event { background: rgba(201,134,255, .98); }
+    .dot.pack { background: rgba(255,172,88, .98); }
+
+    .tree-scroll {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 56px;
+      bottom: 0;
+      overflow: auto;
+      padding: 18px;
+    }
+
+    .tree-shell {
+      position: relative;
+      min-width: max-content;
+      min-height: 100%;
+      padding: var(--tree-pad);
+      border-radius: 22px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.005)),
+        linear-gradient(180deg, rgba(20, 29, 43, 0.78), rgba(10, 15, 23, 0.92));
+      border: 1px solid rgba(255,255,255,0.05);
+      overflow: hidden;
+      box-shadow:
+        0 24px 60px rgba(0,0,0,0.34),
+        inset 0 1px 0 rgba(255,255,255,0.035);
+    }
+
+    .tree-grid,
+    .rank-layer,
+    .edge-layer,
+    .node-layer {
+      position: absolute;
+      inset: 0;
+    }
+
+    .tree-grid {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.024) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.024) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
     .rank-band {
-      position: absolute; left: 0; right: 0; border-radius: 18px;
+      position: absolute;
+      left: 0;
+      right: 0;
+      border-radius: 18px;
       background: linear-gradient(180deg, rgba(24, 34, 48, .55), rgba(13, 20, 29, .42));
       border: 1px solid rgba(255,255,255,0.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
     }
+
     .rank-band::after {
-      content: ""; position: absolute; left: 0; right: 0; top: var(--rank-header-h); height: 1px;
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: var(--rank-header-h);
+      height: 1px;
       background: linear-gradient(90deg, transparent, rgba(146, 176, 215, .26), transparent);
     }
+
     .rank-label {
-      position: absolute; left: 16px; top: 10px; z-index: 1;
-      font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: #c6d4e5; font-weight: 700;
-    }
-    .edge-layer svg { position: absolute; inset: 0; overflow: visible; }
-    .edge-path {
-      fill: none; stroke: rgba(132, 177, 235, 0.24); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+      position: absolute;
+      left: 16px;
+      top: 10px;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 14px;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #d8e4f3;
+      font-weight: 800;
+      background: rgba(8, 12, 18, 0.72);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
     }
 
-    .cell-wrap { position: absolute; width: var(--cell-w); height: var(--cell-h); z-index: 3; }
-    .cell-wrap.grouped .cell-shadow-2, .cell-wrap.grouped .cell-shadow-1 {
-      position: absolute; inset: 0; border-radius: var(--radius); background: rgba(35,47,64,.60);
-      border: 1px solid rgba(144,176,216,.18); pointer-events: none;
+    .edge-layer svg {
+      position: absolute;
+      inset: 0;
+      overflow: visible;
+      pointer-events: none;
     }
-    .cell-wrap.grouped .cell-shadow-2 { transform: translate(9px,9px); opacity: .32; }
-    .cell-wrap.grouped .cell-shadow-1 { transform: translate(4px,4px); opacity: .50; }
+
+    .edge-path {
+      fill: none;
+      stroke: rgba(121, 168, 255, 0.26);
+      stroke-width: 2;
+      stroke-dasharray: 6 6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+      filter: drop-shadow(0 0 1px rgba(121, 168, 255, 0.12));
+    }
+
+    .edge-path.active {
+      stroke: rgba(255, 215, 95, 0.95);
+      stroke-width: 2.5;
+      stroke-dasharray: none;
+      filter: drop-shadow(0 0 5px rgba(255, 215, 95, 0.35));
+    }
+
+    .edge-head-blue { fill: rgba(121, 168, 255, 0.58); }
+    .edge-head-gold { fill: rgba(255, 215, 95, 0.96); }
+
+    .cell-wrap {
+      position: absolute;
+      width: var(--cell-w);
+      height: var(--cell-h);
+      z-index: 4;
+    }
+
+    .cell-wrap.grouped .cell-shadow-2,
+    .cell-wrap.grouped .cell-shadow-1 {
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(41, 53, 70, 0.96), rgba(20, 28, 38, 0.96));
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.22);
+      pointer-events: none;
+    }
+
+    .cell-wrap.grouped .cell-shadow-2 { transform: translate(12px,-12px); opacity: .28; }
+    .cell-wrap.grouped .cell-shadow-1 { transform: translate(6px,-6px); opacity: .50; }
 
     .tree-cell {
-      position: relative; width: 100%; height: 100%; border-radius: var(--radius); overflow: hidden;
-      background: linear-gradient(180deg, rgba(36, 44, 57, .96), rgba(19, 24, 32, .98));
-      border: 1px solid rgba(130,145,170,.22); cursor: pointer;
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(36, 44, 57, .98), rgba(19, 24, 32, .98));
+      border: 1px solid rgba(130,145,170,.22);
+      box-shadow:
+        0 10px 24px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, filter 0.16s ease;
+      user-select: none;
     }
-    .tree-cell.premium {
-      border-color: rgba(212,170,64,.72);
-      background: linear-gradient(180deg, rgba(61, 50, 22, .98), rgba(29,24,14,.98));
-      box-shadow: 0 0 0 1px rgba(212,170,64,.16), 0 0 18px rgba(212,170,64,.14);
+
+    .tree-cell:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.16);
+      box-shadow:
+        0 16px 34px rgba(0,0,0,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+      filter: brightness(1.02);
     }
-    .tree-cell.squadron {
-      border-color: rgba(88,178,97,.72);
-      background: linear-gradient(180deg, rgba(25, 52, 28, .98), rgba(15,28,17,.98));
-      box-shadow: 0 0 0 1px rgba(88,178,97,.16), 0 0 18px rgba(88,178,97,.12);
+
+    .tree-cell.active {
+      border-color: rgba(255, 215, 95, 0.42);
+      box-shadow:
+        0 0 0 1px rgba(255, 215, 95, 0.25),
+        0 18px 36px rgba(0,0,0,0.42),
+        0 0 28px rgba(255, 215, 95, 0.14);
     }
-    .cell-top { position: relative; height: calc(var(--img-h) + 8px); padding: 8px 10px 0 10px; }
+
+    .tree-cell.tech .cell-accent { background: linear-gradient(90deg, rgba(144,171,200,0.9), rgba(144,171,200,0.55)); }
+    .tree-cell.premium .cell-accent { background: linear-gradient(90deg, rgba(255,215,95,1), rgba(255,215,95,0.65)); }
+    .tree-cell.squadron .cell-accent { background: linear-gradient(90deg, rgba(84,230,255,1), rgba(84,230,255,0.65)); }
+    .tree-cell.event .cell-accent { background: linear-gradient(90deg, rgba(201,134,255,1), rgba(201,134,255,0.65)); }
+    .tree-cell.pack .cell-accent { background: linear-gradient(90deg, rgba(255,172,88,1), rgba(255,172,88,0.65)); }
+
+    .cell-accent {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 4px;
+      z-index: 3;
+    }
+
+    .group-corner {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      z-index: 4;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 22px;
+      padding: 0 7px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      color: #f3f7fd;
+      background: rgba(8, 12, 18, 0.72);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.24);
+    }
+
+    .cell-top {
+      position: relative;
+      height: calc(var(--img-h) + 10px);
+      padding: 10px 10px 0 10px;
+    }
+
     .cell-image-wrap {
-      position: relative; height: var(--img-h); border-radius: 10px; overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle at center, rgba(145,175,220,.10), transparent 60%);
+      position: relative;
+      height: var(--img-h);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at center, rgba(145,175,220,.10), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+      border: 1px solid rgba(255,255,255,0.04);
     }
+
     .cell-image {
-      max-width: 100%; max-height: 100%; object-fit: contain; display: block;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
       filter: drop-shadow(0 6px 10px rgba(0,0,0,.22));
     }
-    .cell-fallback { font-size: 11px; color: #8ea1b8; letter-spacing: .08em; text-transform: uppercase; }
-    .cell-body { padding: 6px 10px 10px 10px; display: flex; flex-direction: column; gap: 4px; }
+
+    .cell-fallback {
+      font-size: 11px;
+      color: #8ea1b8;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .cell-body {
+      padding: 8px 10px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+    }
+
     .cell-title {
-      font-size: 12px; line-height: 1.2; font-weight: 700; color: #eef5ff;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 28px;
+      font-size: 13px;
+      line-height: 1.15;
+      font-weight: 800;
+      color: #eef5ff;
+      text-shadow: 0 1px 0 rgba(0,0,0,.3);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 30px;
     }
+
     .cell-meta {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; color: var(--muted);
-      letter-spacing: .08em; text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      min-height: 14px;
     }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: auto;
+    }
+
     .tag {
-      display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 7px;
-      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.05); white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 3px 7px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.05);
+      white-space: nowrap;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
     }
-    .tag.premium { color: #f0d48d; border-color: rgba(212,170,64,.25); background: rgba(212,170,64,.10); }
-    .tag.squadron { color: #97db9d; border-color: rgba(88,178,97,.22); background: rgba(88,178,97,.10); }
 
-    .sidebar { background: linear-gradient(180deg, rgba(12,18,27,.98), rgba(8,12,18,1)); display: flex; flex-direction: column; min-width: 0; }
-    .sidebar-head { padding: 18px 18px 12px 18px; border-bottom: 1px solid rgba(255,255,255,.05); }
-    .sidebar-head h2 { margin: 0 0 6px 0; font-size: 18px; }
-    .sidebar-head p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
-    .detail { padding: 18px; overflow: auto; min-height: 0; }
-    .empty-state { color: var(--muted); font-size: 14px; line-height: 1.55; padding: 6px 2px; }
+    .tag.tech { color: #d7e4f3; background: rgba(144,171,200,0.14); border-color: rgba(144,171,200,0.22); }
+    .tag.premium { color: #fff0b8; background: rgba(255,215,95,0.18); border-color: rgba(255,215,95,0.26); }
+    .tag.squadron { color: #c9f8ff; background: rgba(84,230,255,0.18); border-color: rgba(84,230,255,0.28); }
+    .tag.event { color: #efd3ff; background: rgba(201,134,255,0.18); border-color: rgba(201,134,255,0.28); }
+    .tag.pack { color: #ffe1c5; background: rgba(255,172,88,0.18); border-color: rgba(255,172,88,0.28); }
+    .tag.group { color: #dce8f7; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); }
+
+    .sidebar {
+      background: linear-gradient(180deg, rgba(16, 23, 34, 0.96), rgba(9, 13, 20, 0.98));
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .sidebar-head {
+      padding: 18px 18px 12px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+
+    .sidebar-head h2 {
+      margin: 0 0 6px 0;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .sidebar-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .detail {
+      padding: 18px;
+      overflow: auto;
+      min-height: 0;
+      flex: 1;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      padding: 6px 2px;
+    }
+
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(33, 43, 58, 0.95), rgba(17, 24, 34, 0.95));
+      box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+      margin-bottom: 16px;
+    }
+
+    .hero-image {
+      height: 180px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .hero-image.placeholder {
+      color: var(--dim);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-content {
+      padding: 16px;
+    }
+
+    .hero-kicker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .hero-name {
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 900;
+      margin: 0 0 8px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 14px 0 16px;
+    }
+
+    .meta-box {
+      border-radius: 14px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .meta-label {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 6px;
+      font-weight: 800;
+    }
+
+    .meta-value {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .section {
+      margin-top: 18px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    .member-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .member-item {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      cursor: pointer;
+      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+    }
+
+    .member-item:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .member-thumb {
+      width: 72px;
+      height: 52px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .member-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .member-thumb.placeholder {
+      color: var(--dim);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .member-name {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+
     .status {
-      position: fixed; left: 18px; bottom: 18px; z-index: 20; border-radius: 12px; padding: 10px 12px;
-      font-size: 12px; color: #d8e6f6; background: rgba(12, 18, 27, .92); border: 1px solid rgba(255,255,255,.06);
-      max-width: 760px; white-space: pre-wrap;
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      z-index: 20;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #d8e6f6;
+      background: rgba(12, 18, 27, .92);
+      border: 1px solid rgba(255,255,255,.06);
+      max-width: 920px;
+      white-space: pre-wrap;
     }
-    .status.error { border-color: rgba(255,114,114,.28); color: #ffd5d5; }
 
-    @media (max-width: 1100px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } }
+    .status.error {
+      border-color: rgba(255,114,114,.28);
+      color: #ffd5d5;
+    }
+
+    @media (max-width: 1280px) {
+      .app { grid-template-columns: minmax(0, 1fr) 340px; }
+    }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar {
+        display: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -154,13 +668,16 @@ html = r'''<!DOCTYPE html>
           <span>USA tree viewer</span>
         </div>
         <div class="legend">
-          <div class="pill"><span class="dot standard"></span> Standard</div>
+          <div class="pill"><span class="dot standard"></span> Tech Tree</div>
           <div class="pill"><span class="dot premium"></span> Premium</div>
           <div class="pill"><span class="dot squadron"></span> Squadron</div>
+          <div class="pill"><span class="dot event"></span> Event</div>
+          <div class="pill"><span class="dot pack"></span> Pack</div>
         </div>
       </div>
-      <div class="tree-scroll">
+      <div class="tree-scroll" id="treeScroll">
         <div class="tree-shell" id="treeShell">
+          <div class="tree-grid"></div>
           <div class="rank-layer" id="rankLayer"></div>
           <div class="edge-layer" id="edgeLayer"></div>
           <div class="node-layer" id="nodeLayer"></div>
@@ -170,7 +687,7 @@ html = r'''<!DOCTYPE html>
     <aside class="sidebar">
       <div class="sidebar-head">
         <h2>Aircraft Details</h2>
-        <p>Select an aircraft card to inspect placement and metadata.</p>
+        <p>Select an aircraft card to inspect placement, metadata, grouped members, and type tags.</p>
       </div>
       <div class="detail" id="detailPanel">
         <div class="empty-state">Pick a card in the tree.</div>
@@ -181,39 +698,89 @@ html = r'''<!DOCTYPE html>
   <div class="status" id="statusBox">SCRIPT BOOTED</div>
 
   <script>
-    const TREE_JSON_URL = "usa_tree_pass2_with_arrows.json";
-    const REGISTRY_CSV_URL = "SP_Registry_CANON_3_31.csv";
-    const PIC_BASE = "https://kjumpmaster.github.io/Aircraft-Pics/";
+    const TREE_JSON_URL = 'usa_tree_pass2_with_arrows.json';
+    const FLAGS_JSON_URL = 'usa_tree_v4.json';
+    const REGISTRY_CSV_URL = 'SP_Registry_CANON_3_31.csv';
+    const EDGES_CSV_URL = 'usa_tree_pass2_edges.csv';
+    const PIC_BASE = 'https://kjumpmaster.github.io/Aircraft-Pics/';
 
-    const treeShellEl = document.getElementById("treeShell");
-    const rankLayerEl = document.getElementById("rankLayer");
-    const edgeLayerEl = document.getElementById("edgeLayer");
-    const nodeLayerEl = document.getElementById("nodeLayer");
-    const detailPanelEl = document.getElementById("detailPanel");
-    const statusBoxEl = document.getElementById("statusBox");
+    // Put the 3 exact bad ids here once you confirm them.
+    const EXEMPT_UNIT_IDS = new Set([
+      // 'example_unit_1',
+      // 'example_unit_2',
+      // 'example_unit_3'
+    ].map(normId));
 
-    let registryByMasterKey = new Map();
+    const treeShellEl = document.getElementById('treeShell');
+    const rankLayerEl = document.getElementById('rankLayer');
+    const edgeLayerEl = document.getElementById('edgeLayer');
+    const nodeLayerEl = document.getElementById('nodeLayer');
+    const detailPanelEl = document.getElementById('detailPanel');
+    const statusBoxEl = document.getElementById('statusBox');
+
+    const state = {
+      registryByMasterKey: new Map(),
+      flagMap: new Map(),
+      selectedCellId: '',
+      selectedUnitId: '',
+      cells: [],
+      edges: [],
+      rectMap: new Map()
+    };
 
     function setStatus(message, isError = false) {
       statusBoxEl.textContent = message;
-      statusBoxEl.classList.toggle("error", !!isError);
+      statusBoxEl.classList.toggle('error', !!isError);
     }
 
-    window.addEventListener("error", (e) => {
-      setStatus(`JS error: ${e.message} at ${e.filename || "inline"}:${e.lineno || 0}`, true);
-    });
-    window.addEventListener("unhandledrejection", (e) => {
-      setStatus(`Promise error: ${e.reason?.message || e.reason || "Unknown promise failure"}`, true);
+    window.addEventListener('error', (e) => {
+      setStatus(`JS error: ${e.message} at ${e.filename || 'inline'}:${e.lineno || 0}`, true);
     });
 
-    function normalizeKey(value) { return String(value || "").trim(); }
-    function normalizeType(value) { return String(value || "").trim().toLowerCase(); }
+    window.addEventListener('unhandledrejection', (e) => {
+      setStatus(`Promise error: ${e.reason?.message || e.reason || 'Unknown promise failure'}`, true);
+    });
+
+    function normId(value) {
+      return String(value || '').trim().toLowerCase().replace(/\s+/g, '_');
+    }
+
+    function normalizeKey(value) {
+      return String(value || '').trim();
+    }
+
+    function normalizeType(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function firstNonBlank(values) {
+      for (const v of values) {
+        if (v == null) continue;
+        const s = String(v).trim();
+        if (s !== '') return s;
+      }
+      return '';
+    }
+
+    function toBool(v) {
+      if (v === true || v === 1) return true;
+      const s = String(v || '').trim().toLowerCase();
+      return ['true', '1', 'yes', 'y', 't'].includes(s);
+    }
+
+    function safeInt(v, fallback = 0) {
+      const n = parseInt(String(v ?? '').trim(), 10);
+      return Number.isFinite(n) ? n : fallback;
+    }
+
     function romanize(num) {
       const map = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
-      let out = "";
-      for (const [v, s] of map) while (num >= v) { out += s; num -= v; }
+      let out = '';
+      let n = Number(num) || 0;
+      for (const [v, s] of map) while (n >= v) { out += s; n -= v; }
       return out || String(num);
     }
+
     function varNum(name) {
       return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
     }
@@ -221,7 +788,7 @@ html = r'''<!DOCTYPE html>
     function parseCSV(text) {
       const rows = [];
       let row = [];
-      let cur = "";
+      let cur = '';
       let inQuotes = false;
       for (let i = 0; i < text.length; i++) {
         const ch = text[i];
@@ -229,11 +796,11 @@ html = r'''<!DOCTYPE html>
         if (ch === '"') {
           if (inQuotes && next === '"') { cur += '"'; i++; }
           else { inQuotes = !inQuotes; }
-        } else if (ch === "," && !inQuotes) {
-          row.push(cur); cur = "";
-        } else if ((ch === "\n" || ch === "\r") && !inQuotes) {
-          if (ch === "\r" && next === "\n") i++;
-          row.push(cur); cur = "";
+        } else if (ch === ',' && !inQuotes) {
+          row.push(cur); cur = '';
+        } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+          if (ch === '\r' && next === '\n') i++;
+          row.push(cur); cur = '';
           if (row.some(v => String(v).length > 0)) rows.push(row);
           row = [];
         } else {
@@ -243,57 +810,164 @@ html = r'''<!DOCTYPE html>
       row.push(cur);
       if (row.some(v => String(v).length > 0)) rows.push(row);
       if (!rows.length) return [];
-      const headers = rows[0].map(h => String(h || "").trim());
-      return rows.slice(1).map(r => {
+      const headers = rows[0].map(h => String(h || '').trim());
+      return rows.slice(1).filter(r => r.some(v => String(v || '').trim() !== '')).map(r => {
         const obj = {};
-        headers.forEach((h, idx) => obj[h] = r[idx] ?? "");
+        headers.forEach((h, idx) => obj[h] = r[idx] ?? '');
         return obj;
       });
     }
 
+    async function fetchJSON(url) {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`Could not load ${url} (${res.status})`);
+      return await res.json();
+    }
+
+    async function fetchText(url) {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`Could not load ${url} (${res.status})`);
+      return await res.text();
+    }
+
     function buildRegistryMaps(rows) {
-      registryByMasterKey = new Map();
+      state.registryByMasterKey = new Map();
       for (const row of rows) {
-        const key = normalizeKey(row.master_key);
-        if (key) registryByMasterKey.set(key, row);
+        const keys = [
+          normalizeKey(row.master_key),
+          normId(row.master_key),
+          normalizeKey(row.wt_name),
+          normId(row.wt_name)
+        ].filter(Boolean);
+        for (const key of keys) {
+          if (!state.registryByMasterKey.has(key)) state.registryByMasterKey.set(key, row);
+        }
       }
     }
 
+    function collectObjectsDeep(root) {
+      const out = [];
+      const seen = new Set();
+      (function walk(node) {
+        if (!node || typeof node !== 'object' || seen.has(node)) return;
+        seen.add(node);
+        if (Array.isArray(node)) {
+          for (const item of node) walk(item);
+          return;
+        }
+        const keys = Object.keys(node);
+        const rowish = keys.some(k => /(^|_)(id|name|unit|plane|type|premium|event|pack|squadron)$/i.test(k));
+        if (rowish) out.push(node);
+        for (const value of Object.values(node)) walk(value);
+      })(root);
+      return out;
+    }
+
+    function buildFlagMap(flagJson) {
+      const map = new Map();
+      const rows = collectObjectsDeep(flagJson);
+      for (const row of rows) {
+        const id = firstNonBlank([
+          row.unit_id, row.aircraft_id, row.id, row.name, row.plane, row.vehicle, row.value, row.master_key
+        ]);
+        const nid = normId(id);
+        if (!nid) continue;
+        const typeText = normalizeType(firstNonBlank([
+          row.vehicle_type, row.type, row.unit_type, row.classification, row.flag_type
+        ]));
+        map.set(nid, {
+          premium: toBool(row.premium) || typeText.includes('premium'),
+          squadron: toBool(row.squadron) || typeText.includes('squadron'),
+          event: toBool(row.event) || typeText.includes('event'),
+          pack: toBool(row.pack) || typeText.includes('pack'),
+          vehicleType: typeText,
+          raw: row
+        });
+      }
+      return map;
+    }
+
+    function getCellUnitIds(cell) {
+      const out = [];
+      const pushMaybe = (v) => {
+        const n = normId(v);
+        if (n) out.push(n);
+      };
+
+      pushMaybe(cell.master_key);
+      pushMaybe(cell.cell_key);
+      pushMaybe(cell.unit_id);
+      pushMaybe(cell.id);
+      pushMaybe(cell.key);
+
+      if (Array.isArray(cell.units)) {
+        for (const u of cell.units) {
+          if (typeof u === 'string') pushMaybe(u);
+          else if (u && typeof u === 'object') pushMaybe(firstNonBlank([u.unit_id, u.aircraft_id, u.id, u.master_key, u.name]));
+        }
+      }
+
+      if (Array.isArray(cell.members)) {
+        for (const u of cell.members) {
+          if (typeof u === 'string') pushMaybe(u);
+          else if (u && typeof u === 'object') pushMaybe(firstNonBlank([u.unit_id, u.aircraft_id, u.id, u.master_key, u.name]));
+        }
+      }
+
+      return [...new Set(out.filter(Boolean))];
+    }
+
+    function getRenderableUnitIds(cell) {
+      return getCellUnitIds(cell).filter(id => !EXEMPT_UNIT_IDS.has(normId(id)));
+    }
+
+    function classifyUnit(unitId, fallbackCell = null) {
+      const f = state.flagMap.get(normId(unitId)) || {};
+      if (f.squadron) return 'squadron';
+      if (f.event) return 'event';
+      if (f.pack) return 'pack';
+      if (f.premium) return 'premium';
+
+      if (fallbackCell) {
+        const cellTypeText = normalizeType(firstNonBlank([
+          fallbackCell.type,
+          fallbackCell.vehicle_type,
+          fallbackCell.group_type,
+          fallbackCell.kind,
+          fallbackCell.class,
+          fallbackCell.reward_type
+        ]));
+        const nameText = normalizeType(firstNonBlank([
+          fallbackCell.display_name,
+          fallbackCell.wiki_name,
+          fallbackCell.name,
+          fallbackCell.title,
+          fallbackCell.master_key,
+          fallbackCell.unit_id
+        ]));
+
+        if (cellTypeText.includes('squadron') || nameText.includes('squadron')) return 'squadron';
+        if (cellTypeText.includes('event') || nameText.includes('event')) return 'event';
+        if (cellTypeText.includes('pack') || nameText.includes('pack')) return 'pack';
+        if (cellTypeText.includes('premium') || nameText.includes('premium')) return 'premium';
+      }
+
+      return 'tech';
+    }
+
     function getCellMasterKey(cell) {
-      return normalizeKey(
-        cell.master_key ||
-        cell.cell_key ||
-        cell.unit_id ||
-        cell.id ||
-        cell.key ||
-        (Array.isArray(cell.units) && cell.units.length ? cell.units[0] : "") ||
-        ""
-      );
+      return normalizeKey(firstNonBlank([
+        cell.master_key,
+        cell.cell_key,
+        cell.unit_id,
+        cell.id,
+        cell.key,
+        Array.isArray(cell.units) && cell.units.length ? (typeof cell.units[0] === 'string' ? cell.units[0] : firstNonBlank([cell.units[0].unit_id, cell.units[0].id, cell.units[0].master_key])) : ''
+      ]));
     }
 
-    function isPremium(cell) {
-      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class || cell.reward_type);
-      return t.includes("premium") || normalizeType(cell.display_name).includes("premium");
-    }
-
-    function isSquadron(cell) {
-      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class || cell.reward_type);
-      const nameText = normalizeType(
-        cell.name || cell.title || cell.display_name || cell.wiki_name || cell.master_key || cell.unit_id || ""
-      );
-      return t.includes("squadron") || nameText.includes("squadron");
-    }
-
-    function isGroup(cell) {
-      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class);
-      return t === "group" || (Array.isArray(cell.units) && cell.units.length > 1);
-    }
-
-    function labelForType(cell) {
-      if (isPremium(cell)) return "Premium";
-      if (isSquadron(cell)) return "Squadron";
-      if (isGroup(cell)) return "Group";
-      return "Standard";
+    function getRegistryRowByUnitId(unitId) {
+      return state.registryByMasterKey.get(unitId) || state.registryByMasterKey.get(normId(unitId)) || null;
     }
 
     function getDisplayName(cell, registryRow) {
@@ -302,36 +976,61 @@ html = r'''<!DOCTYPE html>
         cell.wiki_name ||
         cell.name ||
         cell.title ||
-        (Array.isArray(cell.units) && cell.units.length ? cell.units[0] : "") ||
         registryRow?.wt_display_name_new ||
         registryRow?.wt_name ||
         registryRow?.rw_name ||
         getCellMasterKey(cell) ||
-        "Unknown Aircraft"
+        'Unknown Aircraft'
       );
+    }
+
+    function summarizeGroupTypes(unitIds, fallbackCell = null) {
+      const counts = { tech: 0, premium: 0, squadron: 0, event: 0, pack: 0 };
+      for (const id of unitIds) {
+        const t = classifyUnit(id, fallbackCell);
+        counts[t] = (counts[t] || 0) + 1;
+      }
+      return counts;
+    }
+
+    function buildImageCandidates(registryRow, unitId) {
+      const out = [];
+      const wtImage = normalizeKey(registryRow?.wt_image);
+      const masterKey = normalizeKey(registryRow?.master_key || unitId);
+      if (wtImage) {
+        if (/^https?:\/\//i.test(wtImage)) out.push(wtImage);
+        else if (/\.(png|jpg|jpeg|webp)$/i.test(wtImage)) out.push(`${PIC_BASE}${wtImage}`);
+        else out.push(`${PIC_BASE}${wtImage}.png`);
+      }
+      if (masterKey) {
+        out.push(`${PIC_BASE}${masterKey}.png`);
+      }
+      return [...new Set(out)];
+    }
+
+    function resolveImageURL(registryRow, unitId) {
+      const candidates = buildImageCandidates(registryRow, unitId);
+      return candidates[0] || null;
     }
 
     function normalizeCell(raw, idx) {
       const rank = Number(raw.rank);
-      const column = Number(raw.column);
+      const column = Number(raw.column ?? raw.col);
       const row = Number(raw.row_in_rank ?? raw.row);
-      const masterKey = getCellMasterKey(raw);
-      const type = normalizeType(raw.type || raw.vehicle_type || raw.group_type || raw.kind || "unit");
-
+      const cellId = raw.cell_id || raw.cell_key || raw.id || raw.node_id || raw.key || `${getCellMasterKey(raw) || 'cell'}_${idx}`;
       return {
         ...raw,
         rank,
         column,
         row,
-        type,
-        master_key: masterKey,
-        cell_id: raw.cell_id || raw.cell_key || raw.id || raw.node_id || raw.key || `${masterKey || "cell"}_${idx}`
+        cell_id: cellId,
+        cell_key: raw.cell_key || cellId
       };
     }
 
     function validateCellPlacement(cell) {
       return Number.isFinite(cell.rank) && Number.isFinite(cell.column) && Number.isFinite(cell.row) &&
-             cell.rank >= 1 && cell.column >= 1 && cell.row >= 1;
+        cell.rank >= 1 && cell.column >= 1 && cell.row >= 1;
     }
 
     function getRowCountsByRank(cells) {
@@ -352,233 +1051,443 @@ html = r'''<!DOCTYPE html>
       const rowCountsByRank = getRowCountsByRank(cells);
       const ranks = [...rowCountsByRank.keys()].sort((a,b) => a-b);
       const rankLayout = new Map();
-      let y = varNum("--tree-pad");
+      let y = varNum('--tree-pad');
       for (const rank of ranks) {
         const rows = rowCountsByRank.get(rank) || 1;
-        const contentH = rows * varNum("--cell-h") + Math.max(0, rows - 1) * varNum("--cell-gap-y");
-        const bandH = varNum("--rank-header-h") + varNum("--rank-inner-top") + contentH + varNum("--rank-inner-bottom");
+        const contentH = rows * varNum('--cell-h') + Math.max(0, rows - 1) * varNum('--cell-gap-y');
+        const bandH = varNum('--rank-header-h') + varNum('--rank-inner-top') + contentH + varNum('--rank-inner-bottom');
         rankLayout.set(rank, { y, height: bandH, rows });
-        y += bandH + varNum("--rank-gap");
+        y += bandH + varNum('--rank-gap');
       }
       const maxCol = getMaxColumn(cells);
-      const width = varNum("--tree-pad") * 2 + maxCol * varNum("--cell-w") + (maxCol - 1) * varNum("--cell-gap-x");
-      const height = y + varNum("--tree-pad") - varNum("--rank-gap");
-      return { rankLayout, rowCountsByRank, width, height };
+      const width = varNum('--tree-pad') * 2 + maxCol * varNum('--cell-w') + (maxCol - 1) * varNum('--cell-gap-x');
+      const height = y + varNum('--tree-pad') - varNum('--rank-gap');
+      return { rankLayout, width, height };
     }
 
     function getCellRect(cell, rankLayout) {
       const layout = rankLayout.get(Number(cell.rank));
       return {
-        x: varNum("--tree-pad") + (Number(cell.column) - 1) * (varNum("--cell-w") + varNum("--cell-gap-x")),
-        y: layout.y + varNum("--rank-header-h") + varNum("--rank-inner-top") + (Number(cell.row) - 1) * (varNum("--cell-h") + varNum("--cell-gap-y")),
-        w: varNum("--cell-w"),
-        h: varNum("--cell-h")
+        x: varNum('--tree-pad') + (Number(cell.column) - 1) * (varNum('--cell-w') + varNum('--cell-gap-x')),
+        y: layout.y + varNum('--rank-header-h') + varNum('--rank-inner-top') + (Number(cell.row) - 1) * (varNum('--cell-h') + varNum('--cell-gap-y')),
+        w: varNum('--cell-w'),
+        h: varNum('--cell-h')
       };
     }
 
     function renderRankBands(rankLayout, width) {
-      rankLayerEl.innerHTML = "";
+      rankLayerEl.innerHTML = '';
       for (const [rank, layout] of [...rankLayout.entries()].sort((a,b) => a[0]-b[0])) {
-        const band = document.createElement("div");
-        band.className = "rank-band";
-        band.style.left = "0px";
+        const band = document.createElement('div');
+        band.className = 'rank-band';
+        band.style.left = '0px';
         band.style.top = `${layout.y}px`;
         band.style.width = `${width}px`;
         band.style.height = `${layout.height}px`;
-        const label = document.createElement("div");
-        label.className = "rank-label";
+        const label = document.createElement('div');
+        label.className = 'rank-label';
         label.textContent = `Rank ${romanize(rank)}`;
         band.appendChild(label);
         rankLayerEl.appendChild(band);
       }
     }
 
-    async function resolveImageURL(cell, registryRow) {
-      const masterKey = getCellMasterKey(cell);
-      const wtImage = normalizeKey(registryRow?.wt_image);
-      const candidates = [];
-      if (wtImage) candidates.push(`${PIC_BASE}${wtImage}.png`);
-      if (masterKey) candidates.push(`${PIC_BASE}${masterKey}.png`);
-      if (masterKey && !masterKey.endsWith("_group")) candidates.push(`${PIC_BASE}${masterKey}_group.png`);
-      for (const url of [...new Set(candidates)]) {
-        const ok = await new Promise(resolve => {
-          const img = new Image();
-          img.onload = () => resolve(true);
-          img.onerror = () => resolve(false);
-          img.src = url;
-        });
-        if (ok) return url;
-      }
-      return null;
-    }
-
-    function renderDetailPanel(cell, registryRow, imageUrl) {
-      const title = getDisplayName(cell, registryRow);
+    function renderSingleUnitPanel(member) {
+      const row = member.registryRow || null;
       detailPanelEl.innerHTML = `
-        <div class="empty-state">
-          <strong>${title}</strong><br><br>
-          Master key: ${getCellMasterKey(cell) || "—"}<br>
-          Rank: ${cell.rank} | Column: ${cell.column} | Row: ${cell.row}<br>
-          Type: ${labelForType(cell)}<br>
-          Cell key: ${cell.cell_key || cell.cell_id || "—"}<br>
-          WT image: ${registryRow?.wt_image || "—"}<br>
-          Image loaded: ${imageUrl ? "yes" : "no"}
+        <div class="hero-card">
+          <div class="hero-image ${member.imageUrl ? '' : 'placeholder'}">
+            ${member.imageUrl ? `<img src="${escapeHTML(member.imageUrl)}" alt="${escapeHTML(member.displayName)}" />` : 'No Image'}
+          </div>
+          <div class="hero-content">
+            <div class="hero-kicker"><span class="tag ${member.type}">${member.type}</span></div>
+            <h3 class="hero-name">${escapeHTML(member.displayName)}</h3>
+            <div class="meta-grid">
+              <div class="meta-box">
+                <div class="meta-label">Unit ID</div>
+                <div class="meta-value">${escapeHTML(member.unitId || '—')}</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-label">Nation</div>
+                <div class="meta-value">${escapeHTML(row?.nation || 'USA')}</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-label">WT Name</div>
+                <div class="meta-value">${escapeHTML(row?.wt_name || '—')}</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-label">Master Key</div>
+                <div class="meta-value">${escapeHTML(row?.master_key || member.unitId || '—')}</div>
+              </div>
+            </div>
+          </div>
         </div>
       `;
     }
 
-    function createCellElement(cell, registryRow, imageUrl) {
-      const el = document.createElement("div");
-      el.className = "tree-cell";
-      if (isPremium(cell)) el.classList.add("premium");
-      if (isSquadron(cell)) el.classList.add("squadron");
+    function renderGroupPanel(cell) {
+      const summaryTags = [];
+      for (const t of ['squadron', 'event', 'pack', 'premium', 'tech']) {
+        const n = cell.groupCounts[t] || 0;
+        if (n > 0) summaryTags.push(`<span class="tag ${t}">${t} ${n}</span>`);
+      }
 
-      const title = getDisplayName(cell, registryRow);
-      const tagLabel = labelForType(cell);
-      const rankLabel = `R${cell.rank} C${cell.column} Y${cell.row}`;
+      const listHtml = cell.members.map(member => `
+        <div class="member-item" data-member-unit-id="${escapeHTML(member.unitId)}">
+          <div class="member-thumb ${member.imageUrl ? '' : 'placeholder'}">
+            ${member.imageUrl ? `<img src="${escapeHTML(member.imageUrl)}" alt="${escapeHTML(member.displayName)}" />` : 'No Image'}
+          </div>
+          <div>
+            <div class="member-name">${escapeHTML(member.displayName)}</div>
+            <div class="badge-row" style="margin-top:0;">
+              <span class="tag ${member.type}">${member.type}</span>
+            </div>
+            <div style="margin-top:6px;font-size:11px;color:var(--muted);">${escapeHTML(member.unitId)}</div>
+          </div>
+        </div>
+      `).join('');
+
+      detailPanelEl.innerHTML = `
+        <div class="hero-card">
+          <div class="hero-content">
+            <div class="hero-kicker">${summaryTags.join(' ')}</div>
+            <h3 class="hero-name">${escapeHTML(cell.displayTitle)}</h3>
+            <div style="color:var(--muted);font-size:13px;line-height:1.5;">Grouped aircraft folder. Select a member below to inspect the exact aircraft record.</div>
+            <div class="meta-grid" style="margin-top:16px;">
+              <div class="meta-box">
+                <div class="meta-label">Group Members</div>
+                <div class="meta-value">${cell.members.length}</div>
+              </div>
+              <div class="meta-box">
+                <div class="meta-label">Primary Unit</div>
+                <div class="meta-value">${escapeHTML(cell.primaryUnitId || '—')}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title"><span>Folder Members</span></div>
+          <div class="member-list">${listHtml}</div>
+        </div>
+      `;
+
+      detailPanelEl.querySelectorAll('[data-member-unit-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          const unitId = el.getAttribute('data-member-unit-id');
+          const member = cell.members.find(m => m.unitId === unitId);
+          if (member) renderSingleUnitPanel(member);
+        });
+      });
+    }
+
+    function escapeHTML(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function createCellElement(cell) {
+      const el = document.createElement('div');
+      el.className = `tree-cell ${cell.mainType}`;
+      el.dataset.cellId = cell.cell_id;
+      el.dataset.unitId = cell.primaryUnitId;
+
+      const lead = cell.members[0] || null;
+      const title = cell.displayTitle;
+      const metaRight = cell.isGroup ? `${cell.members.length} aircraft` : `R${cell.rank} C${cell.column} Y${cell.row}`;
+      const badges = [`<span class="tag ${cell.mainType}">${cell.mainType}</span>`];
+      if (cell.isGroup) badges.push('<span class="tag group">Group</span>');
 
       el.innerHTML = `
+        <div class="cell-accent"></div>
+        ${cell.isGroup ? `<div class="group-corner">${cell.members.length}</div>` : ''}
         <div class="cell-top">
           <div class="cell-image-wrap"></div>
         </div>
         <div class="cell-body">
           <div class="cell-title"></div>
           <div class="cell-meta">
-            <span class="tag ${isPremium(cell) ? "premium" : isSquadron(cell) ? "squadron" : ""}">${tagLabel}</span>
-            <span>${rankLabel}</span>
+            <span>${cell.primaryUnitId ? escapeHTML(cell.primaryUnitId) : ''}</span>
+            <span>${escapeHTML(metaRight)}</span>
           </div>
+          <div class="badge-row">${badges.join('')}</div>
         </div>
       `;
 
-      el.querySelector(".cell-title").textContent = title;
-      const imgWrap = el.querySelector(".cell-image-wrap");
-
-      if (imageUrl) {
-        const img = document.createElement("img");
-        img.className = "cell-image";
+      el.querySelector('.cell-title').textContent = title;
+      const imgWrap = el.querySelector('.cell-image-wrap');
+      if (lead && lead.imageUrl) {
+        const img = document.createElement('img');
+        img.className = 'cell-image';
         img.alt = title;
-        img.src = imageUrl;
+        img.src = lead.imageUrl;
         imgWrap.appendChild(img);
       } else {
-        const fallback = document.createElement("div");
-        fallback.className = "cell-fallback";
-        fallback.textContent = "No Image";
+        const fallback = document.createElement('div');
+        fallback.className = 'cell-fallback';
+        fallback.textContent = 'No Image';
         imgWrap.appendChild(fallback);
       }
 
-      el.addEventListener("click", () => renderDetailPanel(cell, registryRow, imageUrl));
+      el.addEventListener('click', () => selectCell(cell));
       return el;
     }
 
     function getRectAnchor(rect, side) {
-      if (side === "right") return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
+      if (side === 'right') return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
       return { x: rect.x, y: rect.y + rect.h / 2 };
     }
 
-    function makeOrthogonalPath(a, b) {
+    function makeCurvedPath(a, b) {
       const midX = Math.round((a.x + b.x) / 2);
-      return `M ${a.x} ${a.y} L ${midX} ${a.y} L ${midX} ${b.y} L ${b.x} ${b.y}`;
+      return `M ${a.x} ${a.y} C ${midX} ${a.y}, ${midX} ${b.y}, ${b.x} ${b.y}`;
     }
 
-    function renderEdges(edges, rectMap, width, height) {
-      edgeLayerEl.innerHTML = "";
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", width);
-      svg.setAttribute("height", height);
-      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    function ensureArrowMarkers(svg) {
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
 
-      for (const edge of edges || []) {
-        const fromId = edge.from || edge.source || edge.parent || edge.from_cell_id || edge.from_id || edge.source_cell_key || edge.src;
-        const toId = edge.to || edge.target || edge.child || edge.to_cell_id || edge.to_id || edge.target_cell_key || edge.dst;
-        if (!rectMap.has(fromId) || !rectMap.has(toId)) continue;
-        const fromRect = rectMap.get(fromId);
-        const toRect = rectMap.get(toId);
-        const a = getRectAnchor(fromRect, "right");
-        const b = getRectAnchor(toRect, "left");
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", makeOrthogonalPath(a, b));
-        path.setAttribute("class", "edge-path");
+      const blue = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+      blue.setAttribute('id', 'arrowhead-blue');
+      blue.setAttribute('markerWidth', '8');
+      blue.setAttribute('markerHeight', '8');
+      blue.setAttribute('refX', '7');
+      blue.setAttribute('refY', '4');
+      blue.setAttribute('orient', 'auto');
+      blue.setAttribute('markerUnits', 'strokeWidth');
+      const bluePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      bluePath.setAttribute('d', 'M 0 0 L 8 4 L 0 8 Z');
+      bluePath.setAttribute('class', 'edge-head-blue');
+      blue.appendChild(bluePath);
+
+      const gold = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+      gold.setAttribute('id', 'arrowhead-gold');
+      gold.setAttribute('markerWidth', '8');
+      gold.setAttribute('markerHeight', '8');
+      gold.setAttribute('refX', '7');
+      gold.setAttribute('refY', '4');
+      gold.setAttribute('orient', 'auto');
+      gold.setAttribute('markerUnits', 'strokeWidth');
+      const goldPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      goldPath.setAttribute('d', 'M 0 0 L 8 4 L 0 8 Z');
+      goldPath.setAttribute('class', 'edge-head-gold');
+      gold.appendChild(goldPath);
+
+      defs.appendChild(blue);
+      defs.appendChild(gold);
+      svg.appendChild(defs);
+    }
+
+    function renderEdges() {
+      edgeLayerEl.innerHTML = '';
+      const width = parseFloat(treeShellEl.style.width) || 0;
+      const height = parseFloat(treeShellEl.style.height) || 0;
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', width);
+      svg.setAttribute('height', height);
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      ensureArrowMarkers(svg);
+
+      for (const edge of state.edges) {
+        let fromCell = null;
+        let toCell = null;
+
+        if (edge.matchMode === 'cell') {
+          fromCell = state.cells.find(c => c.cell_id === edge.fromRef || c.cell_key === edge.fromRef);
+          toCell = state.cells.find(c => c.cell_id === edge.toRef || c.cell_key === edge.toRef);
+        } else {
+          fromCell = state.cells.find(c => c.unitIds.includes(edge.fromId));
+          toCell = state.cells.find(c => c.unitIds.includes(edge.toId));
+        }
+
+        if (!fromCell || !toCell) continue;
+        const fromRect = state.rectMap.get(fromCell.cell_id);
+        const toRect = state.rectMap.get(toCell.cell_id);
+        if (!fromRect || !toRect) continue;
+        const a = getRectAnchor(fromRect, 'right');
+        const b = getRectAnchor(toRect, 'left');
+        const active = state.selectedUnitId && (state.selectedUnitId === edge.fromId || state.selectedUnitId === edge.toId);
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', makeCurvedPath(a, b));
+        path.setAttribute('class', `edge-path${active ? ' active' : ''}`);
+        path.setAttribute('marker-end', active ? 'url(#arrowhead-gold)' : 'url(#arrowhead-blue)');
         svg.appendChild(path);
       }
+
       edgeLayerEl.appendChild(svg);
     }
 
-    async function initiateSystem() {
-      setStatus("Loading tree and registry...");
-      const [treeRes, regRes] = await Promise.all([
-        fetch(TREE_JSON_URL, { cache: "no-store" }),
-        fetch(REGISTRY_CSV_URL, { cache: "no-store" })
-      ]);
+    function selectCell(cell) {
+      state.selectedCellId = cell.cell_id;
+      state.selectedUnitId = cell.primaryUnitId || '';
+      document.querySelectorAll('.tree-cell.active').forEach(el => el.classList.remove('active'));
+      const activeEl = document.querySelector(`.tree-cell[data-cell-id="${cssEscape(cell.cell_id)}"]`);
+      if (activeEl) activeEl.classList.add('active');
+      if (cell.isGroup) renderGroupPanel(cell);
+      else renderSingleUnitPanel(cell.members[0]);
+      renderEdges();
+    }
 
-      if (!treeRes.ok) throw new Error(`Tree fetch failed: ${treeRes.status}`);
-      if (!regRes.ok) throw new Error(`Registry fetch failed: ${regRes.status}`);
+    function cssEscape(v) {
+      if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(v);
+      return String(v).replace(/([ #;?%&,.+*~\':"!^$\[\]()=>|\/])/g, '\\$1');
+    }
 
-      const treePayload = await treeRes.json();
-      const regText = await regRes.text();
-      const registryRows = parseCSV(regText);
-      buildRegistryMaps(registryRows);
+    function buildMember(unitId, fallbackCell, registryRow) {
+      const row = registryRow || getRegistryRowByUnitId(unitId) || null;
+      return {
+        unitId,
+        type: classifyUnit(unitId, fallbackCell),
+        displayName: (
+          row?.wt_display_name_new ||
+          row?.wt_name ||
+          row?.rw_name ||
+          fallbackCell.display_name ||
+          fallbackCell.title ||
+          fallbackCell.name ||
+          unitId
+        ),
+        registryRow: row,
+        imageUrl: resolveImageURL(row, unitId)
+      };
+    }
 
-      const rawCells = Array.isArray(treePayload.cells) ? treePayload.cells : [];
-      const edges = Array.isArray(treePayload.edges) ? treePayload.edges : (Array.isArray(treePayload.arrows) ? treePayload.arrows : []);
-      const cells = rawCells.map(normalizeCell);
-
-      const bad = cells.filter(c => !validateCellPlacement(c));
-      if (bad.length) {
-        setStatus(`Some cells invalid.\nFirst bad cell:\n${JSON.stringify(bad[0], null, 2)}`, true);
+    function prepareCells(rawCells) {
+      const validCells = rawCells.map(normalizeCell).filter(validateCellPlacement);
+      const prepared = [];
+      for (const raw of validCells) {
+        const unitIds = getRenderableUnitIds(raw);
+        if (!unitIds.length) continue;
+        const primaryUnitId = unitIds[0];
+        const registryRow = getRegistryRowByUnitId(primaryUnitId) || getRegistryRowByUnitId(getCellMasterKey(raw)) || null;
+        const members = unitIds.map(uid => buildMember(uid, raw, registryRow));
+        prepared.push({
+          ...raw,
+          unitIds,
+          primaryUnitId,
+          members,
+          isGroup: unitIds.length > 1 || Array.isArray(raw.units) && raw.units.length > 1 || Array.isArray(raw.members) && raw.members.length > 1,
+          mainType: classifyUnit(primaryUnitId, raw),
+          groupCounts: summarizeGroupTypes(unitIds, raw),
+          displayTitle: getDisplayName(raw, registryRow)
+        });
       }
+      return prepared;
+    }
 
-      const validCells = cells.filter(validateCellPlacement);
-      if (!validCells.length) {
-        throw new Error(`No valid cells found. First raw cell: ${JSON.stringify(rawCells[0], null, 2)}`);
+    function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
+      const edges = [];
+      for (const row of rows) {
+        const rawFrom = firstNonBlank([row.from_id, row.from, row.source, row.parent, row.parent_id, row.source_cell_key, row.src]);
+        const rawTo = firstNonBlank([row.to_id, row.to, row.target, row.child, row.child_id, row.target_cell_key, row.dst]);
+        const fromId = normId(rawFrom);
+        const toId = normId(rawTo);
+        if (!fromId || !toId) continue;
+        if (EXEMPT_UNIT_IDS.has(fromId) || EXEMPT_UNIT_IDS.has(toId)) continue;
+
+        const fromCellByCellId = cellsById.get(rawFrom) || cellsById.get(fromId) || null;
+        const toCellByCellId = cellsById.get(rawTo) || cellsById.get(toId) || null;
+
+        if (visibleUnitSet.has(fromId) && visibleUnitSet.has(toId)) {
+          edges.push({ fromId, toId, fromRef: fromId, toRef: toId, raw: row, matchMode: 'unit' });
+          continue;
+        }
+
+        if (fromCellByCellId && toCellByCellId) {
+          edges.push({
+            fromId: fromCellByCellId.primaryUnitId,
+            toId: toCellByCellId.primaryUnitId,
+            fromRef: fromCellByCellId.cell_id,
+            toRef: toCellByCellId.cell_id,
+            raw: row,
+            matchMode: 'cell'
+          });
+        }
       }
+      return edges;
+    }
 
-      const { rankLayout, width, height } = computeRankLayout(validCells);
-      treeShellEl.style.width = `${width}px`;
-      treeShellEl.style.height = `${height}px`;
-
-      renderRankBands(rankLayout, width);
-
-      nodeLayerEl.innerHTML = "";
+    function renderCells(cells, rankLayout) {
+      nodeLayerEl.innerHTML = '';
       const rectMap = new Map();
-
-      for (const cell of validCells) {
+      for (const cell of cells) {
         const rect = getCellRect(cell, rankLayout);
         rectMap.set(cell.cell_id, rect);
-        const registryRow = registryByMasterKey.get(getCellMasterKey(cell)) || null;
-        const imageUrl = await resolveImageURL(cell, registryRow);
-
-        const wrap = document.createElement("div");
-        wrap.className = "cell-wrap" + (isGroup(cell) ? " grouped" : "");
+        const wrap = document.createElement('div');
+        wrap.className = 'cell-wrap' + (cell.isGroup ? ' grouped' : '');
         wrap.style.left = `${rect.x}px`;
         wrap.style.top = `${rect.y}px`;
 
-        if (isGroup(cell)) {
-          const s2 = document.createElement("div");
-          s2.className = "cell-shadow-2";
-          const s1 = document.createElement("div");
-          s1.className = "cell-shadow-1";
+        if (cell.isGroup) {
+          const s2 = document.createElement('div');
+          s2.className = 'cell-shadow-2';
+          const s1 = document.createElement('div');
+          s1.className = 'cell-shadow-1';
           wrap.appendChild(s2);
           wrap.appendChild(s1);
         }
 
-        wrap.appendChild(createCellElement(cell, registryRow, imageUrl));
+        wrap.appendChild(createCellElement(cell));
         nodeLayerEl.appendChild(wrap);
       }
+      return rectMap;
+    }
 
-      renderEdges(edges, rectMap, width, height);
-      setStatus(`Loaded OK
-Tree: ${TREE_JSON_URL}
-Registry: ${REGISTRY_CSV_URL}
-Valid cells: ${validCells.length}
-Edges: ${edges.length}`);
+    async function initiateSystem() {
+      setStatus('Loading tree, flags, registry, and edge truth...');
+
+      const [treePayload, flagsPayload, regText, edgeText] = await Promise.all([
+        fetchJSON(TREE_JSON_URL),
+        fetchJSON(FLAGS_JSON_URL),
+        fetchText(REGISTRY_CSV_URL),
+        fetchText(EDGES_CSV_URL)
+      ]);
+
+      const registryRows = parseCSV(regText);
+      buildRegistryMaps(registryRows);
+      state.flagMap = buildFlagMap(flagsPayload);
+
+      const rawCells = Array.isArray(treePayload.cells) ? treePayload.cells : [];
+      const bad = rawCells.map(normalizeCell).filter(c => !validateCellPlacement(c));
+      if (bad.length) {
+        setStatus(`Some cells invalid.\nFirst bad cell:\n${JSON.stringify(bad[0], null, 2)}`, true);
+      }
+
+      state.cells = prepareCells(rawCells);
+      if (!state.cells.length) {
+        throw new Error(`No valid cells found. First raw cell: ${JSON.stringify(rawCells[0], null, 2)}`);
+      }
+
+      const visibleUnitSet = new Set();
+      const cellsById = new Map();
+      for (const cell of state.cells) {
+        cellsById.set(cell.cell_id, cell);
+        cellsById.set(cell.cell_key, cell);
+        for (const id of cell.unitIds) visibleUnitSet.add(id);
+      }
+
+      const edgeRows = parseCSV(edgeText);
+      state.edges = buildVisibleEdges(edgeRows, visibleUnitSet, cellsById);
+
+      const { rankLayout, width, height } = computeRankLayout(state.cells);
+      treeShellEl.style.width = `${width}px`;
+      treeShellEl.style.height = `${height}px`;
+      renderRankBands(rankLayout, width);
+      state.rectMap = renderCells(state.cells, rankLayout);
+      renderEdges();
+
+      const first = state.cells.find(c => !c.isGroup) || state.cells[0];
+      if (first) selectCell(first);
+
+      const counts = { tech: 0, premium: 0, squadron: 0, event: 0, pack: 0 };
+      for (const cell of state.cells) counts[cell.mainType] = (counts[cell.mainType] || 0) + 1;
+
+      setStatus(`Loaded OK\nTree: ${TREE_JSON_URL}\nFlags: ${FLAGS_JSON_URL}\nRegistry: ${REGISTRY_CSV_URL}\nEdges: ${EDGES_CSV_URL}\nVisible cells: ${state.cells.length}\nDrawn arrows: ${state.edges.length}\nPremium: ${counts.premium} | Squadron: ${counts.squadron} | Event: ${counts.event} | Pack: ${counts.pack}`);
     }
 
     initiateSystem();
   </script>
 </body>
 </html>
-'''
-
-path = Path("/mnt/data/research_clean.html")
-path.write_text(html, encoding="utf-8")
-print(f"Wrote {path}")
