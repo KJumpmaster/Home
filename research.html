@@ -786,6 +786,7 @@
     function getCellMasterKey(cell) {
       return normalizeKey(
         cell.master_key ||
+        cell.cell_key ||
         cell.unit_id ||
         cell.id ||
         cell.aircraft_id ||
@@ -793,6 +794,7 @@
         cell.key ||
         cell.name_key ||
         cell.vehicle ||
+        (Array.isArray(cell.units) && cell.units.length ? cell.units[0] : "") ||
         ""
       );
     }
@@ -803,6 +805,7 @@
         cell.wiki_name ||
         cell.name ||
         cell.title ||
+        (Array.isArray(cell.units) && cell.units.length ? cell.units[0] : "") ||
         registryRow?.wt_display_name_new ||
         registryRow?.wt_name ||
         registryRow?.rw_name ||
@@ -911,14 +914,27 @@
     function normalizeCell(raw, idx) {
       const pos = extractGridPos(raw);
 
-      let rank = parseRankValue(raw.rank ?? raw.rank_index ?? raw.tier ?? raw.row_rank ?? raw.r ?? raw.era ?? raw.bracket);
+      let rank = parseRankValue(raw.rank ?? raw.rank_index ?? raw.tier ?? raw.row_rank ?? raw.r ?? raw.era ?? raw.bracket ?? raw.range_index);
       let column = toFiniteNumber(raw.column ?? raw.col ?? raw.x ?? raw.grid_x ?? raw.c ?? raw.column_index ?? pos.x);
-      let row = toFiniteNumber(raw.row ?? raw.y ?? raw.grid_y ?? raw.line ?? raw.rw ?? raw.row_index ?? pos.y);
+      let row = toFiniteNumber(raw.row ?? raw.row_in_rank ?? raw.y ?? raw.grid_y ?? raw.line ?? raw.rw ?? raw.row_index ?? pos.y);
 
       if (Number.isFinite(column) && column <= 0) column += 1;
       if (Number.isFinite(row) && row <= 0) row += 1;
+      if (Number.isFinite(rank) && rank <= 0) rank += 1;
 
-      const masterKey = getCellMasterKey(raw);
+      const masterKey = normalizeKey(
+        raw.master_key ||
+        raw.cell_key ||
+        raw.unit_id ||
+        raw.id ||
+        raw.aircraft_id ||
+        raw.aircraft ||
+        raw.key ||
+        raw.name_key ||
+        raw.vehicle ||
+        (Array.isArray(raw.units) && raw.units.length ? raw.units[0] : "")
+      );
+
       const type = normalizeType(raw.type || raw.vehicle_type || raw.group_type || raw.kind || guessType(raw));
       return {
         ...raw,
@@ -927,7 +943,7 @@
         row,
         type,
         master_key: masterKey,
-        cell_id: raw.cell_id || raw.id || raw.node_id || raw.key || raw.name || `${masterKey || "cell"}_${idx}`
+        cell_id: raw.cell_id || raw.cell_key || raw.id || raw.node_id || raw.key || raw.name || `${masterKey || "cell"}_${idx}`
       };
     }
 
@@ -1184,8 +1200,8 @@
       svg.setAttribute("height", height);
       svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
       for (const edge of edges || []) {
-        const fromId = edge.from || edge.source || edge.parent || edge.from_cell_id || edge.from_id;
-        const toId = edge.to || edge.target || edge.child || edge.to_cell_id || edge.to_id;
+        const fromId = edge.from || edge.source || edge.parent || edge.from_cell_id || edge.from_id || edge.source_cell_key || edge.src;
+        const toId = edge.to || edge.target || edge.child || edge.to_cell_id || edge.to_id || edge.target_cell_key || edge.dst;
         if (!rectMap.has(fromId) || !rectMap.has(toId)) continue;
         const fromRect = rectMap.get(fromId);
         const toRect = rectMap.get(toId);
