@@ -1221,11 +1221,27 @@
         console.log("Sample normalized cells:", cells.slice(0, 12));
         console.log("Bad cells:", cells.filter(c => !validateCellPlacement(c)).slice(0, 12));
         const { rectMap, skippedInvalid } = await renderCells(cells, rowCountsByRank, rankLayout);
+
+        if (skippedInvalid === cells.length && cells.length > 0) {
+          const raw0 = treePayload.cells?.[0] || treePayload.nodes?.[0] || treePayload.items?.[0] || treePayload.vehicles?.[0] || (Array.isArray(treePayload) ? treePayload[0] : null);
+          const norm0 = cells[0];
+          const debugText = [
+            `ALL CELLS SKIPPED`,
+            `Raw first cell keys: ${raw0 ? Object.keys(raw0).join(", ") : "none"}`,
+            `Raw first cell sample: ${raw0 ? JSON.stringify(raw0).slice(0, 700) : "none"}`,
+            `Normalized first cell: ${norm0 ? JSON.stringify({ rank: norm0.rank, column: norm0.column, row: norm0.row, type: norm0.type, cell_id: norm0.cell_id, master_key: norm0.master_key }).slice(0, 700) : "none"}`
+          ].join("
+");
+          setStatus(debugText, true);
+          return;
+        }
         renderEdges(edges, rectMap, width, height);
 
         setStatus(
-          `Loaded tree from ${treeRes.url}\n` +
-          `Loaded registry from ${registryRes.url}\n` +
+          `Loaded tree from ${treeRes.url}
+` +
+          `Loaded registry from ${registryRes.url}
+` +
           `Cells: ${cells.length} | Edges: ${edges.length} | Skipped invalid placements: ${skippedInvalid}`
         );
       } catch (err) {
