@@ -665,29 +665,32 @@ function makeCurvedPath(a, b) {
 function ensureArrowMarkers(svg) {
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
 
+function ensureArrowMarkers(svg) {
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+
   const blue = document.createElementNS("http://www.w3.org/2000/svg", "marker");
   blue.setAttribute("id", "arrowhead-blue");
-  blue.setAttribute("markerWidth", "8");
-  blue.setAttribute("markerHeight", "8");
-  blue.setAttribute("refX", "7");
-  blue.setAttribute("refY", "4");
+  blue.setAttribute("markerWidth", "12");
+  blue.setAttribute("markerHeight", "12");
+  blue.setAttribute("refX", "10");
+  blue.setAttribute("refY", "6");
   blue.setAttribute("orient", "auto");
   blue.setAttribute("markerUnits", "strokeWidth");
   const bluePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  bluePath.setAttribute("d", "M 0 0 L 8 4 L 0 8 Z");
+  bluePath.setAttribute("d", "M 0 0 L 12 6 L 0 12 Z");
   bluePath.setAttribute("class", "edge-head-blue");
   blue.appendChild(bluePath);
 
   const gold = document.createElementNS("http://www.w3.org/2000/svg", "marker");
   gold.setAttribute("id", "arrowhead-gold");
-  gold.setAttribute("markerWidth", "8");
-  gold.setAttribute("markerHeight", "8");
-  gold.setAttribute("refX", "7");
-  gold.setAttribute("refY", "4");
+  gold.setAttribute("markerWidth", "12");
+  gold.setAttribute("markerHeight", "12");
+  gold.setAttribute("refX", "10");
+  gold.setAttribute("refY", "6");
   gold.setAttribute("orient", "auto");
   gold.setAttribute("markerUnits", "strokeWidth");
   const goldPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  goldPath.setAttribute("d", "M 0 0 L 8 4 L 0 8 Z");
+  goldPath.setAttribute("d", "M 0 0 L 12 6 L 0 12 Z");
   goldPath.setAttribute("class", "edge-head-gold");
   gold.appendChild(goldPath);
 
