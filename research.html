@@ -540,8 +540,9 @@
       background: rgba(12, 18, 27, 0.92);
       border: 1px solid rgba(255,255,255,0.06);
       box-shadow: var(--shadow-soft);
-      max-width: 520px;
+      max-width: 620px;
       backdrop-filter: blur(10px);
+      white-space: pre-wrap;
     }
 
     .status.error { border-color: rgba(255,114,114,0.28); color: #ffd5d5; }
@@ -595,11 +596,18 @@
   <div class="status" id="statusBox">Loading tree…</div>
 
   <script>
-    const TREE_JSON_URL = "usa_tree_v4.json";
-    const EDGES_JSON_URL = "usa_tree_pass2_witharrows.json";
-    const REGISTRY_CSV_URL = "SP_Registry_CANON_3_31.csv";
-    const PIC_BASE = "https://kjumpmaster.github.io/Aircraft-Pics/";
+    const TREE_FILE_CANDIDATES = [
+      "usa_tree_pass2_with_arrows.json",
+      "usa_tree_v4.json"
+    ];
 
+    const REGISTRY_FILE_CANDIDATES = [
+      "SP_Registry_CANON_3_31.csv",
+      "sp_registry_CANON_UPDATED_with_wt_images_ENRICHED.csv",
+      "sp_registry_CANON.csv"
+    ];
+
+    const PIC_BASE = "https://kjumpmaster.github.io/Aircraft-Pics/";
     const PREMIUM_COLUMNS = new Set([6, 7]);
 
     const treeShellEl = document.getElementById("treeShell");
@@ -611,7 +619,6 @@
 
     let selectedCellId = null;
     let registryByMasterKey = new Map();
-    let registryByWtImage = new Map();
 
     function setStatus(message, isError = false) {
       statusBoxEl.textContent = message;
@@ -627,17 +634,19 @@
     }
 
     function isPremium(cell) {
-      const t = normalizeType(cell.type);
+      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind);
       return t.includes("premium");
     }
 
     function isSquadron(cell) {
-      const t = normalizeType(cell.type);
+      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind);
       return t.includes("squadron");
     }
 
     function isGroup(cell) {
-      return normalizeType(cell.type) === "group";
+      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind);
+      if (t === "group") return true;
+      return Array.isArray(cell.grouped_cells) || Array.isArray(cell.members) || Array.isArray(cell.units);
     }
 
     function isPremiumLike(cell) {
@@ -660,11 +669,9 @@
       let row = [];
       let cur = "";
       let inQuotes = false;
-
       for (let i = 0; i < text.length; i++) {
         const ch = text[i];
         const next = text[i + 1];
-
         if (ch === '"') {
           if (inQuotes && next === '"') {
             cur += '"';
@@ -685,11 +692,9 @@
           cur += ch;
         }
       }
-
       row.push(cur);
       if (row.some(v => String(v).length > 0)) rows.push(row);
       if (!rows.length) return [];
-
       const headers = rows[0].map(h => String(h || "").trim());
       return rows.slice(1).map(r => {
         const obj = {};
@@ -700,27 +705,45 @@
       });
     }
 
-    async function fetchJSON(url) {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`Failed to load ${url} (${res.status})`);
-      return res.json();
+    async function tryFetchJSON(candidates) {
+      const errors = [];
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) {
+            errors.push(`${url} (${res.status})`);
+            continue;
+          }
+          return { url, data: await res.json() };
+        } catch (err) {
+          errors.push(`${url} (${err.message})`);
+        }
+      }
+      throw new Error(`Could not load any tree JSON. Tried: ${errors.join(", ")}`);
     }
 
-    async function fetchText(url) {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`Failed to load ${url} (${res.status})`);
-      return res.text();
+    async function tryFetchText(candidates) {
+      const errors = [];
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) {
+            errors.push(`${url} (${res.status})`);
+            continue;
+          }
+          return { url, data: await res.text() };
+        } catch (err) {
+          errors.push(`${url} (${err.message})`);
+        }
+      }
+      throw new Error(`Could not load any registry CSV. Tried: ${errors.join(", ")}`);
     }
 
     function buildRegistryMaps(rows) {
       registryByMasterKey = new Map();
-      registryByWtImage = new Map();
-
       for (const row of rows) {
         const masterKey = normalizeKey(row.master_key);
-        const wtImage = normalizeKey(row.wt_image);
         if (masterKey) registryByMasterKey.set(masterKey, row);
-        if (wtImage) registryByWtImage.set(wtImage, row);
       }
     }
 
@@ -730,7 +753,10 @@
         cell.unit_id ||
         cell.id ||
         cell.aircraft_id ||
+        cell.aircraft ||
         cell.key ||
+        cell.name_key ||
+        cell.vehicle ||
         ""
       );
     }
@@ -751,25 +777,20 @@
 
     function getRegistryRowForCell(cell) {
       const masterKey = getCellMasterKey(cell);
-      if (masterKey && registryByMasterKey.has(masterKey)) {
-        return registryByMasterKey.get(masterKey);
-      }
-      return null;
+      return masterKey && registryByMasterKey.has(masterKey) ? registryByMasterKey.get(masterKey) : null;
     }
 
     function buildImageCandidates(cell, registryRow) {
       const candidates = [];
       const masterKey = getCellMasterKey(cell);
       const wtImage = normalizeKey(registryRow?.wt_image);
-      const direct = normalizeKey(cell.wt_image || cell.image || cell.image_name);
+      const direct = normalizeKey(cell.wt_image || cell.image || cell.image_name || cell.filename);
       const groupName = normalizeKey(cell.group_filename || cell.group_image || cell.cell_id);
-
       if (wtImage) candidates.push(`${PIC_BASE}${wtImage}.png`);
       if (direct) candidates.push(`${PIC_BASE}${direct}.png`);
       if (groupName) candidates.push(`${PIC_BASE}${groupName}.png`);
       if (masterKey) candidates.push(`${PIC_BASE}${masterKey}.png`);
       if (masterKey && !masterKey.endsWith("_group")) candidates.push(`${PIC_BASE}${masterKey}_group.png`);
-
       return [...new Set(candidates)];
     }
 
@@ -789,8 +810,50 @@
       return null;
     }
 
-    function getMaxColumn(cells) {
-      return Math.max(...cells.map(c => Number(c.column) || 0), 7);
+    function varNum(name) {
+      return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
+    }
+
+    function guessType(cell) {
+      if (isPremium(cell)) return "premium";
+      if (isSquadron(cell)) return "squadron";
+      return isGroup(cell) ? "group" : "standard";
+    }
+
+    function normalizeCell(raw, idx) {
+      const rank = Number(raw.rank ?? raw.rank_index ?? raw.tier ?? raw.row_rank ?? raw.r ?? NaN);
+      const column = Number(raw.column ?? raw.col ?? raw.x ?? raw.grid_x ?? raw.c ?? NaN);
+      const row = Number(raw.row ?? raw.y ?? raw.grid_y ?? raw.line ?? raw.rw ?? NaN);
+      const masterKey = getCellMasterKey(raw);
+      const type = normalizeType(raw.type || raw.vehicle_type || raw.group_type || raw.kind || guessType(raw));
+      return {
+        ...raw,
+        rank,
+        column,
+        row,
+        type,
+        master_key: masterKey,
+        cell_id: raw.cell_id || raw.id || raw.node_id || raw.key || raw.name || `${masterKey || "cell"}_${idx}`
+      };
+    }
+
+    function normalizeCellsPayload(payload) {
+      let arr = null;
+      if (Array.isArray(payload)) arr = payload;
+      else if (Array.isArray(payload.cells)) arr = payload.cells;
+      else if (Array.isArray(payload.nodes)) arr = payload.nodes;
+      else if (Array.isArray(payload.items)) arr = payload.items;
+      else if (Array.isArray(payload.vehicles)) arr = payload.vehicles;
+      if (!arr) throw new Error("Could not find cells array in tree JSON");
+      return arr.map(normalizeCell);
+    }
+
+    function normalizeEdgesPayload(payload) {
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload.edges)) return payload.edges;
+      if (Array.isArray(payload.arrows)) return payload.arrows;
+      if (Array.isArray(payload.links)) return payload.links;
+      return [];
     }
 
     function groupCellsByRank(cells) {
@@ -813,12 +876,15 @@
       return result;
     }
 
+    function getMaxColumn(cells) {
+      return Math.max(...cells.map(c => Number(c.column) || 0), 7);
+    }
+
     function computeRankLayout(cells) {
       const rowCountsByRank = getRowCountsByRank(cells);
       const ranks = [...rowCountsByRank.keys()].sort((a, b) => a - b);
       const rankLayout = new Map();
       let y = varNum("--tree-pad");
-
       for (const rank of ranks) {
         const rows = rowCountsByRank.get(rank) || 1;
         const contentH = rows * varNum("--cell-h") + Math.max(0, rows - 1) * varNum("--cell-gap-y");
@@ -826,39 +892,20 @@
         rankLayout.set(rank, { y, height: bandH, rows });
         y += bandH + varNum("--rank-gap");
       }
-
       const maxCol = getMaxColumn(cells);
       const width = varNum("--tree-pad") * 2 + maxCol * varNum("--cell-w") + (maxCol - 1) * varNum("--cell-gap-x");
       const height = y + varNum("--tree-pad") - varNum("--rank-gap");
-
       return { rankLayout, rowCountsByRank, width, height, maxCol };
-    }
-
-    function varNum(name) {
-      return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
     }
 
     function validateCellPlacement(cell) {
       const rank = Number(cell.rank);
       const col = Number(cell.column);
       const row = Number(cell.row);
-
-      if (!Number.isFinite(rank) || !Number.isFinite(col) || !Number.isFinite(row)) {
-        console.warn("[SKIP invalid placement] non-numeric rank/column/row", cell);
-        return false;
-      }
-      if (rank < 1 || col < 1 || row < 1) {
-        console.warn("[SKIP invalid placement] rank/column/row below 1", cell);
-        return false;
-      }
-      if (isStandard(cell) && PREMIUM_COLUMNS.has(col)) {
-        console.warn("[SKIP invalid placement] standard aircraft in premium/squadron column", cell);
-        return false;
-      }
-      if (isPremiumLike(cell) && !PREMIUM_COLUMNS.has(col)) {
-        console.warn("[SKIP invalid placement] premium/squadron aircraft outside premium zone", cell);
-        return false;
-      }
+      if (!Number.isFinite(rank) || !Number.isFinite(col) || !Number.isFinite(row)) return false;
+      if (rank < 1 || col < 1 || row < 1) return false;
+      if (isStandard(cell) && PREMIUM_COLUMNS.has(col)) return false;
+      if (isPremiumLike(cell) && !PREMIUM_COLUMNS.has(col)) return false;
       return true;
     }
 
@@ -866,18 +913,21 @@
       const rank = Number(cell.rank);
       const col = Number(cell.column);
       const row = Number(cell.row);
-      if (!Number.isFinite(rank) || !Number.isFinite(col) || !Number.isFinite(row)) {
-        throw new Error(`Invalid cell placement for ${cell.cell_id || getCellMasterKey(cell) || "unknown"}`);
-      }
-
       const layout = rankLayout.get(rank);
-      if (!layout) {
-        throw new Error(`Missing rank layout for rank ${rank}`);
-      }
+      if (!layout) throw new Error(`Missing rank layout for rank ${rank}`);
+      return {
+        x: varNum("--tree-pad") + (col - 1) * (varNum("--cell-w") + varNum("--cell-gap-x")),
+        y: layout.y + varNum("--rank-header-h") + varNum("--rank-inner-top") + (row - 1) * (varNum("--cell-h") + varNum("--cell-gap-y")),
+        w: varNum("--cell-w"),
+        h: varNum("--cell-h")
+      };
+    }
 
-      const x = varNum("--tree-pad") + (col - 1) * (varNum("--cell-w") + varNum("--cell-gap-x"));
-      const y = layout.y + varNum("--rank-header-h") + varNum("--rank-inner-top") + (row - 1) * (varNum("--cell-h") + varNum("--cell-gap-y"));
-      return { x, y, w: varNum("--cell-w"), h: varNum("--cell-h") };
+    function romanize(num) {
+      const map = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+      let out = "";
+      for (const [v, s] of map) while (num >= v) { out += s; num -= v; }
+      return out || String(num);
     }
 
     function renderRankBands(rankLayout, width) {
@@ -889,26 +939,12 @@
         band.style.top = `${layout.y}px`;
         band.style.width = `${width}px`;
         band.style.height = `${layout.height}px`;
-
         const label = document.createElement("div");
         label.className = "rank-label";
         label.textContent = `Rank ${romanize(rank)}`;
         band.appendChild(label);
         rankLayerEl.appendChild(band);
       }
-    }
-
-    function romanize(num) {
-      const map = [
-        [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
-        [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
-        [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
-      ];
-      let out = "";
-      for (const [v, s] of map) {
-        while (num >= v) { out += s; num -= v; }
-      }
-      return out || String(num);
     }
 
     function createCellElement(cell, registryRow, imageUrl) {
@@ -937,7 +973,6 @@
 
       el.querySelector(".cell-title").textContent = title;
       const imgWrap = el.querySelector(".cell-image-wrap");
-
       if (imageUrl) {
         const img = document.createElement("img");
         img.className = "cell-image";
@@ -953,186 +988,4 @@
 
       el.addEventListener("click", () => {
         selectedCellId = cell.cell_id;
-        document.querySelectorAll(".tree-cell.selected").forEach(n => n.classList.remove("selected"));
-        el.classList.add("selected");
-        renderDetailPanel(cell, registryRow, imageUrl);
-      });
-
-      return el;
-    }
-
-    function renderDetailPanel(cell, registryRow, imageUrl) {
-      const title = getDisplayName(cell, registryRow);
-      const typeLabel = labelForType(cell);
-      const masterKey = getCellMasterKey(cell) || "—";
-      const wtImage = registryRow?.wt_image || cell.wt_image || "—";
-      const nation = registryRow?.nation || cell.nation || "—";
-
-      detailPanelEl.innerHTML = `
-        <div class="detail-card">
-          <div class="detail-hero">
-            <div class="detail-img-wrap"></div>
-          </div>
-          <div class="detail-body">
-            <div class="detail-title">
-              <strong>${escapeHtml(title)}</strong>
-              <span>${escapeHtml(typeLabel)} aircraft</span>
-            </div>
-            <div class="detail-grid">
-              <div class="stat"><label>Master Key</label><div>${escapeHtml(masterKey)}</div></div>
-              <div class="stat"><label>Nation</label><div>${escapeHtml(nation)}</div></div>
-              <div class="stat"><label>Rank</label><div>${escapeHtml(String(cell.rank ?? "—"))}</div></div>
-              <div class="stat"><label>Column / Row</label><div>${escapeHtml(`${cell.column ?? "—"} / ${cell.row ?? "—"}`)}</div></div>
-              <div class="stat"><label>Cell ID</label><div>${escapeHtml(String(cell.cell_id || "—"))}</div></div>
-              <div class="stat"><label>WT Image Key</label><div>${escapeHtml(String(wtImage))}</div></div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      const imgWrap = detailPanelEl.querySelector(".detail-img-wrap");
-      if (imageUrl) {
-        const img = document.createElement("img");
-        img.src = imageUrl;
-        img.alt = title;
-        imgWrap.appendChild(img);
-      } else {
-        imgWrap.innerHTML = '<div class="cell-fallback">No Image</div>';
-      }
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
-    }
-
-    async function renderCells(cells, rowCountsByRank, rankLayout) {
-      nodeLayerEl.innerHTML = "";
-      const rectMap = new Map();
-      const warnings = [];
-
-      for (const cell of cells) {
-        if (!validateCellPlacement(cell)) {
-          warnings.push(cell.cell_id || getCellMasterKey(cell) || "unknown");
-          continue;
-        }
-
-        const rect = getCellRect(cell, rowCountsByRank, rankLayout);
-        rectMap.set(cell.cell_id, rect);
-
-        const registryRow = getRegistryRowForCell(cell);
-        const imageUrl = await resolveImageURL(cell, registryRow);
-
-        const wrap = document.createElement("div");
-        wrap.className = "cell-wrap" + (isGroup(cell) ? " grouped" : "");
-        if (isPremium(cell)) wrap.classList.add("premium");
-        if (isSquadron(cell)) wrap.classList.add("squadron");
-        wrap.style.left = `${rect.x}px`;
-        wrap.style.top = `${rect.y}px`;
-
-        if (isGroup(cell)) {
-          const s2 = document.createElement("div");
-          s2.className = "cell-shadow-2";
-          const s1 = document.createElement("div");
-          s1.className = "cell-shadow-1";
-          wrap.appendChild(s2);
-          wrap.appendChild(s1);
-        }
-
-        wrap.appendChild(createCellElement(cell, registryRow, imageUrl));
-        nodeLayerEl.appendChild(wrap);
-      }
-
-      return { rectMap, warnings };
-    }
-
-    function getRectAnchor(rect, side) {
-      if (side === "right") return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
-      if (side === "left") return { x: rect.x, y: rect.y + rect.h / 2 };
-      if (side === "top") return { x: rect.x + rect.w / 2, y: rect.y };
-      return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
-    }
-
-    function makeOrthogonalPath(a, b) {
-      const midX = Math.round((a.x + b.x) / 2);
-      return `M ${a.x} ${a.y} L ${midX} ${a.y} L ${midX} ${b.y} L ${b.x} ${b.y}`;
-    }
-
-    function renderEdges(edges, rectMap, width, height) {
-      edgeLayerEl.innerHTML = "";
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", width);
-      svg.setAttribute("height", height);
-      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-
-      for (const edge of edges || []) {
-        const fromId = edge.from || edge.source || edge.parent || edge.from_cell_id;
-        const toId = edge.to || edge.target || edge.child || edge.to_cell_id;
-        if (!rectMap.has(fromId) || !rectMap.has(toId)) continue;
-
-        const fromRect = rectMap.get(fromId);
-        const toRect = rectMap.get(toId);
-        const a = getRectAnchor(fromRect, "right");
-        const b = getRectAnchor(toRect, "left");
-
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", makeOrthogonalPath(a, b));
-        path.setAttribute("class", "edge-path");
-        svg.appendChild(path);
-      }
-
-      edgeLayerEl.appendChild(svg);
-    }
-
-    function normalizeCellsPayload(payload) {
-      if (Array.isArray(payload)) return payload;
-      if (Array.isArray(payload.cells)) return payload.cells;
-      if (Array.isArray(payload.nodes)) return payload.nodes;
-      throw new Error("Could not find cells array in tree JSON");
-    }
-
-    function normalizeEdgesPayload(payload) {
-      if (Array.isArray(payload)) return payload;
-      if (Array.isArray(payload.edges)) return payload.edges;
-      return [];
-    }
-
-    async function initiateSystem() {
-      try {
-        setStatus("Loading tree, edges, and registry…");
-
-        const [treePayload, edgePayload, registryText] = await Promise.all([
-          fetchJSON(TREE_JSON_URL),
-          fetchJSON(EDGES_JSON_URL).catch(() => []),
-          fetchText(REGISTRY_CSV_URL)
-        ]);
-
-        const cells = normalizeCellsPayload(treePayload);
-        const edges = normalizeEdgesPayload(edgePayload);
-        const registryRows = parseCSV(registryText);
-        buildRegistryMaps(registryRows);
-
-        const { rankLayout, rowCountsByRank, width, height } = computeRankLayout(cells);
-        treeShellEl.style.width = `${width}px`;
-        treeShellEl.style.height = `${height}px`;
-
-        renderRankBands(rankLayout, width);
-        const { rectMap, warnings } = await renderCells(cells, rowCountsByRank, rankLayout);
-        renderEdges(edges, rectMap, width, height);
-
-        const warnText = warnings.length ? ` Skipped ${warnings.length} invalid placement${warnings.length === 1 ? "" : "s"}.` : "";
-        setStatus(`Loaded ${cells.length} cells and ${edges.length} edges.${warnText}`);
-      } catch (err) {
-        console.error(err);
-        setStatus(`Load failed: ${err.message}`, true);
-      }
-    }
-
-    initiateSystem();
-  </script>
-</body>
-</html>
+        document.querySelectorAl
