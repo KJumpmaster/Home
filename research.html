@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+from pathlib import Path
+
+html = r'''<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -7,22 +9,10 @@
   <style>
     :root {
       --bg: #0b1118;
-      --bg-2: #101823;
-      --panel: rgba(19, 27, 38, 0.92);
-      --panel-2: rgba(29, 40, 56, 0.94);
-      --line: rgba(130, 170, 220, 0.18);
-      --line-strong: rgba(130, 170, 220, 0.35);
       --text: #e7eef7;
       --muted: #91a2b6;
-      --accent: #7fb3ff;
       --premium: #d4aa40;
-      --premium-bg-1: rgba(61, 50, 22, 0.98);
-      --premium-bg-2: rgba(29, 24, 14, 0.98);
       --squadron: #58b261;
-      --squadron-bg-1: rgba(25, 52, 28, 0.98);
-      --squadron-bg-2: rgba(15, 28, 17, 0.98);
-      --danger: #ff7272;
-
       --sidebar-w: 360px;
       --rank-header-h: 44px;
       --rank-gap: 26px;
@@ -35,543 +25,141 @@
       --tree-pad: 28px;
       --img-h: 62px;
       --radius: 14px;
-      --shadow-soft: 0 10px 30px rgba(0,0,0,0.28);
     }
 
     * { box-sizing: border-box; }
     html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background:
-        radial-gradient(circle at top, rgba(44, 69, 102, 0.18), transparent 30%),
-        linear-gradient(180deg, #0b1118 0%, #0a0f15 100%);
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: linear-gradient(180deg, #0b1118 0%, #0a0f15 100%);
       color: var(--text);
       font-family: Inter, Segoe UI, Arial, sans-serif;
       overflow: hidden;
     }
 
-    .app {
-      display: grid;
-      grid-template-columns: 1fr var(--sidebar-w);
-      width: 100%;
-      height: 100%;
-    }
-
-    .main {
-      position: relative;
-      min-width: 0;
-      min-height: 0;
-      border-right: 1px solid rgba(255,255,255,0.05);
-    }
-
+    .app { display: grid; grid-template-columns: 1fr var(--sidebar-w); width: 100%; height: 100%; }
+    .main { position: relative; min-width: 0; min-height: 0; border-right: 1px solid rgba(255,255,255,0.05); }
     .toolbar {
-      height: 54px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      background: rgba(9, 14, 21, 0.88);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      backdrop-filter: blur(12px);
+      height: 54px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; background: rgba(9, 14, 21, 0.95); border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-
-    .title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .title-badge {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      background: linear-gradient(180deg, rgba(99, 154, 226, 0.5), rgba(60, 107, 176, 0.2));
-      border: 1px solid rgba(143, 190, 255, 0.26);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-    }
-
-    .title-text {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .title-text strong {
-      font-size: 14px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .title-text span {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .toolbar-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
+    .toolbar strong { font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+    .toolbar span { color: var(--muted); font-size: 12px; }
+    .legend { display: flex; gap: 10px; align-items: center; }
     .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 12px;
-      color: var(--muted);
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
+      display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 6px 10px;
+      font-size: 12px; color: var(--muted); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
     }
+    .dot { width: 9px; height: 9px; border-radius: 999px; display: inline-block; }
+    .dot.standard { background: rgba(127, 179, 255, .9); }
+    .dot.premium { background: rgba(212, 170, 64, .95); }
+    .dot.squadron { background: rgba(88, 178, 97, .95); }
 
-    .legend-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 999px;
-      display: inline-block;
-    }
-
-    .legend-dot.standard { background: rgba(127, 179, 255, 0.9); }
-    .legend-dot.premium { background: rgba(212, 170, 64, 0.95); }
-    .legend-dot.squadron { background: rgba(88, 178, 97, 0.95); }
-
-    .tree-scroll {
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 54px;
-      bottom: 0;
-      overflow: auto;
-      padding: 18px;
-    }
-
+    .tree-scroll { position: absolute; left: 0; right: 0; top: 54px; bottom: 0; overflow: auto; padding: 18px; }
     .tree-shell {
-      position: relative;
-      min-width: max-content;
-      min-height: 100%;
-      padding: var(--tree-pad);
-      border-radius: 22px;
-      background:
-        linear-gradient(180deg, rgba(18, 26, 37, 0.92), rgba(10, 15, 22, 0.96));
-      box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(255,255,255,0.05);
-      overflow: hidden;
+      position: relative; min-width: max-content; min-height: 100%; padding: var(--tree-pad);
+      border-radius: 22px; background: linear-gradient(180deg, rgba(18, 26, 37, .92), rgba(10, 15, 22, .96));
+      border: 1px solid rgba(255,255,255,0.05); overflow: hidden;
     }
-
-    .tree-shell::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
-      background-size: 28px 28px;
-      pointer-events: none;
-      mask-image: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.2));
-    }
-
-    .rank-layer,
-    .edge-layer,
-    .node-layer {
-      position: absolute;
-      inset: 0;
-    }
-
+    .rank-layer, .edge-layer, .node-layer { position: absolute; inset: 0; }
     .rank-band {
-      position: absolute;
-      left: 0;
-      right: 0;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(24, 34, 48, 0.55), rgba(13, 20, 29, 0.42));
+      position: absolute; left: 0; right: 0; border-radius: 18px;
+      background: linear-gradient(180deg, rgba(24, 34, 48, .55), rgba(13, 20, 29, .42));
       border: 1px solid rgba(255,255,255,0.04);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
-
     .rank-band::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: var(--rank-header-h);
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(146, 176, 215, 0.26), transparent);
+      content: ""; position: absolute; left: 0; right: 0; top: var(--rank-header-h); height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(146, 176, 215, .26), transparent);
     }
-
     .rank-label {
-      position: absolute;
-      left: 16px;
-      top: 10px;
-      z-index: 1;
-      font-size: 13px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #c6d4e5;
-      font-weight: 700;
+      position: absolute; left: 16px; top: 10px; z-index: 1;
+      font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: #c6d4e5; font-weight: 700;
     }
-
-    .edge-layer svg {
-      position: absolute;
-      inset: 0;
-      overflow: visible;
-    }
-
+    .edge-layer svg { position: absolute; inset: 0; overflow: visible; }
     .edge-path {
-      fill: none;
-      stroke: rgba(132, 177, 235, 0.24);
-      stroke-width: 2.5;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      filter: drop-shadow(0 0 6px rgba(93, 144, 221, 0.08));
+      fill: none; stroke: rgba(132, 177, 235, 0.24); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
     }
 
-    .cell-wrap {
-      position: absolute;
-      width: var(--cell-w);
-      height: var(--cell-h);
-      z-index: 3;
+    .cell-wrap { position: absolute; width: var(--cell-w); height: var(--cell-h); z-index: 3; }
+    .cell-wrap.grouped .cell-shadow-2, .cell-wrap.grouped .cell-shadow-1 {
+      position: absolute; inset: 0; border-radius: var(--radius); background: rgba(35,47,64,.60);
+      border: 1px solid rgba(144,176,216,.18); pointer-events: none;
     }
-
-    .cell-wrap.grouped .cell-shadow-2,
-    .cell-wrap.grouped .cell-shadow-1 {
-      position: absolute;
-      inset: 0;
-      border-radius: var(--radius);
-      background: rgba(35, 47, 64, 0.60);
-      border: 1px solid rgba(144, 176, 216, 0.18);
-      pointer-events: none;
-    }
-
-    .cell-wrap.grouped .cell-shadow-2 { transform: translate(9px, 9px); opacity: 0.32; }
-    .cell-wrap.grouped .cell-shadow-1 { transform: translate(4px, 4px); opacity: 0.50; }
-
-    .cell-wrap.premium .cell-shadow-1,
-    .cell-wrap.premium .cell-shadow-2 {
-      background: rgba(70, 58, 28, 0.55);
-      border-color: rgba(212, 170, 64, 0.28);
-    }
-
-    .cell-wrap.squadron .cell-shadow-1,
-    .cell-wrap.squadron .cell-shadow-2 {
-      background: rgba(31, 58, 34, 0.55);
-      border-color: rgba(88, 178, 97, 0.26);
-    }
+    .cell-wrap.grouped .cell-shadow-2 { transform: translate(9px,9px); opacity: .32; }
+    .cell-wrap.grouped .cell-shadow-1 { transform: translate(4px,4px); opacity: .50; }
 
     .tree-cell {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: linear-gradient(180deg, rgba(36, 44, 57, 0.96), rgba(19, 24, 32, 0.98));
-      border: 1px solid rgba(130, 145, 170, 0.22);
-      box-shadow:
-        0 8px 22px rgba(0,0,0,0.30),
-        inset 0 1px 0 rgba(255,255,255,0.04);
-      cursor: pointer;
-      transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+      position: relative; width: 100%; height: 100%; border-radius: var(--radius); overflow: hidden;
+      background: linear-gradient(180deg, rgba(36, 44, 57, .96), rgba(19, 24, 32, .98));
+      border: 1px solid rgba(130,145,170,.22); cursor: pointer;
     }
-
-    .tree-cell:hover {
-      transform: translateY(-2px);
-      border-color: rgba(150, 191, 255, 0.38);
-      box-shadow:
-        0 10px 26px rgba(0,0,0,0.34),
-        0 0 18px rgba(99, 154, 226, 0.12),
-        inset 0 1px 0 rgba(255,255,255,0.06);
-    }
-
-    .tree-cell.selected {
-      border-color: rgba(162, 204, 255, 0.62);
-      box-shadow:
-        0 12px 28px rgba(0,0,0,0.36),
-        0 0 22px rgba(127, 179, 255, 0.18),
-        inset 0 1px 0 rgba(255,255,255,0.08);
-    }
-
     .tree-cell.premium {
-      border-color: rgba(212, 170, 64, 0.72);
-      background: linear-gradient(180deg, var(--premium-bg-1), var(--premium-bg-2));
-      box-shadow:
-        0 8px 22px rgba(0,0,0,0.30),
-        0 0 0 1px rgba(212, 170, 64, 0.16),
-        0 0 18px rgba(212, 170, 64, 0.14),
-        inset 0 1px 0 rgba(255, 236, 178, 0.10);
+      border-color: rgba(212,170,64,.72);
+      background: linear-gradient(180deg, rgba(61, 50, 22, .98), rgba(29,24,14,.98));
+      box-shadow: 0 0 0 1px rgba(212,170,64,.16), 0 0 18px rgba(212,170,64,.14);
     }
-
-    .tree-cell.premium::before,
-    .tree-cell.squadron::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0) 40%);
-    }
-
     .tree-cell.squadron {
-      border-color: rgba(88, 178, 97, 0.72);
-      background: linear-gradient(180deg, var(--squadron-bg-1), var(--squadron-bg-2));
-      box-shadow:
-        0 8px 22px rgba(0,0,0,0.30),
-        0 0 0 1px rgba(88, 178, 97, 0.16),
-        0 0 18px rgba(88, 178, 97, 0.12),
-        inset 0 1px 0 rgba(197, 255, 201, 0.08);
+      border-color: rgba(88,178,97,.72);
+      background: linear-gradient(180deg, rgba(25, 52, 28, .98), rgba(15,28,17,.98));
+      box-shadow: 0 0 0 1px rgba(88,178,97,.16), 0 0 18px rgba(88,178,97,.12);
     }
-
-    .cell-top {
-      position: relative;
-      height: calc(var(--img-h) + 8px);
-      padding: 8px 10px 0 10px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0));
-    }
-
+    .cell-top { position: relative; height: calc(var(--img-h) + 8px); padding: 8px 10px 0 10px; }
     .cell-image-wrap {
-      position: relative;
-      height: var(--img-h);
-      border-radius: 10px;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at center, rgba(145, 175, 220, 0.10), transparent 60%),
-        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative; height: var(--img-h); border-radius: 10px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at center, rgba(145,175,220,.10), transparent 60%);
     }
-
     .cell-image {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      display: block;
-      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.22));
+      max-width: 100%; max-height: 100%; object-fit: contain; display: block;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.22));
     }
-
-    .cell-fallback {
-      font-size: 11px;
-      color: #8ea1b8;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .cell-body {
-      padding: 6px 10px 10px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
+    .cell-fallback { font-size: 11px; color: #8ea1b8; letter-spacing: .08em; text-transform: uppercase; }
+    .cell-body { padding: 6px 10px 10px 10px; display: flex; flex-direction: column; gap: 4px; }
     .cell-title {
-      font-size: 12px;
-      line-height: 1.2;
-      font-weight: 700;
-      color: #eef5ff;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      min-height: 28px;
+      font-size: 12px; line-height: 1.2; font-weight: 700; color: #eef5ff;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 28px;
     }
-
     .cell-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; color: var(--muted);
+      letter-spacing: .08em; text-transform: uppercase;
     }
-
     .tag {
-      display: inline-flex;
-      align-items: center;
-      min-width: 0;
-      gap: 6px;
-      border-radius: 999px;
-      padding: 3px 7px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.05);
-      white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 3px 7px;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.05); white-space: nowrap;
     }
+    .tag.premium { color: #f0d48d; border-color: rgba(212,170,64,.25); background: rgba(212,170,64,.10); }
+    .tag.squadron { color: #97db9d; border-color: rgba(88,178,97,.22); background: rgba(88,178,97,.10); }
 
-    .tag.premium {
-      color: #f0d48d;
-      border-color: rgba(212,170,64,0.25);
-      background: rgba(212,170,64,0.10);
-    }
-
-    .tag.squadron {
-      color: #97db9d;
-      border-color: rgba(88,178,97,0.22);
-      background: rgba(88,178,97,0.10);
-    }
-
-    .sidebar {
-      background: linear-gradient(180deg, rgba(12, 18, 27, 0.98), rgba(8, 12, 18, 1));
-      display: flex;
-      flex-direction: column;
-      min-width: 0;
-    }
-
-    .sidebar-head {
-      padding: 18px 18px 12px 18px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .sidebar-head h2 {
-      margin: 0 0 6px 0;
-      font-size: 18px;
-    }
-
-    .sidebar-head p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .detail {
-      padding: 18px;
-      overflow: auto;
-      min-height: 0;
-    }
-
-    .detail-card {
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(22,31,44,0.92), rgba(12,18,26,0.98));
-      border: 1px solid rgba(255,255,255,0.05);
-      box-shadow: var(--shadow-soft);
-      overflow: hidden;
-    }
-
-    .detail-hero {
-      padding: 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
-    }
-
-    .detail-img-wrap {
-      height: 160px;
-      border-radius: 14px;
-      background:
-        radial-gradient(circle at center, rgba(145, 175, 220, 0.14), transparent 60%),
-        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .detail-img-wrap img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-
-    .detail-body {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .detail-title {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .detail-title strong {
-      font-size: 20px;
-      line-height: 1.2;
-    }
-
-    .detail-title span {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .stat {
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .stat label {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 4px;
-    }
-
-    .stat div {
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .empty-state {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.55;
-      padding: 6px 2px;
-    }
-
+    .sidebar { background: linear-gradient(180deg, rgba(12,18,27,.98), rgba(8,12,18,1)); display: flex; flex-direction: column; min-width: 0; }
+    .sidebar-head { padding: 18px 18px 12px 18px; border-bottom: 1px solid rgba(255,255,255,.05); }
+    .sidebar-head h2 { margin: 0 0 6px 0; font-size: 18px; }
+    .sidebar-head p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .detail { padding: 18px; overflow: auto; min-height: 0; }
+    .empty-state { color: var(--muted); font-size: 14px; line-height: 1.55; padding: 6px 2px; }
     .status {
-      position: fixed;
-      left: 18px;
-      bottom: 18px;
-      z-index: 20;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 12px;
-      color: #d8e6f6;
-      background: rgba(12, 18, 27, 0.92);
-      border: 1px solid rgba(255,255,255,0.06);
-      box-shadow: var(--shadow-soft);
-      max-width: 620px;
-      backdrop-filter: blur(10px);
-      white-space: pre-wrap;
+      position: fixed; left: 18px; bottom: 18px; z-index: 20; border-radius: 12px; padding: 10px 12px;
+      font-size: 12px; color: #d8e6f6; background: rgba(12, 18, 27, .92); border: 1px solid rgba(255,255,255,.06);
+      max-width: 760px; white-space: pre-wrap;
     }
+    .status.error { border-color: rgba(255,114,114,.28); color: #ffd5d5; }
 
-    .status.error { border-color: rgba(255,114,114,0.28); color: #ffd5d5; }
-
-    @media (max-width: 1100px) {
-      .app { grid-template-columns: 1fr; }
-      .sidebar { display: none; }
-    }
+    @media (max-width: 1100px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } }
   </style>
 </head>
 <body>
   <div class="app">
     <section class="main">
       <div class="toolbar">
-        <div class="title-wrap">
-          <div class="title-badge"></div>
-          <div class="title-text">
-            <strong>Sky Pilot Research Tree</strong>
-            <span>Custom aircraft progression viewer</span>
-          </div>
+        <div>
+          <strong>Sky Pilot Research Tree</strong><br>
+          <span>USA tree viewer</span>
         </div>
-        <div class="toolbar-right">
-          <div class="pill"><span class="legend-dot standard"></span> Standard</div>
-          <div class="pill"><span class="legend-dot premium"></span> Premium</div>
-          <div class="pill"><span class="legend-dot squadron"></span> Squadron</div>
+        <div class="legend">
+          <div class="pill"><span class="dot standard"></span> Standard</div>
+          <div class="pill"><span class="dot premium"></span> Premium</div>
+          <div class="pill"><span class="dot squadron"></span> Squadron</div>
         </div>
       </div>
-
-      <div class="tree-scroll" id="treeScroll">
+      <div class="tree-scroll">
         <div class="tree-shell" id="treeShell">
           <div class="rank-layer" id="rankLayer"></div>
           <div class="edge-layer" id="edgeLayer"></div>
@@ -579,55 +167,23 @@
         </div>
       </div>
     </section>
-
     <aside class="sidebar">
       <div class="sidebar-head">
         <h2>Aircraft Details</h2>
-        <p>Select an aircraft card to inspect placement, type, image source, and core metadata.</p>
+        <p>Select an aircraft card to inspect placement and metadata.</p>
       </div>
       <div class="detail" id="detailPanel">
-        <div class="empty-state">
-          Pick a card in the tree. This panel is wired for a later richer details view, but already gives you a clean target for hover/selection expansion.
-        </div>
+        <div class="empty-state">Pick a card in the tree.</div>
       </div>
     </aside>
   </div>
 
-  <div class="status" id="statusBox">Loading tree…</div>
+  <div class="status" id="statusBox">SCRIPT BOOTED</div>
 
   <script>
-  alert("SCRIPT IS RUNNING");
-    window.addEventListener("error", (e) => {
-      const box = document.getElementById("statusBox");
-      if (box) {
-        box.textContent = `JS error: ${e.message} at ${e.filename || "inline"}:${e.lineno || 0}`;
-        box.classList.add("error");
-      }
-      console.error("window error", e);
-    });
-
-    window.addEventListener("unhandledrejection", (e) => {
-      const box = document.getElementById("statusBox");
-      if (box) {
-        box.textContent = `Promise error: ${e.reason?.message || e.reason || "Unknown promise failure"}`;
-        box.classList.add("error");
-      }
-      console.error("unhandled rejection", e.reason);
-    });
-
-    const TREE_FILE_CANDIDATES = [
-      "usa_tree_pass2_with_arrows.json",
-      "usa_tree_v4.json"
-    ];
-
-    const REGISTRY_FILE_CANDIDATES = [
-      "SP_Registry_CANON_3_31.csv",
-      "sp_registry_CANON_UPDATED_with_wt_images_ENRICHED.csv",
-      "sp_registry_CANON.csv"
-    ];
-
+    const TREE_JSON_URL = "usa_tree_pass2_with_arrows.json";
+    const REGISTRY_CSV_URL = "SP_Registry_CANON_3_31.csv";
     const PIC_BASE = "https://kjumpmaster.github.io/Aircraft-Pics/";
-    const PREMIUM_COLUMNS = new Set([6, 7]);
 
     const treeShellEl = document.getElementById("treeShell");
     const rankLayerEl = document.getElementById("rankLayer");
@@ -636,11 +192,6 @@
     const detailPanelEl = document.getElementById("detailPanel");
     const statusBoxEl = document.getElementById("statusBox");
 
-    if (statusBoxEl) {
-      statusBoxEl.textContent = "Script booted. Starting load...";
-    }
-
-    let selectedCellId = null;
     let registryByMasterKey = new Map();
 
     function setStatus(message, isError = false) {
@@ -648,57 +199,23 @@
       statusBoxEl.classList.toggle("error", !!isError);
     }
 
-    function normalizeKey(value) {
-      return String(value || "").trim();
+    window.addEventListener("error", (e) => {
+      setStatus(`JS error: ${e.message} at ${e.filename || "inline"}:${e.lineno || 0}`, true);
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      setStatus(`Promise error: ${e.reason?.message || e.reason || "Unknown promise failure"}`, true);
+    });
+
+    function normalizeKey(value) { return String(value || "").trim(); }
+    function normalizeType(value) { return String(value || "").trim().toLowerCase(); }
+    function romanize(num) {
+      const map = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+      let out = "";
+      for (const [v, s] of map) while (num >= v) { out += s; num -= v; }
+      return out || String(num);
     }
-
-    function normalizeType(value) {
-      return String(value || "").trim().toLowerCase();
-    }
-
-    function isPremium(cell) {
-      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class || cell.reward_type);
-      if (t.includes("premium")) return true;
-      const col = Number(cell.column ?? cell.col ?? cell.x ?? cell.grid_x ?? cell.c);
-      return col === 6;
-    }
-
-    function isSquadron(cell) {
-      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class || cell.reward_type);
-      if (t.includes("squadron")) return true;
-
-      const nameText = normalizeType(
-        cell.name ||
-        cell.title ||
-        cell.display_name ||
-        cell.wiki_name ||
-        cell.master_key ||
-        cell.unit_id ||
-        ""
-      );
-
-      return nameText.includes("squadron");
-    }
-
-    function isGroup(cell) {
-      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind);
-      if (t === "group") return true;
-      return Array.isArray(cell.grouped_cells) || Array.isArray(cell.members) || Array.isArray(cell.units);
-    }
-
-    function isPremiumLike(cell) {
-      return isPremium(cell) || isSquadron(cell);
-    }
-
-    function isStandard(cell) {
-      return !isPremiumLike(cell);
-    }
-
-    function labelForType(cell) {
-      if (isPremium(cell)) return "Premium";
-      if (isSquadron(cell)) return "Squadron";
-      if (isGroup(cell)) return "Group";
-      return "Standard";
+    function varNum(name) {
+      return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
     }
 
     function parseCSV(text) {
@@ -710,19 +227,13 @@
         const ch = text[i];
         const next = text[i + 1];
         if (ch === '"') {
-          if (inQuotes && next === '"') {
-            cur += '"';
-            i++;
-          } else {
-            inQuotes = !inQuotes;
-          }
+          if (inQuotes && next === '"') { cur += '"'; i++; }
+          else { inQuotes = !inQuotes; }
         } else if (ch === "," && !inQuotes) {
-          row.push(cur);
-          cur = "";
+          row.push(cur); cur = "";
         } else if ((ch === "\n" || ch === "\r") && !inQuotes) {
           if (ch === "\r" && next === "\n") i++;
-          row.push(cur);
-          cur = "";
+          row.push(cur); cur = "";
           if (row.some(v => String(v).length > 0)) rows.push(row);
           row = [];
         } else {
@@ -735,52 +246,16 @@
       const headers = rows[0].map(h => String(h || "").trim());
       return rows.slice(1).map(r => {
         const obj = {};
-        headers.forEach((h, idx) => {
-          obj[h] = r[idx] ?? "";
-        });
+        headers.forEach((h, idx) => obj[h] = r[idx] ?? "");
         return obj;
       });
-    }
-
-    async function tryFetchJSON(candidates) {
-      const errors = [];
-      for (const url of candidates) {
-        try {
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) {
-            errors.push(`${url} (${res.status})`);
-            continue;
-          }
-          return { url, data: await res.json() };
-        } catch (err) {
-          errors.push(`${url} (${err.message})`);
-        }
-      }
-      throw new Error(`Could not load any tree JSON. Tried: ${errors.join(", ")}`);
-    }
-
-    async function tryFetchText(candidates) {
-      const errors = [];
-      for (const url of candidates) {
-        try {
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) {
-            errors.push(`${url} (${res.status})`);
-            continue;
-          }
-          return { url, data: await res.text() };
-        } catch (err) {
-          errors.push(`${url} (${err.message})`);
-        }
-      }
-      throw new Error(`Could not load any registry CSV. Tried: ${errors.join(", ")}`);
     }
 
     function buildRegistryMaps(rows) {
       registryByMasterKey = new Map();
       for (const row of rows) {
-        const masterKey = normalizeKey(row.master_key);
-        if (masterKey) registryByMasterKey.set(masterKey, row);
+        const key = normalizeKey(row.master_key);
+        if (key) registryByMasterKey.set(key, row);
       }
     }
 
@@ -790,14 +265,35 @@
         cell.cell_key ||
         cell.unit_id ||
         cell.id ||
-        cell.aircraft_id ||
-        cell.aircraft ||
         cell.key ||
-        cell.name_key ||
-        cell.vehicle ||
         (Array.isArray(cell.units) && cell.units.length ? cell.units[0] : "") ||
         ""
       );
+    }
+
+    function isPremium(cell) {
+      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class || cell.reward_type);
+      return t.includes("premium") || normalizeType(cell.display_name).includes("premium");
+    }
+
+    function isSquadron(cell) {
+      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class || cell.reward_type);
+      const nameText = normalizeType(
+        cell.name || cell.title || cell.display_name || cell.wiki_name || cell.master_key || cell.unit_id || ""
+      );
+      return t.includes("squadron") || nameText.includes("squadron");
+    }
+
+    function isGroup(cell) {
+      const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class);
+      return t === "group" || (Array.isArray(cell.units) && cell.units.length > 1);
+    }
+
+    function labelForType(cell) {
+      if (isPremium(cell)) return "Premium";
+      if (isSquadron(cell)) return "Squadron";
+      if (isGroup(cell)) return "Group";
+      return "Standard";
     }
 
     function getDisplayName(cell, registryRow) {
@@ -815,128 +311,13 @@
       );
     }
 
-    function getRegistryRowForCell(cell) {
-      const masterKey = getCellMasterKey(cell);
-      return masterKey && registryByMasterKey.has(masterKey) ? registryByMasterKey.get(masterKey) : null;
-    }
-
-    function buildImageCandidates(cell, registryRow) {
-      const candidates = [];
-      const masterKey = getCellMasterKey(cell);
-      const wtImage = normalizeKey(registryRow?.wt_image);
-      const direct = normalizeKey(cell.wt_image || cell.image || cell.image_name || cell.filename);
-      const groupName = normalizeKey(cell.group_filename || cell.group_image || cell.cell_id);
-      if (wtImage) candidates.push(`${PIC_BASE}${wtImage}.png`);
-      if (direct) candidates.push(`${PIC_BASE}${direct}.png`);
-      if (groupName) candidates.push(`${PIC_BASE}${groupName}.png`);
-      if (masterKey) candidates.push(`${PIC_BASE}${masterKey}.png`);
-      if (masterKey && !masterKey.endsWith("_group")) candidates.push(`${PIC_BASE}${masterKey}_group.png`);
-      return [...new Set(candidates)];
-    }
-
-    async function resolveImageURL(cell, registryRow) {
-      const candidates = buildImageCandidates(cell, registryRow);
-      for (const url of candidates) {
-        try {
-          const img = new Image();
-          const ok = await new Promise(resolve => {
-            img.onload = () => resolve(true);
-            img.onerror = () => resolve(false);
-            img.src = url;
-          });
-          if (ok) return url;
-        } catch (_) {}
-      }
-      return null;
-    }
-
-    function varNum(name) {
-      return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
-    }
-
-    function guessType(cell) {
-      if (isPremium(cell)) return "premium";
-      if (isSquadron(cell)) return "squadron";
-      return isGroup(cell) ? "group" : "standard";
-    }
-
-    function toFiniteNumber(value) {
-      if (typeof value === "number" && Number.isFinite(value)) return value;
-      const n = Number(value);
-      return Number.isFinite(n) ? n : NaN;
-    }
-
-    function parseRankValue(value) {
-      if (typeof value === "number" && Number.isFinite(value)) return value;
-      const text = String(value || "").trim().toUpperCase();
-      if (!text) return NaN;
-      const direct = Number(text);
-      if (Number.isFinite(direct)) return direct;
-      const romanMap = {
-        I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10
-      };
-      return romanMap[text] ?? NaN;
-    }
-
-    function extractGridPos(raw) {
-      const candidates = [
-        raw.pos,
-        raw.position,
-        raw.grid_pos,
-        raw.grid,
-        raw.cell_pos,
-        raw.coords,
-        raw.xy
-      ];
-
-      for (const p of candidates) {
-        if (!p) continue;
-
-        if (Array.isArray(p) && p.length >= 2) {
-          return { x: toFiniteNumber(p[0]), y: toFiniteNumber(p[1]) };
-        }
-
-        if (Array.isArray(p?.p2) && p.p2.length >= 2) {
-          return { x: toFiniteNumber(p.p2[0]), y: toFiniteNumber(p.p2[1]) };
-        }
-
-        if (Number.isFinite(toFiniteNumber(p.x)) && Number.isFinite(toFiniteNumber(p.y))) {
-          return { x: toFiniteNumber(p.x), y: toFiniteNumber(p.y) };
-        }
-
-        if (Number.isFinite(toFiniteNumber(p.col)) && Number.isFinite(toFiniteNumber(p.row))) {
-          return { x: toFiniteNumber(p.col), y: toFiniteNumber(p.row) };
-        }
-      }
-
-      return { x: NaN, y: NaN };
-    }
-
     function normalizeCell(raw, idx) {
-      const pos = extractGridPos(raw);
+      const rank = Number(raw.rank);
+      const column = Number(raw.column);
+      const row = Number(raw.row_in_rank ?? raw.row);
+      const masterKey = getCellMasterKey(raw);
+      const type = normalizeType(raw.type || raw.vehicle_type || raw.group_type || raw.kind || "unit");
 
-      let rank = parseRankValue(raw.rank ?? raw.rank_index ?? raw.tier ?? raw.row_rank ?? raw.r ?? raw.era ?? raw.bracket ?? raw.range_index);
-      let column = toFiniteNumber(raw.column ?? raw.col ?? raw.x ?? raw.grid_x ?? raw.c ?? raw.column_index ?? pos.x);
-      let row = toFiniteNumber(raw.row ?? raw.row_in_rank ?? raw.y ?? raw.grid_y ?? raw.line ?? raw.rw ?? raw.row_index ?? pos.y);
-
-      if (Number.isFinite(column) && column <= 0) column += 1;
-      if (Number.isFinite(row) && row <= 0) row += 1;
-      if (Number.isFinite(rank) && rank <= 0) rank += 1;
-
-      const masterKey = normalizeKey(
-        raw.master_key ||
-        raw.cell_key ||
-        raw.unit_id ||
-        raw.id ||
-        raw.aircraft_id ||
-        raw.aircraft ||
-        raw.key ||
-        raw.name_key ||
-        raw.vehicle ||
-        (Array.isArray(raw.units) && raw.units.length ? raw.units[0] : "")
-      );
-
-      const type = normalizeType(raw.type || raw.vehicle_type || raw.group_type || raw.kind || guessType(raw));
       return {
         ...raw,
         rank,
@@ -944,45 +325,21 @@
         row,
         type,
         master_key: masterKey,
-        cell_id: raw.cell_id || raw.cell_key || raw.id || raw.node_id || raw.key || raw.name || `${masterKey || "cell"}_${idx}`
+        cell_id: raw.cell_id || raw.cell_key || raw.id || raw.node_id || raw.key || `${masterKey || "cell"}_${idx}`
       };
     }
 
-    function normalizeCellsPayload(payload) {
-      let arr = null;
-      if (Array.isArray(payload)) arr = payload;
-      else if (Array.isArray(payload.cells)) arr = payload.cells;
-      else if (Array.isArray(payload.nodes)) arr = payload.nodes;
-      else if (Array.isArray(payload.items)) arr = payload.items;
-      else if (Array.isArray(payload.vehicles)) arr = payload.vehicles;
-      if (!arr) throw new Error("Could not find cells array in tree JSON");
-      return arr.map(normalizeCell);
-    }
-
-    function normalizeEdgesPayload(payload) {
-      if (Array.isArray(payload)) return payload;
-      if (Array.isArray(payload.edges)) return payload.edges;
-      if (Array.isArray(payload.arrows)) return payload.arrows;
-      if (Array.isArray(payload.links)) return payload.links;
-      return [];
-    }
-
-    function groupCellsByRank(cells) {
-      const map = new Map();
-      for (const cell of cells) {
-        const rank = Number(cell.rank);
-        if (!map.has(rank)) map.set(rank, []);
-        map.get(rank).push(cell);
-      }
-      return map;
+    function validateCellPlacement(cell) {
+      return Number.isFinite(cell.rank) && Number.isFinite(cell.column) && Number.isFinite(cell.row) &&
+             cell.rank >= 1 && cell.column >= 1 && cell.row >= 1;
     }
 
     function getRowCountsByRank(cells) {
-      const byRank = groupCellsByRank(cells);
       const result = new Map();
-      for (const [rank, rankCells] of byRank.entries()) {
-        const maxRow = Math.max(...rankCells.map(c => Number(c.row) || 0), 1);
-        result.set(rank, maxRow);
+      for (const cell of cells) {
+        const rank = Number(cell.rank);
+        const existing = result.get(rank) || 0;
+        result.set(rank, Math.max(existing, Number(cell.row) || 1));
       }
       return result;
     }
@@ -993,7 +350,7 @@
 
     function computeRankLayout(cells) {
       const rowCountsByRank = getRowCountsByRank(cells);
-      const ranks = [...rowCountsByRank.keys()].sort((a, b) => a - b);
+      const ranks = [...rowCountsByRank.keys()].sort((a,b) => a-b);
       const rankLayout = new Map();
       let y = varNum("--tree-pad");
       for (const rank of ranks) {
@@ -1006,42 +363,22 @@
       const maxCol = getMaxColumn(cells);
       const width = varNum("--tree-pad") * 2 + maxCol * varNum("--cell-w") + (maxCol - 1) * varNum("--cell-gap-x");
       const height = y + varNum("--tree-pad") - varNum("--rank-gap");
-      return { rankLayout, rowCountsByRank, width, height, maxCol };
+      return { rankLayout, rowCountsByRank, width, height };
     }
 
-    function validateCellPlacement(cell) {
-      const rank = Number(cell.rank);
-      const col = Number(cell.column);
-      const row = Number(cell.row);
-      if (!Number.isFinite(rank) || !Number.isFinite(col) || !Number.isFinite(row)) return false;
-      if (rank < 1 || col < 1 || row < 1) return false;
-      return true;
-    }
-
-    function getCellRect(cell, rowCountsByRank, rankLayout) {
-      const rank = Number(cell.rank);
-      const col = Number(cell.column);
-      const row = Number(cell.row);
-      const layout = rankLayout.get(rank);
-      if (!layout) throw new Error(`Missing rank layout for rank ${rank}`);
+    function getCellRect(cell, rankLayout) {
+      const layout = rankLayout.get(Number(cell.rank));
       return {
-        x: varNum("--tree-pad") + (col - 1) * (varNum("--cell-w") + varNum("--cell-gap-x")),
-        y: layout.y + varNum("--rank-header-h") + varNum("--rank-inner-top") + (row - 1) * (varNum("--cell-h") + varNum("--cell-gap-y")),
+        x: varNum("--tree-pad") + (Number(cell.column) - 1) * (varNum("--cell-w") + varNum("--cell-gap-x")),
+        y: layout.y + varNum("--rank-header-h") + varNum("--rank-inner-top") + (Number(cell.row) - 1) * (varNum("--cell-h") + varNum("--cell-gap-y")),
         w: varNum("--cell-w"),
         h: varNum("--cell-h")
       };
     }
 
-    function romanize(num) {
-      const map = [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
-      let out = "";
-      for (const [v, s] of map) while (num >= v) { out += s; num -= v; }
-      return out || String(num);
-    }
-
     function renderRankBands(rankLayout, width) {
       rankLayerEl.innerHTML = "";
-      for (const [rank, layout] of [...rankLayout.entries()].sort((a, b) => a[0] - b[0])) {
+      for (const [rank, layout] of [...rankLayout.entries()].sort((a,b) => a[0]-b[0])) {
         const band = document.createElement("div");
         band.className = "rank-band";
         band.style.left = "0px";
@@ -1056,12 +393,45 @@
       }
     }
 
+    async function resolveImageURL(cell, registryRow) {
+      const masterKey = getCellMasterKey(cell);
+      const wtImage = normalizeKey(registryRow?.wt_image);
+      const candidates = [];
+      if (wtImage) candidates.push(`${PIC_BASE}${wtImage}.png`);
+      if (masterKey) candidates.push(`${PIC_BASE}${masterKey}.png`);
+      if (masterKey && !masterKey.endsWith("_group")) candidates.push(`${PIC_BASE}${masterKey}_group.png`);
+      for (const url of [...new Set(candidates)]) {
+        const ok = await new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = url;
+        });
+        if (ok) return url;
+      }
+      return null;
+    }
+
+    function renderDetailPanel(cell, registryRow, imageUrl) {
+      const title = getDisplayName(cell, registryRow);
+      detailPanelEl.innerHTML = `
+        <div class="empty-state">
+          <strong>${title}</strong><br><br>
+          Master key: ${getCellMasterKey(cell) || "—"}<br>
+          Rank: ${cell.rank} | Column: ${cell.column} | Row: ${cell.row}<br>
+          Type: ${labelForType(cell)}<br>
+          Cell key: ${cell.cell_key || cell.cell_id || "—"}<br>
+          WT image: ${registryRow?.wt_image || "—"}<br>
+          Image loaded: ${imageUrl ? "yes" : "no"}
+        </div>
+      `;
+    }
+
     function createCellElement(cell, registryRow, imageUrl) {
       const el = document.createElement("div");
       el.className = "tree-cell";
       if (isPremium(cell)) el.classList.add("premium");
       if (isSquadron(cell)) el.classList.add("squadron");
-      if (selectedCellId && selectedCellId === cell.cell_id) el.classList.add("selected");
 
       const title = getDisplayName(cell, registryRow);
       const tagLabel = labelForType(cell);
@@ -1082,6 +452,7 @@
 
       el.querySelector(".cell-title").textContent = title;
       const imgWrap = el.querySelector(".cell-image-wrap");
+
       if (imageUrl) {
         const img = document.createElement("img");
         img.className = "cell-image";
@@ -1095,98 +466,13 @@
         imgWrap.appendChild(fallback);
       }
 
-      el.addEventListener("click", () => {
-        selectedCellId = cell.cell_id;
-        document.querySelectorAll(".tree-cell.selected").forEach(n => n.classList.remove("selected"));
-        el.classList.add("selected");
-        renderDetailPanel(cell, registryRow, imageUrl);
-      });
+      el.addEventListener("click", () => renderDetailPanel(cell, registryRow, imageUrl));
       return el;
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#39;");
-    }
-
-    function renderDetailPanel(cell, registryRow, imageUrl) {
-      const title = getDisplayName(cell, registryRow);
-      const typeLabel = labelForType(cell);
-      const masterKey = getCellMasterKey(cell) || "—";
-      const wtImage = registryRow?.wt_image || cell.wt_image || "—";
-      const nation = registryRow?.nation || cell.nation || "—";
-      detailPanelEl.innerHTML = `
-        <div class="detail-card">
-          <div class="detail-hero"><div class="detail-img-wrap"></div></div>
-          <div class="detail-body">
-            <div class="detail-title">
-              <strong>${escapeHtml(title)}</strong>
-              <span>${escapeHtml(typeLabel)} aircraft</span>
-            </div>
-            <div class="detail-grid">
-              <div class="stat"><label>Master Key</label><div>${escapeHtml(masterKey)}</div></div>
-              <div class="stat"><label>Nation</label><div>${escapeHtml(nation)}</div></div>
-              <div class="stat"><label>Rank</label><div>${escapeHtml(String(cell.rank ?? "—"))}</div></div>
-              <div class="stat"><label>Column / Row</label><div>${escapeHtml(`${cell.column ?? "—"} / ${cell.row ?? "—"}`)}</div></div>
-              <div class="stat"><label>Cell ID</label><div>${escapeHtml(String(cell.cell_id || "—"))}</div></div>
-              <div class="stat"><label>WT Image Key</label><div>${escapeHtml(String(wtImage))}</div></div>
-            </div>
-          </div>
-        </div>
-      `;
-      const imgWrap = detailPanelEl.querySelector(".detail-img-wrap");
-      if (imageUrl) {
-        const img = document.createElement("img");
-        img.src = imageUrl;
-        img.alt = title;
-        imgWrap.appendChild(img);
-      } else {
-        imgWrap.innerHTML = '<div class="cell-fallback">No Image</div>';
-      }
-    }
-
-    async function renderCells(cells, rowCountsByRank, rankLayout) {
-      nodeLayerEl.innerHTML = "";
-      const rectMap = new Map();
-      let skippedInvalid = 0;
-      for (const cell of cells) {
-        if (!validateCellPlacement(cell)) {
-          skippedInvalid++;
-          continue;
-        }
-        const rect = getCellRect(cell, rowCountsByRank, rankLayout);
-        rectMap.set(cell.cell_id, rect);
-        const registryRow = getRegistryRowForCell(cell);
-        const imageUrl = await resolveImageURL(cell, registryRow);
-        const wrap = document.createElement("div");
-        wrap.className = "cell-wrap" + (isGroup(cell) ? " grouped" : "");
-        if (isPremium(cell)) wrap.classList.add("premium");
-        if (isSquadron(cell)) wrap.classList.add("squadron");
-        wrap.style.left = `${rect.x}px`;
-        wrap.style.top = `${rect.y}px`;
-        if (isGroup(cell)) {
-          const s2 = document.createElement("div");
-          s2.className = "cell-shadow-2";
-          const s1 = document.createElement("div");
-          s1.className = "cell-shadow-1";
-          wrap.appendChild(s2);
-          wrap.appendChild(s1);
-        }
-        wrap.appendChild(createCellElement(cell, registryRow, imageUrl));
-        nodeLayerEl.appendChild(wrap);
-      }
-      return { rectMap, skippedInvalid };
     }
 
     function getRectAnchor(rect, side) {
       if (side === "right") return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
-      if (side === "left") return { x: rect.x, y: rect.y + rect.h / 2 };
-      if (side === "top") return { x: rect.x + rect.w / 2, y: rect.y };
-      return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
+      return { x: rect.x, y: rect.y + rect.h / 2 };
     }
 
     function makeOrthogonalPath(a, b) {
@@ -1200,6 +486,7 @@
       svg.setAttribute("width", width);
       svg.setAttribute("height", height);
       svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
       for (const edge of edges || []) {
         const fromId = edge.from || edge.source || edge.parent || edge.from_cell_id || edge.from_id || edge.source_cell_key || edge.src;
         const toId = edge.to || edge.target || edge.child || edge.to_cell_id || edge.to_id || edge.target_cell_key || edge.dst;
@@ -1217,57 +504,81 @@
     }
 
     async function initiateSystem() {
-      console.log("Sky Pilot loader booted");
-      try {
-        setStatus("Loading tree and registry...");
-        await new Promise(resolve => setTimeout(resolve, 0));
-        const treeRes = await tryFetchJSON(TREE_FILE_CANDIDATES);
-        const registryRes = await tryFetchText(REGISTRY_FILE_CANDIDATES);
+      setStatus("Loading tree and registry...");
+      const [treeRes, regRes] = await Promise.all([
+        fetch(TREE_JSON_URL, { cache: "no-store" }),
+        fetch(REGISTRY_CSV_URL, { cache: "no-store" })
+      ]);
 
-        const treePayload = treeRes.data;
-        const cells = normalizeCellsPayload(treePayload);
-        const edges = normalizeEdgesPayload(treePayload);
-        const registryRows = parseCSV(registryRes.data);
-        buildRegistryMaps(registryRows);
+      if (!treeRes.ok) throw new Error(`Tree fetch failed: ${treeRes.status}`);
+      if (!regRes.ok) throw new Error(`Registry fetch failed: ${regRes.status}`);
 
-        const { rankLayout, rowCountsByRank, width, height } = computeRankLayout(cells);
-        treeShellEl.style.width = `${width}px`;
-        treeShellEl.style.height = `${height}px`;
+      const treePayload = await treeRes.json();
+      const regText = await regRes.text();
+      const registryRows = parseCSV(regText);
+      buildRegistryMaps(registryRows);
 
-        renderRankBands(rankLayout, width);
-        console.log("Sample normalized cells:", cells.slice(0, 12));
-        console.log("Bad cells:", cells.filter(c => !validateCellPlacement(c)).slice(0, 12));
-        const { rectMap, skippedInvalid } = await renderCells(cells, rowCountsByRank, rankLayout);
+      const rawCells = Array.isArray(treePayload.cells) ? treePayload.cells : [];
+      const edges = Array.isArray(treePayload.edges) ? treePayload.edges : (Array.isArray(treePayload.arrows) ? treePayload.arrows : []);
+      const cells = rawCells.map(normalizeCell);
 
-        if (skippedInvalid === cells.length && cells.length > 0) {
-          const raw0 = treePayload.cells?.[0] || treePayload.nodes?.[0] || treePayload.items?.[0] || treePayload.vehicles?.[0] || (Array.isArray(treePayload) ? treePayload[0] : null);
-          const norm0 = cells[0];
-          const debugText = [
-            `ALL CELLS SKIPPED`,
-            `Raw first cell keys: ${raw0 ? Object.keys(raw0).join(", ") : "none"}`,
-            `Raw first cell sample: ${raw0 ? JSON.stringify(raw0).slice(0, 700) : "none"}`,
-            `Normalized first cell: ${norm0 ? JSON.stringify({ rank: norm0.rank, column: norm0.column, row: norm0.row, type: norm0.type, cell_id: norm0.cell_id, master_key: norm0.master_key }).slice(0, 700) : "none"}`
-          ].join("
-");
-          setStatus(debugText, true);
-          return;
-        }
-        renderEdges(edges, rectMap, width, height);
-
-        setStatus(
-          `Loaded tree from ${treeRes.url}
-` +
-          `Loaded registry from ${registryRes.url}
-` +
-          `Cells: ${cells.length} | Edges: ${edges.length} | Skipped invalid placements: ${skippedInvalid}`
-        );
-      } catch (err) {
-        console.error(err);
-        setStatus(`Load failed: ${err.message}`, true);
+      const bad = cells.filter(c => !validateCellPlacement(c));
+      if (bad.length) {
+        setStatus(`Some cells invalid.\nFirst bad cell:\n${JSON.stringify(bad[0], null, 2)}`, true);
       }
+
+      const validCells = cells.filter(validateCellPlacement);
+      if (!validCells.length) {
+        throw new Error(`No valid cells found. First raw cell: ${JSON.stringify(rawCells[0], null, 2)}`);
+      }
+
+      const { rankLayout, width, height } = computeRankLayout(validCells);
+      treeShellEl.style.width = `${width}px`;
+      treeShellEl.style.height = `${height}px`;
+
+      renderRankBands(rankLayout, width);
+
+      nodeLayerEl.innerHTML = "";
+      const rectMap = new Map();
+
+      for (const cell of validCells) {
+        const rect = getCellRect(cell, rankLayout);
+        rectMap.set(cell.cell_id, rect);
+        const registryRow = registryByMasterKey.get(getCellMasterKey(cell)) || null;
+        const imageUrl = await resolveImageURL(cell, registryRow);
+
+        const wrap = document.createElement("div");
+        wrap.className = "cell-wrap" + (isGroup(cell) ? " grouped" : "");
+        wrap.style.left = `${rect.x}px`;
+        wrap.style.top = `${rect.y}px`;
+
+        if (isGroup(cell)) {
+          const s2 = document.createElement("div");
+          s2.className = "cell-shadow-2";
+          const s1 = document.createElement("div");
+          s1.className = "cell-shadow-1";
+          wrap.appendChild(s2);
+          wrap.appendChild(s1);
+        }
+
+        wrap.appendChild(createCellElement(cell, registryRow, imageUrl));
+        nodeLayerEl.appendChild(wrap);
+      }
+
+      renderEdges(edges, rectMap, width, height);
+      setStatus(`Loaded OK
+Tree: ${TREE_JSON_URL}
+Registry: ${REGISTRY_CSV_URL}
+Valid cells: ${validCells.length}
+Edges: ${edges.length}`);
     }
 
     initiateSystem();
   </script>
 </body>
 </html>
+'''
+
+path = Path("/mnt/data/research_clean.html")
+path.write_text(html, encoding="utf-8")
+print(f"Wrote {path}")
