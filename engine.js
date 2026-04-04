@@ -4,6 +4,9 @@ const REGISTRY_CSV_URL = "SP_Registry_CANON_3_31.csv";
 const EDGES_CSV_URL = "usa_tree_pass2_edges.csv";
 const PIC_BASE = "https://kjumpmaster.github.io/Aircraft-Pics/";
 
+const CELL_HEIGHT_SCALE = 0.80;
+const IMAGE_SCALE = 0.80;
+
 const EXEMPT_UNIT_IDS = new Set([
   "ucav",
   "quadcopter",
@@ -95,6 +98,10 @@ function varNum(name) {
   return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || 0;
 }
 
+function scaledCellH() {
+  return varNum("--cell-h") * CELL_HEIGHT_SCALE;
+}
+
 function escapeHTML(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -183,7 +190,7 @@ function collectObjectsDeep(root) {
     }
 
     const keys = Object.keys(node);
-    const rowish = keys.some(k => /(^|_)(id|name|unit|plane|type|premium|event|pack|squadron)$/i.test(k));
+    const rowish = keys.some(k => /(^|_)(id|name|unit|plane|type|premium|event|pack|squadron|vehicle|classification|reward)$/i.test(k));
     if (rowish) out.push(node);
 
     for (const value of Object.values(node)) walk(value);
@@ -201,7 +208,8 @@ function buildRegistryMap(rows) {
       row.wt_name,
       row.wt_display_name_new,
       row.rw_name,
-      row.wt_image
+      row.wt_image,
+      row.rw_image_name
     ].map(v => String(v || "").trim()).filter(Boolean);
 
     for (const rawKey of keys) {
@@ -242,26 +250,37 @@ function buildFlagMap(flagJson) {
 
   for (const row of rows) {
     const typeText = normalizeType(firstNonBlank([
-      row.vehicle_type, row.type, row.unit_type, row.classification, row.flag_type,
-      row.reward_type, row.kind, row.class
+      row.vehicle_type,
+      row.type,
+      row.unit_type,
+      row.classification,
+      row.flag_type,
+      row.reward_type,
+      row.kind,
+      row.class,
+      row.category,
+      row.vehicle_class
     ]));
 
+    const allText = normalizeType(Object.values(row).map(v => String(v || "")).join(" | "));
+
     const payload = {
-      premium: toBool(row.premium) || typeText.includes("premium"),
-      squadron: toBool(row.squadron) || typeText.includes("squadron"),
-      event: toBool(row.event) || typeText.includes("event"),
-      pack: toBool(row.pack) || typeText.includes("pack")
+      premium: toBool(row.premium) || typeText.includes("premium") || allText.includes("premium"),
+      squadron: toBool(row.squadron) || typeText.includes("squadron") || allText.includes("squadron"),
+      event: toBool(row.event) || typeText.includes("event") || allText.includes("event"),
+      pack: toBool(row.pack) || typeText.includes("pack") || allText.includes("pack")
     };
 
     [
       row.unit_id, row.aircraft_id, row.id, row.name, row.plane, row.vehicle,
-      row.value, row.master_key, row.wt_name, row.display_name, row.title
+      row.value, row.master_key, row.wt_name, row.display_name, row.title,
+      row.cell_id, row.cell_key, row.node_id, row.key
     ].forEach(v => addAlias(v, payload));
 
     for (const v of Object.values(row)) {
       if (typeof v !== "string") continue;
       const s = v.trim();
-      if (!s || s.length > 120) continue;
+      if (!s || s.length > 140) continue;
       addAlias(s, payload);
     }
   }
@@ -311,18 +330,24 @@ function getCellUnitIds(cell) {
 
   if (Array.isArray(cell.units)) {
     for (const u of cell.units) {
-      if (typeof u === "string") pushMaybe(u);
-      else if (u && typeof u === "object") {
-        pushMaybe(firstNonBlank([u.unit_id, u.aircraft_id, u.id, u.master_key, u.name]));
+      if (typeof u === "string") {
+        pushMaybe(u);
+      } else if (u && typeof u === "object") {
+        pushMaybe(firstNonBlank([
+          u.unit_id, u.aircraft_id, u.id, u.master_key, u.name, u.title, u.display_name
+        ]));
       }
     }
   }
 
   if (Array.isArray(cell.members)) {
     for (const u of cell.members) {
-      if (typeof u === "string") pushMaybe(u);
-      else if (u && typeof u === "object") {
-        pushMaybe(firstNonBlank([u.unit_id, u.aircraft_id, u.id, u.master_key, u.name]));
+      if (typeof u === "string") {
+        pushMaybe(u);
+      } else if (u && typeof u === "object") {
+        pushMaybe(firstNonBlank([
+          u.unit_id, u.aircraft_id, u.id, u.master_key, u.name, u.title, u.display_name
+        ]));
       }
     }
   }
@@ -355,6 +380,7 @@ function classifyUnit(unitId, fallbackCell = null) {
     add(fallbackCell.name);
     add(fallbackCell.display_name);
     add(fallbackCell.title);
+    add(fallbackCell.node_id);
   }
 
   const reg = getRegistryRowByUnitId(unitId);
@@ -364,6 +390,7 @@ function classifyUnit(unitId, fallbackCell = null) {
     add(reg.wt_display_name_new);
     add(reg.rw_name);
     add(reg.wt_image);
+    add(reg.rw_image_name);
   }
 
   if (fallbackCell) {
@@ -391,7 +418,9 @@ function classifyUnit(unitId, fallbackCell = null) {
       fallbackCell.class,
       fallbackCell.reward_type,
       fallbackCell.classification,
-      fallbackCell.flag_type
+      fallbackCell.flag_type,
+      fallbackCell.category,
+      fallbackCell.vehicle_class
     ]));
 
     const nameText = normalizeType(firstNonBlank([
@@ -403,10 +432,12 @@ function classifyUnit(unitId, fallbackCell = null) {
       fallbackCell.unit_id
     ]));
 
-    if (cellTypeText.includes("squadron") || nameText.includes("squadron")) return "squadron";
-    if (cellTypeText.includes("event") || nameText.includes("event")) return "event";
-    if (cellTypeText.includes("pack") || nameText.includes("pack")) return "pack";
-    if (cellTypeText.includes("premium") || nameText.includes("premium")) return "premium";
+    const megaText = `${cellTypeText} | ${nameText}`;
+
+    if (megaText.includes("squadron")) return "squadron";
+    if (megaText.includes("event")) return "event";
+    if (megaText.includes("pack")) return "pack";
+    if (megaText.includes("premium")) return "premium";
   }
 
   return "tech";
@@ -512,7 +543,7 @@ function computeRankLayout(cells) {
 
   for (const rank of ranks) {
     const rows = rowCountsByRank.get(rank) || 1;
-    const contentH = rows * varNum("--cell-h") + Math.max(0, rows - 1) * varNum("--cell-gap-y");
+    const contentH = rows * scaledCellH() + Math.max(0, rows - 1) * varNum("--cell-gap-y");
     const bandH = varNum("--rank-header-h") + varNum("--rank-inner-top") + contentH + varNum("--rank-inner-bottom");
     rankLayout.set(rank, { y, height: bandH, rows });
     y += bandH + varNum("--rank-gap");
@@ -528,9 +559,9 @@ function getCellRect(cell, rankLayout) {
   const layout = rankLayout.get(Number(cell.rank));
   return {
     x: varNum("--tree-pad") + (Number(cell.column) - 1) * (varNum("--cell-w") + varNum("--cell-gap-x")),
-    y: layout.y + varNum("--rank-header-h") + varNum("--rank-inner-top") + (Number(cell.row) - 1) * (varNum("--cell-h") + varNum("--cell-gap-y")),
+    y: layout.y + varNum("--rank-header-h") + varNum("--rank-inner-top") + (Number(cell.row) - 1) * (scaledCellH() + varNum("--cell-gap-y")),
     w: varNum("--cell-w"),
-    h: varNum("--cell-h")
+    h: scaledCellH()
   };
 }
 
@@ -598,6 +629,8 @@ function createCellElement(cell) {
   el.className = `tree-cell ${cell.mainType}`;
   el.dataset.cellId = cell.cell_id;
   el.dataset.unitId = cell.primaryUnitId;
+  el.style.width = `${varNum("--cell-w")}px`;
+  el.style.height = `${scaledCellH()}px`;
 
   const lead = cell.members[0] || null;
   const metaRight = cell.isGroup ? `${cell.members.length} aircraft` : `R${cell.rank} C${cell.column} Y${cell.row}`;
@@ -620,12 +653,38 @@ function createCellElement(cell) {
 
   el.querySelector(".cell-title").textContent = cell.displayTitle;
 
+  const topEl = el.querySelector(".cell-top");
   const imgWrap = el.querySelector(".cell-image-wrap");
+  const bodyEl = el.querySelector(".cell-body");
+  const titleEl = el.querySelector(".cell-title");
+
+  if (topEl) {
+    topEl.style.flex = "0 0 auto";
+    topEl.style.height = `${Math.max(44, Math.round(56 * IMAGE_SCALE))}px`;
+  }
+
+  if (imgWrap) {
+    imgWrap.style.height = `${Math.max(40, Math.round(52 * IMAGE_SCALE))}px`;
+    imgWrap.style.display = "flex";
+    imgWrap.style.alignItems = "center";
+    imgWrap.style.justifyContent = "center";
+  }
+
+  if (bodyEl) {
+    bodyEl.style.minHeight = "0";
+  }
+
+  if (titleEl) {
+    titleEl.style.lineHeight = "1.05";
+  }
+
   if (lead && lead.imageUrl) {
     const img = document.createElement("img");
     img.className = "cell-image";
     img.alt = cell.displayTitle;
     img.src = lead.imageUrl;
+    img.style.maxWidth = `${Math.round(110 * IMAGE_SCALE)}px`;
+    img.style.maxHeight = `${Math.round(48 * IMAGE_SCALE)}px`;
     imgWrap.appendChild(img);
   } else {
     const fallback = document.createElement("div");
@@ -650,12 +709,20 @@ function renderCells(cells, rankLayout) {
     wrap.className = "cell-wrap" + (cell.isGroup ? " grouped" : "");
     wrap.style.left = `${rect.x}px`;
     wrap.style.top = `${rect.y}px`;
+    wrap.style.width = `${rect.w}px`;
+    wrap.style.height = `${rect.h}px`;
 
     if (cell.isGroup) {
       const s2 = document.createElement("div");
       s2.className = "cell-shadow-2";
+      s2.style.width = `${rect.w}px`;
+      s2.style.height = `${rect.h}px`;
+
       const s1 = document.createElement("div");
       s1.className = "cell-shadow-1";
+      s1.style.width = `${rect.w}px`;
+      s1.style.height = `${rect.h}px`;
+
       wrap.appendChild(s2);
       wrap.appendChild(s1);
     }
@@ -673,7 +740,7 @@ function getRectAnchor(rect, side) {
 }
 
 function makeCurvedPath(a, b) {
-  const dx = Math.max(26, Math.abs(b.x - a.x) * 0.42);
+  const dx = Math.max(40, Math.abs(b.x - a.x) * 0.34);
   return `M ${a.x} ${a.y} C ${a.x + dx} ${a.y}, ${b.x - dx} ${b.y}, ${b.x} ${b.y}`;
 }
 
@@ -682,28 +749,30 @@ function ensureArrowMarkers(svg) {
 
   const blue = document.createElementNS("http://www.w3.org/2000/svg", "marker");
   blue.setAttribute("id", "arrowhead-blue");
-  blue.setAttribute("markerWidth", "10");
-  blue.setAttribute("markerHeight", "10");
-  blue.setAttribute("refX", "8.5");
-  blue.setAttribute("refY", "5");
+  blue.setAttribute("markerWidth", "14");
+  blue.setAttribute("markerHeight", "14");
+  blue.setAttribute("refX", "11.5");
+  blue.setAttribute("refY", "7");
   blue.setAttribute("orient", "auto");
-  blue.setAttribute("markerUnits", "strokeWidth");
+  blue.setAttribute("markerUnits", "userSpaceOnUse");
+
   const bluePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  bluePath.setAttribute("d", "M 0 0 L 10 5 L 0 10 Z");
-  bluePath.setAttribute("class", "edge-head-blue");
+  bluePath.setAttribute("d", "M 0 0 L 14 7 L 0 14 Z");
+  bluePath.setAttribute("fill", "rgba(125, 190, 255, 0.92)");
   blue.appendChild(bluePath);
 
   const gold = document.createElementNS("http://www.w3.org/2000/svg", "marker");
   gold.setAttribute("id", "arrowhead-gold");
-  gold.setAttribute("markerWidth", "10");
-  gold.setAttribute("markerHeight", "10");
-  gold.setAttribute("refX", "8.5");
-  gold.setAttribute("refY", "5");
+  gold.setAttribute("markerWidth", "14");
+  gold.setAttribute("markerHeight", "14");
+  gold.setAttribute("refX", "11.5");
+  gold.setAttribute("refY", "7");
   gold.setAttribute("orient", "auto");
-  gold.setAttribute("markerUnits", "strokeWidth");
+  gold.setAttribute("markerUnits", "userSpaceOnUse");
+
   const goldPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  goldPath.setAttribute("d", "M 0 0 L 10 5 L 0 10 Z");
-  goldPath.setAttribute("class", "edge-head-gold");
+  goldPath.setAttribute("d", "M 0 0 L 14 7 L 0 14 Z");
+  goldPath.setAttribute("fill", "rgba(255, 221, 110, 0.98)");
   gold.appendChild(goldPath);
 
   defs.appendChild(blue);
@@ -718,6 +787,7 @@ function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
   function addEdge(fromCell, toCell, row, sourceTag) {
     if (!fromCell || !toCell) return;
     if (fromCell.cell_id === toCell.cell_id) return;
+
     const key = `${fromCell.cell_id}__${toCell.cell_id}`;
     if (seen.has(key)) return;
     seen.add(key);
@@ -752,7 +822,9 @@ function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
         normId(c.displayTitle) === nid ||
         normId(c.master_key) === nid ||
         normId(c.name) === nid ||
-        normId(c.title) === nid
+        normId(c.title) === nid ||
+        normId(c.node_id) === nid ||
+        normId(c.id) === nid
       ) ||
       null
     );
@@ -762,13 +834,15 @@ function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
     const fromRef = firstNonBlank([
       row.from_id, row.from, row.source, row.parent, row.parent_id,
       row.source_cell_key, row.src, row.From, row.Source, row.Parent,
-      row.source_id, row.start, row.a, row.u, row.unit_from, row.cell_from
+      row.source_id, row.start, row.a, row.u, row.unit_from, row.cell_from,
+      row.from_cell, row.source_node, row.parent_cell, row.parent_unit
     ]);
 
     const toRef = firstNonBlank([
       row.to_id, row.to, row.target, row.child, row.child_id,
       row.target_cell_key, row.dst, row.To, row.Target, row.Child,
-      row.target_id, row.end, row.b, row.v, row.unit_to, row.cell_to
+      row.target_id, row.end, row.b, row.v, row.unit_to, row.cell_to,
+      row.to_cell, row.target_node, row.child_cell, row.child_unit
     ]);
 
     if (fromRef && toRef) {
@@ -785,6 +859,20 @@ function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
       const parts = row.path.split(/>|,|;/).map(s => s.trim()).filter(Boolean);
       if (parts.length >= 2) {
         addEdge(resolveCell(parts[0]), resolveCell(parts[parts.length - 1]), row, "path-string");
+        continue;
+      }
+    }
+
+    const compactRefs = Object.values(row)
+      .map(v => String(v || "").trim())
+      .filter(Boolean)
+      .filter(v => v.length < 120);
+
+    if (compactRefs.length >= 2) {
+      const maybeFrom = resolveCell(compactRefs[0]);
+      const maybeTo = resolveCell(compactRefs[1]);
+      if (maybeFrom && maybeTo) {
+        addEdge(maybeFrom, maybeTo, row, "fallback-first-two");
       }
     }
   }
@@ -795,13 +883,20 @@ function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
 function renderEdges() {
   edgeLayerEl.innerHTML = "";
 
-  const width = parseFloat(treeShellEl.style.width) || 0;
-  const height = parseFloat(treeShellEl.style.height) || 0;
+  const width = parseFloat(treeShellEl.style.width) || treeShellEl.clientWidth || 0;
+  const height = parseFloat(treeShellEl.style.height) || treeShellEl.clientHeight || 0;
 
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("width", width);
   svg.setAttribute("height", height);
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.style.position = "absolute";
+  svg.style.left = "0";
+  svg.style.top = "0";
+  svg.style.width = `${width}px`;
+  svg.style.height = `${height}px`;
+  svg.style.overflow = "visible";
+  svg.style.pointerEvents = "none";
   ensureArrowMarkers(svg);
 
   for (const edge of state.edges) {
@@ -819,8 +914,24 @@ function renderEdges() {
 
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", makeCurvedPath(a, b));
-    path.setAttribute("class", `edge-path${active ? " active" : ""}`);
-    path.setAttribute("marker-end", active ? "url(#arrowhead-gold)" : "url(#arrowhead-blue)");
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("stroke-linejoin", "round");
+
+    if (active) {
+      path.setAttribute("stroke", "rgba(255, 221, 110, 0.96)");
+      path.setAttribute("stroke-width", "3.4");
+      path.setAttribute("opacity", "1");
+      path.setAttribute("filter", "drop-shadow(0 0 4px rgba(255,221,110,0.65))");
+      path.setAttribute("marker-end", "url(#arrowhead-gold)");
+    } else {
+      path.setAttribute("stroke", "rgba(125, 190, 255, 0.68)");
+      path.setAttribute("stroke-width", "2.2");
+      path.setAttribute("opacity", "0.95");
+      path.setAttribute("stroke-dasharray", "7 8");
+      path.setAttribute("marker-end", "url(#arrowhead-blue)");
+    }
+
     svg.appendChild(path);
   }
 
@@ -955,6 +1066,11 @@ async function initiateSystem() {
       cellsById.set(normId(cell.displayTitle), cell);
     }
 
+    if (cell.master_key) {
+      cellsById.set(cell.master_key, cell);
+      cellsById.set(normId(cell.master_key), cell);
+    }
+
     for (const id of cell.unitIds) {
       cellsById.set(id, cell);
       cellsById.set(normId(id), cell);
@@ -1000,7 +1116,9 @@ Visible cells: ${state.cells.length}
 Drawn arrows: ${state.edges.length}
 Premium: ${counts.premium} | Squadron: ${counts.squadron} | Event: ${counts.event} | Pack: ${counts.pack}
 Flag rows indexed: ${state.flagMap.size}
-Arrow source used: ${state.arrowSourceUsed || "csv"}`
+Arrow source used: ${state.arrowSourceUsed || "csv"}
+Cell height scale: ${CELL_HEIGHT_SCALE}
+Image scale: ${IMAGE_SCALE}`
   );
 }
 
