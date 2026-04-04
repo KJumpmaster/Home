@@ -5,7 +5,7 @@ const EDGES_CSV_URL = "usa_tree_pass2_edges.csv";
 const PIC_BASE = "https://kjumpmaster.github.io/Aircraft-Pics/";
 
 const EXEMPT_UNIT_IDS = new Set([
-  "ucav_mq_1_predator",
+  "ucav_MQ1_predator",
   "uav_quadcopter",
   "o3u_1"
 ].map(normId));
@@ -661,9 +661,6 @@ function makeCurvedPath(a, b) {
   const midX = Math.round((a.x + b.x) / 2);
   return `M ${a.x} ${a.y} C ${midX} ${a.y}, ${midX} ${b.y}, ${b.x} ${b.y}`;
 }
-
-function ensureArrowMarkers(svg) {
-  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
 
 function ensureArrowMarkers(svg) {
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
