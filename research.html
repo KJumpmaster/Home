@@ -665,8 +665,18 @@
     function isSquadron(cell) {
       const t = normalizeType(cell.type || cell.vehicle_type || cell.group_type || cell.kind || cell.class || cell.reward_type);
       if (t.includes("squadron")) return true;
-      const col = Number(cell.column ?? cell.col ?? cell.x ?? cell.grid_x ?? cell.c);
-      return col === 7;
+
+      const nameText = normalizeType(
+        cell.name ||
+        cell.title ||
+        cell.display_name ||
+        cell.wiki_name ||
+        cell.master_key ||
+        cell.unit_id ||
+        ""
+      );
+
+      return nameText.includes("squadron");
     }
 
     function isGroup(cell) {
@@ -846,10 +856,68 @@
       return isGroup(cell) ? "group" : "standard";
     }
 
+    function toFiniteNumber(value) {
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      const n = Number(value);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    function parseRankValue(value) {
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+      const text = String(value || "").trim().toUpperCase();
+      if (!text) return NaN;
+      const direct = Number(text);
+      if (Number.isFinite(direct)) return direct;
+      const romanMap = {
+        I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10
+      };
+      return romanMap[text] ?? NaN;
+    }
+
+    function extractGridPos(raw) {
+      const candidates = [
+        raw.pos,
+        raw.position,
+        raw.grid_pos,
+        raw.grid,
+        raw.cell_pos,
+        raw.coords,
+        raw.xy
+      ];
+
+      for (const p of candidates) {
+        if (!p) continue;
+
+        if (Array.isArray(p) && p.length >= 2) {
+          return { x: toFiniteNumber(p[0]), y: toFiniteNumber(p[1]) };
+        }
+
+        if (Array.isArray(p?.p2) && p.p2.length >= 2) {
+          return { x: toFiniteNumber(p.p2[0]), y: toFiniteNumber(p.p2[1]) };
+        }
+
+        if (Number.isFinite(toFiniteNumber(p.x)) && Number.isFinite(toFiniteNumber(p.y))) {
+          return { x: toFiniteNumber(p.x), y: toFiniteNumber(p.y) };
+        }
+
+        if (Number.isFinite(toFiniteNumber(p.col)) && Number.isFinite(toFiniteNumber(p.row))) {
+          return { x: toFiniteNumber(p.col), y: toFiniteNumber(p.row) };
+        }
+      }
+
+      return { x: NaN, y: NaN };
+    }
+
     function normalizeCell(raw, idx) {
-      const rank = Number(raw.rank ?? raw.rank_index ?? raw.tier ?? raw.row_rank ?? raw.r ?? NaN);
-      const column = Number(raw.column ?? raw.col ?? raw.x ?? raw.grid_x ?? raw.c ?? NaN);
-      const row = Number(raw.row ?? raw.y ?? raw.grid_y ?? raw.line ?? raw.rw ?? NaN);
+      const pos = extractGridPos(raw);
+
+      let rank = parseRankValue(raw.rank ?? raw.rank_index ?? raw.tier ?? raw.row_rank ?? raw.r ?? raw.era ?? raw.bracket);
+      let column = toFiniteNumber(raw.column ?? raw.col ?? raw.x ?? raw.grid_x ?? raw.c ?? raw.column_index ?? pos.x);
+      let row = toFiniteNumber(raw.row ?? raw.y ?? raw.grid_y ?? raw.line ?? raw.rw ?? raw.row_index ?? pos.y);
+
+      if (Number.isFinite(column) && column <= 0) column += 1;
+      if (Number.isFinite(row) && row <= 0) row += 1;
+
       const masterKey = getCellMasterKey(raw);
       const type = normalizeType(raw.type || raw.vehicle_type || raw.group_type || raw.kind || guessType(raw));
       return {
@@ -1151,6 +1219,7 @@
 
         renderRankBands(rankLayout, width);
         console.log("Sample normalized cells:", cells.slice(0, 12));
+        console.log("Bad cells:", cells.filter(c => !validateCellPlacement(c)).slice(0, 12));
         const { rectMap, skippedInvalid } = await renderCells(cells, rowCountsByRank, rankLayout);
         renderEdges(edges, rectMap, width, height);
 
