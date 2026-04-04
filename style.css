@@ -14,8 +14,7 @@ body.caoc-page {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: #0a0f0e;
-}
+  background-color: red;
 
 .page-wrap {
   min-height: 100vh;
