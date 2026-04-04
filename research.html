@@ -1396,89 +1396,68 @@
 
     function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
       const edges = [];
-      const visibleRefs = new Set();
+      const seen = new Set();
 
-      for (const cell of state.cells) {
-        [cell.cell_id, cell.cell_key, cell.primaryUnitId, cell.displayTitle, cell.master_key, cell.name, cell.title]
-          .map(v => String(v || '').trim())
-          .filter(Boolean)
-          .forEach(v => {
-            visibleRefs.add(v);
-            visibleRefs.add(normId(v));
-          });
+      function addEdge(fromCell, toCell, row, matchMode, sourceTag) {
+        if (!fromCell || !toCell) return;
+        const key = `${fromCell.cell_id}__${toCell.cell_id}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        edges.push({
+          fromId: fromCell.primaryUnitId,
+          toId: toCell.primaryUnitId,
+          fromRef: fromCell.cell_id,
+          toRef: toCell.cell_id,
+          raw: row,
+          matchMode,
+          sourceTag
+        });
+      }
 
-        for (const id of cell.unitIds) {
-          visibleRefs.add(id);
-          visibleRefs.add(normId(id));
-        }
+      function resolveCell(ref) {
+        const raw = String(ref || '').trim();
+        const nid = normId(raw);
+        if (!raw && !nid) return null;
+
+        return (
+          cellsById.get(raw) ||
+          cellsById.get(nid) ||
+          state.cells.find(c =>
+            c.cell_id === raw || c.cell_key === raw ||
+            normId(c.cell_id) === nid || normId(c.cell_key) === nid ||
+            c.unitIds.includes(raw) || c.unitIds.includes(nid) ||
+            c.primaryUnitId === raw || c.primaryUnitId === nid ||
+            normId(c.displayTitle) === nid || normId(c.master_key) === nid || normId(c.name) === nid || normId(c.title) === nid
+          ) ||
+          null
+        );
       }
 
       for (const row of rows) {
-        const rawFrom = String(firstNonBlank([
+        const candidatesA = [
           row.from_id, row.from, row.source, row.parent, row.parent_id, row.source_cell_key, row.src,
-          row.From, row.Source, row.Parent
-        ])).trim();
-        const rawTo = String(firstNonBlank([
+          row.From, row.Source, row.Parent, row.source_id, row.start, row.a, row.u, row.unit_from, row.cell_from
+        ].map(v => String(v || '').trim()).filter(Boolean);
+
+        const candidatesB = [
           row.to_id, row.to, row.target, row.child, row.child_id, row.target_cell_key, row.dst,
-          row.To, row.Target, row.Child
-        ])).trim();
+          row.To, row.Target, row.Child, row.target_id, row.end, row.b, row.v, row.unit_to, row.cell_to
+        ].map(v => String(v || '').trim()).filter(Boolean);
 
-        const fromId = normId(rawFrom);
-        const toId = normId(rawTo);
-        if (!rawFrom || !rawTo) continue;
-        if (EXEMPT_UNIT_IDS.has(fromId) || EXEMPT_UNIT_IDS.has(toId)) continue;
-
-        const fromCellByCellId = cellsById.get(rawFrom) || cellsById.get(fromId) || null;
-        const toCellByCellId = cellsById.get(rawTo) || cellsById.get(toId) || null;
-
-        if (visibleUnitSet.has(rawFrom) && visibleUnitSet.has(rawTo)) {
-          edges.push({ fromId: rawFrom, toId: rawTo, fromRef: rawFrom, toRef: rawTo, raw: row, matchMode: 'unit' });
-          continue;
-        }
-
-        if (visibleUnitSet.has(fromId) && visibleUnitSet.has(toId)) {
-          edges.push({ fromId, toId, fromRef: fromId, toRef: toId, raw: row, matchMode: 'unit' });
-          continue;
-        }
-
-        if (fromCellByCellId && toCellByCellId) {
-          edges.push({
-            fromId: fromCellByCellId.primaryUnitId,
-            toId: toCellByCellId.primaryUnitId,
-            fromRef: fromCellByCellId.cell_id,
-            toRef: toCellByCellId.cell_id,
-            raw: row,
-            matchMode: 'cell'
-          });
-          continue;
-        }
-
-        if (visibleRefs.has(rawFrom) && visibleRefs.has(rawTo)) {
-          const fromCell = state.cells.find(c =>
-            c.unitIds.includes(rawFrom) ||
-            c.unitIds.includes(fromId) ||
-            c.cell_id === rawFrom ||
-            c.cell_key === rawFrom ||
-            normId(c.displayTitle) === fromId
-          );
-          const toCell = state.cells.find(c =>
-            c.unitIds.includes(rawTo) ||
-            c.unitIds.includes(toId) ||
-            c.cell_id === rawTo ||
-            c.cell_key === rawTo ||
-            normId(c.displayTitle) === toId
-          );
-
-          if (fromCell && toCell) {
-            edges.push({
-              fromId: fromCell.primaryUnitId,
-              toId: toCell.primaryUnitId,
-              fromRef: fromCell.cell_id,
-              toRef: toCell.cell_id,
-              raw: row,
-              matchMode: 'cell'
-            });
+        for (const a of candidatesA) {
+          for (const b of candidatesB) {
+            const fromCell = resolveCell(a);
+            const toCell = resolveCell(b);
+            if (fromCell && toCell) {
+              addEdge(fromCell, toCell, row, 'resolved', 'direct');
+            }
           }
+        }
+
+        if (Array.isArray(row.path) && row.path.length >= 2) {
+          const fromCell = resolveCell(row.path[0]);
+          const toCell = resolveCell(row.path[row.path.length - 1]);
+          addEdge(fromCell, toCell, row, 'resolved', 'path');
         }
       }
 
@@ -1574,10 +1553,14 @@ ${JSON.stringify(bad[0], null, 2)}`, true);
         : (Array.isArray(treePayload.arrows) ? treePayload.arrows : []);
 
       state.edges = buildVisibleEdges(edgeRows, visibleUnitSet, cellsById);
+      let arrowSourceUsed = 'csv';
 
       if (!state.edges.length && jsonEdges.length) {
         state.edges = buildVisibleEdges(jsonEdges, visibleUnitSet, cellsById);
+        arrowSourceUsed = 'json-fallback';
       }
+
+      state.arrowSourceUsed = arrowSourceU
 
       const { rankLayout, width, height } = computeRankLayout(state.cells);
       treeShellEl.style.width = `${width}px`;
@@ -1603,8 +1586,7 @@ Edges: ${EDGES_CSV_URL}
 Visible cells: ${state.cells.length}
 Drawn arrows: ${state.edges.length}
 Premium: ${counts.premium} | Squadron: ${counts.squadron} | Event: ${counts.event} | Pack: ${counts.pack}
-Flag rows indexed: ${state.flagMap.size}`);
-    }
+FlagFlag rows indexed: ${state.flagMap.size}\nArrow source used: ${state.arrowSourceUsed || 'cs }
 
     initiateSystem();
   </script>
