@@ -5,9 +5,9 @@ const EDGES_CSV_URL = "usa_tree_pass2_edges.csv";
 const PIC_BASE = "https://kjumpmaster.github.io/Aircraft-Pics/";
 
 const EXEMPT_UNIT_IDS = new Set([
-  // "example_unit_1",
-  // "example_unit_2",
-  // "example_unit_3"
+  "ucav_mq_1_predator",
+  "uav_quadcopter",
+  "o3u_1"
 ].map(normId));
 
 const treeShellEl = document.getElementById("treeShell");
