@@ -3,65 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>THE CAOC | COMBINED AIR OPERATIONS CENTER</title>
+  <title>CAOC - Combined Air Operations Center</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="cover-page">
+<body class="caoc-page">
+  <div class="caoc-overlay"></div>
 
-  <div class="rivet" style="top: 20px; left: 20px;"></div>
-  <div class="rivet" style="top: 20px; right: 20px;"></div>
-  <div class="rivet" style="bottom: 20px; left: 20px;"></div>
-  <div class="rivet" style="bottom: 20px; right: 20px;"></div>
+  <main class="hub-shell">
+    <header class="hub-header">
+      <div class="header-frame">
+        <div class="side-brand left-brand">
+          <img src="sky_pilot_logo.png" alt="Sky Pilot Logo" class="side-logo" />
+        </div>
 
-  <main class="caoc-page">
-    <header class="caoc-header">
-      <video class="caoc-logo-video" autoplay muted loop playsinline>
-        <source src="Norden%20II%20Logo.mp4" type="video/mp4" />
-      </video>
+        <div class="hero-center">
+          <div class="hero-video-frame">
+            <video
+              class="hero-video"
+              autoplay
+              muted
+              loop
+              playsinline
+            >
+              <source src="main_movie.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
 
-      <section class="caoc-center">
-        <video class="caoc-banner" autoplay muted loop playsinline>
-          <source src="caoc_banner.mp4" type="video/mp4" />
-        </video>
+          <div class="hero-title-block">
+            <h1 class="main-title">COMBINED AIR OPERATIONS CENTER</h1>
+            <p class="main-subtitle">Strategic Systems Hub</p>
+          </div>
+        </div>
 
-        <h1 class="caoc-title">The CAOC</h1>
-        <p class="caoc-slogan">Combined Air Operations Center</p>
-        <p class="caoc-subtext">
-          Central command hub for air combat systems, research interfaces, strike tools, and future modules.
-        </p>
-      </section>
-
-      <video class="caoc-logo-video" autoplay muted loop playsinline>
-        <source src="SKY_PILOT_LOGO.mp4" type="video/mp4" />
-      </video>
+        <div class="side-brand right-brand">
+          <img src="norden_ii_logo.png" alt="Norden II Logo" class="side-logo" />
+        </div>
+      </div>
     </header>
 
-    <section class="caoc-grid">
-      <a href="#" class="caoc-card">
-        <div class="caoc-card-kicker">Strike System</div>
-        <div class="caoc-card-title">Norden II</div>
-        <div class="caoc-card-text">
-          Bombing tools, targeting workflows, release calculations, and strike support systems.
-        </div>
+    <section class="hub-options">
+      <a href="research.html" class="hub-card">
+        <span class="card-kicker">Sky Pilot</span>
+        <span class="card-title">Commander's Manifest</span>
+        <span class="card-desc">Enter the aircraft research tree and operational review interface.</span>
       </a>
 
-      <a href="research.html" class="caoc-card">
-        <div class="caoc-card-kicker">Sky Pilot</div>
-        <div class="caoc-card-title">Commander's Manifest</div>
-        <div class="caoc-card-text">
-          Aircraft tech tree viewer, research layout prototype, aircraft registry integration, and tree UI testing.
-        </div>
+      <a href="norden.html" class="hub-card">
+        <span class="card-kicker">Norden II</span>
+        <span class="card-title">Bombing Calculator</span>
+        <span class="card-desc">Open the strike-planning and drop-analysis system.</span>
       </a>
 
-      <a href="#" class="caoc-card">
-        <div class="caoc-card-kicker">Systems Bay</div>
-        <div class="caoc-card-title">The Armory</div>
-        <div class="caoc-card-text">
-          Weapons, payloads, equipment, and future module expansion for broader CAOC tooling.
-        </div>
+      <a href="intel.html" class="hub-card">
+        <span class="card-kicker">CAOC</span>
+        <span class="card-title">Command Briefing</span>
+        <span class="card-desc">Access central command tools, briefings, and future systems modules.</span>
       </a>
     </section>
   </main>
-
 </body>
 </html>
