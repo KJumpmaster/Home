@@ -14,7 +14,8 @@ body.caoc-page {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-color: red;
+  background-color: #0a0f0e;
+}
 
 .page-wrap {
   min-height: 100vh;
@@ -29,7 +30,7 @@ body.caoc-page {
   width: 100%;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 240px 1fr 240px;
+  grid-template-columns: 280px 1fr 280px;
   gap: 24px;
   align-items: center;
 }
@@ -42,12 +43,15 @@ body.caoc-page {
 
 .side-video {
   width: 100%;
-  max-width: 220px;
+  max-width: 260px;
   height: auto;
   display: block;
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(124, 255, 178, 0.25);
   border-radius: 12px;
+  box-shadow:
+    0 0 18px rgba(124, 255, 178, 0.10),
+    0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .center-panel {
@@ -64,6 +68,9 @@ body.caoc-page {
   border: 1px solid rgba(124, 255, 178, 0.28);
   border-radius: 16px;
   overflow: hidden;
+  box-shadow:
+    0 0 24px rgba(124, 255, 178, 0.10),
+    0 12px 30px rgba(0, 0, 0, 0.40);
 }
 
 .main-video {
@@ -81,6 +88,7 @@ body.caoc-page {
   margin: 0;
   font-size: clamp(1.5rem, 2vw, 2.3rem);
   letter-spacing: 0.14em;
+  text-shadow: 0 0 10px rgba(124, 255, 178, 0.14);
 }
 
 .title-area p {
@@ -109,7 +117,18 @@ body.caoc-page {
   background: rgba(10, 22, 18, 0.88);
   border: 1px solid rgba(124, 255, 178, 0.28);
   border-radius: 14px;
-  box-shadow: 0 0 18px rgba(124, 255, 178, 0.08);
+  box-shadow:
+    0 0 18px rgba(124, 255, 178, 0.08),
+    0 10px 24px rgba(0, 0, 0, 0.32);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(124, 255, 178, 0.45);
+  box-shadow:
+    0 0 24px rgba(124, 255, 178, 0.16),
+    0 14px 28px rgba(0, 0, 0, 0.38);
 }
 
 .menu-tag {
@@ -138,7 +157,7 @@ body.caoc-page {
   }
 
   .side-video {
-    max-width: 200px;
+    max-width: 240px;
   }
 }
 
