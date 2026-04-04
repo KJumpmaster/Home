@@ -742,7 +742,12 @@
     });
 
     function normId(value) {
-      return String(value || '').trim().toLowerCase().replace(/\s+/g, '_');
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .replace(/_+/g, '_');
     }
 
     function normalizeKey(value) {
@@ -834,13 +839,18 @@
       state.registryByMasterKey = new Map();
       for (const row of rows) {
         const keys = [
-          normalizeKey(row.master_key),
-          normId(row.master_key),
-          normalizeKey(row.wt_name),
-          normId(row.wt_name)
-        ].filter(Boolean);
-        for (const key of keys) {
-          if (!state.registryByMasterKey.has(key)) state.registryByMasterKey.set(key, row);
+          row.master_key,
+          row.wt_name,
+          row.wt_display_name_new,
+          row.rw_name,
+          row.wt_image
+        ].map(v => String(v || '').trim()).filter(Boolean);
+
+        for (const rawKey of keys) {
+          const exact = String(rawKey).trim();
+          const normalized = normId(rawKey);
+          if (exact && !state.registryByMasterKey.has(exact)) state.registryByMasterKey.set(exact, row);
+          if (normalized && !state.registryByMasterKey.has(normalized)) state.registryByMasterKey.set(normalized, row);
         }
       }
     }
@@ -890,7 +900,9 @@
     function getCellUnitIds(cell) {
       const out = [];
       const pushMaybe = (v) => {
+        const raw = String(v || '').trim();
         const n = normId(v);
+        if (raw) out.push(raw);
         if (n) out.push(n);
       };
 
@@ -899,6 +911,9 @@
       pushMaybe(cell.unit_id);
       pushMaybe(cell.id);
       pushMaybe(cell.key);
+      pushMaybe(cell.name);
+      pushMaybe(cell.display_name);
+      pushMaybe(cell.title);
 
       if (Array.isArray(cell.units)) {
         for (const u of cell.units) {
@@ -967,7 +982,9 @@
     }
 
     function getRegistryRowByUnitId(unitId) {
-      return state.registryByMasterKey.get(unitId) || state.registryByMasterKey.get(normId(unitId)) || null;
+      const raw = String(unitId || '').trim();
+      const normalized = normId(unitId);
+      return state.registryByMasterKey.get(raw) || state.registryByMasterKey.get(normalized) || null;
     }
 
     function getDisplayName(cell, registryRow) {
@@ -1379,93 +1396,26 @@
 
     function buildVisibleEdges(rows, visibleUnitSet, cellsById) {
       const edges = [];
-      for (const row of rows) {
-        const rawFrom = firstNonBlank([row.from_id, row.from, row.source, row.parent, row.parent_id, row.source_cell_key, row.src]);
-        const rawTo = firstNonBlank([row.to_id, row.to, row.target, row.child, row.child_id, row.target_cell_key, row.dst]);
-        const fromId = normId(rawFrom);
-        const toId = normId(rawTo);
-        if (!fromId || !toId) continue;
-        if (EXEMPT_UNIT_IDS.has(fromId) || EXEMPT_UNIT_IDS.has(toId)) continue;
-
-        const fromCellByCellId = cellsById.get(rawFrom) || cellsById.get(fromId) || null;
-        const toCellByCellId = cellsById.get(rawTo) || cellsById.get(toId) || null;
-
-        if (visibleUnitSet.has(fromId) && visibleUnitSet.has(toId)) {
-          edges.push({ fromId, toId, fromRef: fromId, toRef: toId, raw: row, matchMode: 'unit' });
-          continue;
-        }
-
-        if (fromCellByCellId && toCellByCellId) {
-          edges.push({
-            fromId: fromCellByCellId.primaryUnitId,
-            toId: toCellByCellId.primaryUnitId,
-            fromRef: fromCellByCellId.cell_id,
-            toRef: toCellByCellId.cell_id,
-            raw: row,
-            matchMode: 'cell'
-          });
-        }
-      }
-      return edges;
-    }
-
-    function renderCells(cells, rankLayout) {
-      nodeLayerEl.innerHTML = '';
-      const rectMap = new Map();
-      for (const cell of cells) {
-        const rect = getCellRect(cell, rankLayout);
-        rectMap.set(cell.cell_id, rect);
-        const wrap = document.createElement('div');
-        wrap.className = 'cell-wrap' + (cell.isGroup ? ' grouped' : '');
-        wrap.style.left = `${rect.x}px`;
-        wrap.style.top = `${rect.y}px`;
-
-        if (cell.isGroup) {
-          const s2 = document.createElement('div');
-          s2.className = 'cell-shadow-2';
-          const s1 = document.createElement('div');
-          s1.className = 'cell-shadow-1';
-          wrap.appendChild(s2);
-          wrap.appendChild(s1);
-        }
-
-        wrap.appendChild(createCellElement(cell));
-        nodeLayerEl.appendChild(wrap);
-      }
-      return rectMap;
-    }
-
-    async function initiateSystem() {
-      setStatus('Loading tree, flags, registry, and edge truth...');
-
-      const [treePayload, flagsPayload, regText, edgeText] = await Promise.all([
-        fetchJSON(TREE_JSON_URL),
-        fetchJSON(FLAGS_JSON_URL),
-        fetchText(REGISTRY_CSV_URL),
-        fetchText(EDGES_CSV_URL)
-      ]);
-
-      const registryRows = parseCSV(regText);
-      buildRegistryMaps(registryRows);
-      state.flagMap = buildFlagMap(flagsPayload);
-
-      const rawCells = Array.isArray(treePayload.cells) ? treePayload.cells : [];
-      const bad = rawCells.map(normalizeCell).filter(c => !validateCellPlacement(c));
-      if (bad.length) {
-        setStatus(`Some cells invalid.\nFirst bad cell:\n${JSON.stringify(bad[0], null, 2)}`, true);
-      }
-
-      state.cells = prepareCells(rawCells);
-      if (!state.cells.length) {
-        throw new Error(`No valid cells found. First raw cell: ${JSON.stringify(rawCells[0], null, 2)}`);
-      }
-
-      const visibleUnitSet = new Set();
-      const cellsById = new Map();
+      const visibleRefs = new Set();
       for (const cell of state.cells) {
         cellsById.set(cell.cell_id, cell);
+        cellsById.set(normId(cell.cell_id), cell);
         cellsById.set(cell.cell_key, cell);
-        for (const id of cell.unitIds) visibleUnitSet.add(id);
+        cellsById.set(normId(cell.cell_key), cell);
+        if (cell.primaryUnitId) {
+          cellsById.set(cell.primaryUnitId, cell);
+          cellsById.set(normId(cell.primaryUnitId), cell);
+        }
+        if (cell.displayTitle) {
+          cellsById.set(cell.displayTitle, cell);
+          cellsById.set(normId(cell.displayTitle), cell);
+        }
+        for (const id of cell.unitIds) {
+          visibleUnitSet.add(id);
+          visibleUnitSet.add(normId(id));
+          cellsById.set(id, cell);
+          cellsById.set(normId(id), cell);
+        }
       }
 
       const edgeRows = parseCSV(edgeText);
@@ -1484,7 +1434,15 @@
       const counts = { tech: 0, premium: 0, squadron: 0, event: 0, pack: 0 };
       for (const cell of state.cells) counts[cell.mainType] = (counts[cell.mainType] || 0) + 1;
 
-      setStatus(`Loaded OK\nTree: ${TREE_JSON_URL}\nFlags: ${FLAGS_JSON_URL}\nRegistry: ${REGISTRY_CSV_URL}\nEdges: ${EDGES_CSV_URL}\nVisible cells: ${state.cells.length}\nDrawn arrows: ${state.edges.length}\nPremium: ${counts.premium} | Squadron: ${counts.squadron} | Event: ${counts.event} | Pack: ${counts.pack}`);
+      setStatus(`Loaded OK
+Tree: ${TREE_JSON_URL}
+Flags: ${FLAGS_JSON_URL}
+Registry: ${REGISTRY_CSV_URL}
+Edges: ${EDGES_CSV_URL}
+Visible cells: ${state.cells.length}
+Drawn arrows: ${state.edges.length}
+Premium: ${counts.premium} | Squadron: ${counts.squadron} | Event: ${counts.event} | Pack: ${counts.pack}
+Flag rows indexed: ${state.flagMap.size}`);
     }
 
     initiateSystem();
