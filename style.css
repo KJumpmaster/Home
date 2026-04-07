@@ -27,7 +27,7 @@
   --shadow-mid: 0 14px 30px rgba(0, 0, 0, 0.38);
   --shadow-strong: 0 18px 40px rgba(0, 0, 0, 0.46);
 
-  --tree-pad: 140;
+  --tree-pad: 200;
   --cell-w: 141;
   --cell-h: 126;
   --cell-gap-x: 21;
