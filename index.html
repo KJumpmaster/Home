@@ -5,8 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CAOC - Combined Air Operations Center</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .savage-skies-wrap {
+      width: 100%;
+      max-width: 980px;
+      margin: 18px auto 0;
+      padding: 0 12px;
+      display: flex;
+      justify-content: center;
+    }
+    .savage-skies-image {
+      width: min(980px, 100%);
+      height: auto;
+      display: block;
+      border-radius: 16px;
+      border: 1px solid rgba(124, 255, 178, 0.14);
+      box-shadow:
+        0 0 24px rgba(124, 255, 178, 0.06),
+        0 14px 30px rgba(0, 0, 0, 0.34);
+      background: rgba(0, 0, 0, 0.22);
+    }
+    .music-note {
+      margin-top: 10px;
+      text-align: center;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      color: rgba(220, 250, 255, 0.62);
+      text-transform: uppercase;
+    }
+  </style>
 </head>
 <body class="caoc-page">
+  <audio id="wonder-audio" src="Wonder.mp3" preload="auto" loop></audio>
 
   <div class="page-wrap">
     <div class="top-row">
@@ -27,6 +57,11 @@
           <h1>COMBINED AIR OPERATIONS CENTER</h1>
           <p>Strategic Systems Hub</p>
         </div>
+
+        <div class="savage-skies-wrap">
+          <img class="savage-skies-image" src="savage_skies.png" alt="Into the Savage Skies We Ascend" />
+        </div>
+        <div class="music-note">Wonder armed on first click</div>
       </div>
 
       <div class="side-panel">
@@ -38,10 +73,10 @@
 
     <div class="bottom-row">
       <a class="menu-card" href="https://kjumpmaster.github.io/caoc-site/manifest.html">
-      <div class="menu-tag">SKY PILOT</div>
-      <div class="menu-title">Commander’s Manifest</div>
-      <div class="menu-text">Access research trees and aircraft progression systems.</div>
-     </a>
+        <div class="menu-tag">SKY PILOT</div>
+        <div class="menu-title">Commander’s Manifest</div>
+        <div class="menu-text">Access research trees and aircraft progression systems.</div>
+      </a>
 
       <a class="menu-card" href="norden.html">
         <div class="menu-tag">NORDEN II</div>
@@ -57,5 +92,19 @@
     </div>
   </div>
 
+  <script>
+    (function () {
+      const wonderAudio = document.getElementById("wonder-audio");
+      if (!wonderAudio) return;
+      wonderAudio.volume = 0.18;
+      const start = () => {
+        wonderAudio.play().catch(() => {});
+        document.removeEventListener("click", start);
+        document.removeEventListener("keydown", start);
+      };
+      document.addEventListener("click", start, { once: true });
+      document.addEventListener("keydown", start, { once: true });
+    })();
+  </script>
 </body>
 </html>
