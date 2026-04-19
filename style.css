@@ -10,13 +10,13 @@ text-align:center;
 }
 
 .wrap{
-max-width:1200px;
+max-width:1100px;
 margin:auto;
 padding:20px;
 }
 
 .hero video{
-width:100%;
+width:85%;
 border-radius:20px;
 }
 
@@ -32,7 +32,7 @@ margin-bottom:20px;
 
 .logos{
 display:grid;
-grid-template-columns:1fr 1.5fr 1fr;
+grid-template-columns:1fr 1.2fr 1fr;
 gap:20px;
 align-items:center;
 }
@@ -43,7 +43,7 @@ border-radius:15px;
 }
 
 .center video{
-transform:scale(1.1);
+transform:scale(0.9);
 }
 
 .cap{
@@ -60,4 +60,10 @@ opacity:0.8;
 margin-top:10px;
 font-size:20px;
 font-family:Georgia;
+}
+
+.wonder span{
+font-size:14px;
+margin-left:10px;
+opacity:0.7;
 }
