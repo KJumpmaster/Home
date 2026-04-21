@@ -1,0 +1,6 @@
+# _data/repos.yml
+sources:
+  game_pics: "https://raw.githubusercontent.com/JumpingKJ/Aircraft-Pics/main/"
+  real_life: "https://raw.githubusercontent.com/JumpingKJ/Real_Life_Aircraft_Pics/main/"
+  # Future-proofing for when you add these:
+  helos: "https://raw.githubusercontent.com/JumpingKJ/Helo-Pics/main/"
